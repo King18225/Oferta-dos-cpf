@@ -82,9 +82,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
   const formattedCpf = cpf ? `***.${cpf.substring(4, 7)}.${cpf.substring(8, 11)}-**` : '***.***.***-**';
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-0 pb-4 md:px-0 md:pb-6 bg-background text-foreground pt-0">
-      {/* SEÇÃO DE OFERTA PRINCIPAL (Card Principal) */}
-      <div className="bg-card rounded-lg shadow-[0px_4px_15px_rgba(0,0,0,0.1)] p-4 md:p-6 space-y-5">
+    <div className="w-full max-w-2xl mx-auto p-4 md:p-6 space-y-5 bg-background text-foreground">
         
         <div className="text-center">
            <h2 className="font-headline text-2xl md:text-3xl font-bold text-primary mb-2 uppercase">
@@ -189,17 +187,9 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
               Renda Expressa &copy; {new Date().getFullYear()} - Todos os direitos (não tão) reservados. CNPJ: XX.XXX.XXX/0001-XX. 
               <a href="#" className="underline hover:text-primary">Termos de Uso</a>. <a href="#" className="underline hover:text-primary">Política de Privacidade</a>.
           </p>
-      </div>
     </div>
   );
 };
 
 export default OfferStep;
 
-// Helper style for staggered animation if needed, not directly used by Tailwind animate-pulse default
-// Add to globals.css if you want to use custom animation delays for the dots
-/*
-.animation-delay-0 { animation-delay: 0s; }
-.animation-delay-150 { animation-delay: 0.15s; }
-.animation-delay-300 { animation-delay: 0.3s; }
-*/
