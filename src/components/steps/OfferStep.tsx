@@ -133,11 +133,6 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
             </div>
           </div>
 
-          <div className="text-center mt-8">
-            <p className="text-xs text-muted-foreground leading-relaxed px-2">
-              Este site e seu conteúdo são fictícios e criados para fins de demonstração. Nenhuma transação financeira real será processada. Ao prosseguir, você reconhece que esta é uma simulação. Os valores e benefícios mencionados são ilustrativos. O "Renda Expressa" não possui vínculo com instituições governamentais.
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>
@@ -145,5 +140,3 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 };
 
 export default OfferStep;
-
-    
