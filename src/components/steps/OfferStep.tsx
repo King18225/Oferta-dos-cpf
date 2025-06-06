@@ -62,14 +62,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
       />
       
       <Card className="border-primary shadow-2xl">
-        <CardHeader className="bg-primary text-primary-foreground text-center rounded-t-lg p-4 md:p-6">
-          <CardTitle className="font-headline text-xl md:text-3xl font-bold">
-            🎉 PARABÉNS! SEU ACESSO FOI APROVADO! 🎉
-          </CardTitle>
-          <CardDescription className="text-primary-foreground/80 text-sm md:text-base mt-1">
-            Você está a um passo de liberar seus benefícios exclusivos.
-          </CardDescription>
-        </CardHeader>
+        {/* CardHeader removed as per user request to match image header (logo only) */}
         <CardContent className="p-4 md:p-6 space-y-6">
           <div className="text-center">
             <h2 className="font-headline text-lg md:text-xl font-semibold text-primary mb-3">Benefícios Pré-Aprovados para o CPF: {cpf ? `***.${cpf.substring(4, 7)}.${cpf.substring(8, 11)}-**` : '***.***.***-**'}</h2>
@@ -148,5 +141,3 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 };
 
 export default OfferStep;
-
-    
