@@ -47,8 +47,8 @@ const ProcessingStep: React.FC<ProcessingStepProps> = ({ onComplete }) => {
   return (
     <div className="w-full max-w-md mx-auto text-center p-4">
       <UrgentHeader />
-      <div className="bg-card shadow-xl rounded-lg p-6 md:p-8 border border-border">
-        <h2 className="font-headline text-2xl md:text-3xl font-bold text-primary mb-6">
+      <div className="bg-primary shadow-xl rounded-lg p-6 md:p-8">
+        <h2 className="font-headline text-2xl md:text-3xl font-bold text-primary-foreground mb-6">
           Aguarde, estamos consultando seu CPF...
         </h2>
         
@@ -56,17 +56,17 @@ const ProcessingStep: React.FC<ProcessingStepProps> = ({ onComplete }) => {
           {allStepsComplete ? (
             <CheckCircle className="h-16 w-16 text-accent mx-auto animate-pulse" />
           ) : (
-            <Loader2 className="h-16 w-16 text-primary mx-auto animate-spin" />
+            <Loader2 className="h-16 w-16 text-primary-foreground mx-auto animate-spin" />
           )}
         </div>
 
-        <Progress value={progress} className="w-full h-4 mb-4" indicatorClassName="bg-accent" />
+        <Progress value={progress} className="w-full h-4 mb-4 bg-secondary/70" indicatorClassName="bg-accent" />
         
-        <p className="text-lg text-foreground font-medium h-12 flex items-center justify-center">
+        <p className="text-lg text-primary-foreground font-medium h-12 flex items-center justify-center">
           {currentMessageIndex < loadingMessages.length ? loadingMessages[currentMessageIndex].text : "Tudo pronto!"}
         </p>
         
-        <p className="text-sm text-muted-foreground mt-6">
+        <p className="text-sm text-primary-foreground opacity-80 mt-6">
           Por favor, não feche ou atualize esta página. Sua consulta segura está em andamento.
         </p>
       </div>
