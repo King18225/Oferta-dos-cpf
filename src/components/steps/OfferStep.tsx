@@ -21,7 +21,6 @@ interface Testimonial {
   photoUrl?: string;
 }
 
-// Updated Testimonial Data with more "raw" feel and varied star ratings
 const fakeTestimonialsData: Testimonial[] = [
   {
     name: "MARIA S.",
@@ -48,15 +47,14 @@ const fakeTestimonialsData: Testimonial[] = [
 
 
 const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
-  const [peopleServed, setPeopleServed] = useState(2347); // Initial value based on prompt
+  const [peopleServed, setPeopleServed] = useState(2347);
   const [testimonials, setTestimonials] = useState<Testimonial[]>(fakeTestimonialsData);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setPeopleServed(prev => prev + Math.floor(Math.random() * 5) + 1); // Increase by 1-5
-    }, 1500); // Faster update
+      setPeopleServed(prev => prev + Math.floor(Math.random() * 5) + 1);
+    }, 1500); 
 
-    // Simulate new testimonials appearing
     const testimonialInterval = setInterval(() => {
       const names = ["CARLOS R.", "SOFIA L.", "PAULO G.", "LUCIA F."];
       const locations = ["Curitiba/PR", "Manaus/AM", "Brasília/DF", "Porto Alegre/RS"];
@@ -64,11 +62,11 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         name: names[Math.floor(Math.random() * names.length)],
         location: locations[Math.floor(Math.random() * locations.length)],
         text: "Funciona mesmo! Recebi o valor e a taxa foi tranquila. Recomendo muito!",
-        stars: 5, // Can vary this too for more realism
+        stars: 5,
         photoUrl: "https://placehold.co/56x56.png",
       };
-      setTestimonials(prev => [newTestimonial, ...prev.slice(0, prev.length-1)].sort(() => 0.5 - Math.random())); // Add new and shuffle
-    }, 8000); // New testimonial every 8s
+      setTestimonials(prev => [newTestimonial, ...prev.slice(0, prev.length-1)].sort(() => 0.5 - Math.random()));
+    }, 8000);
 
     return () => {
       clearInterval(interval);
@@ -78,7 +76,6 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 
   const handleLiberarAcessoClick = () => {
     console.log("LIBERAR ACESSO IMEDIATO AGORA clicado! CPF:", cpf, "Redirect to R$47,90 checkout.");
-    // Add actual redirection to payment gateway here
     alert("Você será redirecionado para a página de pagamento da taxa de R$47,90. Após o PIX, seus R$1.200 serão liberados IMEDIATAMENTE.");
   };
 
@@ -86,7 +83,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4 pb-4 md:px-6 md:pb-6 bg-background text-foreground pt-0">
-       <Card className="mb-4 shadow-md rounded-lg">
+      <Card className="mb-4 shadow-sm rounded-lg border-0 bg-slate-50">
         <CardContent className="p-3 flex items-center">
           <Image
             src="https://i.imgur.com/SQWMv5D.png"
@@ -96,7 +93,6 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
             className="rounded-md"
             data-ai-hint="government logo"
           />
-          {/* Content to the right of the logo can be added here if needed */}
         </CardContent>
       </Card>
 
