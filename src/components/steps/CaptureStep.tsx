@@ -24,13 +24,8 @@ const GovBrLogo: React.FC = () => (
 const CaptureStep: React.FC<CaptureStepProps> = ({ onSubmitSuccess }) => {
   return (
     <div className="w-full max-w-xs sm:max-w-sm mx-auto">
-      <div className="bg-card shadow-lg rounded-lg p-6 mb-8 border text-center">
-        <div className="flex justify-center mb-3">
-          <GovBrLogo />
-        </div>
-        <p className="text-sm text-muted-foreground animate-pulse">
-          Procurando um atendente disponível para você...
-        </p>
+      <div className="flex justify-center mb-6">
+        <GovBrLogo />
       </div>
       <div className="px-2 sm:px-4">
         <p className="text-lg text-foreground mb-4 text-gray-700 font-bold">Identifique-se no gov.br com:</p>
