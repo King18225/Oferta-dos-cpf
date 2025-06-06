@@ -114,7 +114,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
              <OfferTimer initialMinutes={4} initialSeconds={31} />
           </div>
           <p className="text-destructive text-sm sm:text-md md:text-lg font-bold uppercase leading-tight">
-            Atenção: <span className="text-2xl md:text-3xl underline">NÃO SEJA BURRO!</span><br/> Se você não sacar <strong>AGORA</strong>, seus <strong>R$1.200,00</strong> serão <strong>CANCELADOS</strong> e <strong>PERDIDOS PARA SEMPRE</strong> às 23:59 de <strong>HOJE!</strong><br/> Não tem choro nem vela, <strong className="text-xl">É AGORA OU NUNCA!</strong>
+            Atenção: <span className="text-2xl md:text-3xl underline">NÃO SEJA BURRO!</span><br/> Se você não sacar <strong className="text-destructive">AGORA</strong>, seus <strong className="text-destructive">R$1.200,00</strong> serão <strong className="text-destructive">CANCELADOS</strong> e <strong className="text-destructive">PERDIDOS PARA SEMPRE</strong> às 23:59 de <strong className="text-destructive">HOJE!</strong><br/> Não tem choro nem vela, <strong className="text-xl text-destructive">É AGORA OU NUNCA!</strong>
           </p>
         </div>
 
@@ -134,7 +134,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         </div>
 
         <Button
-          className="w-full h-16 md:h-20 text-xl md:text-2xl font-bold bg-accent text-accent-foreground hover:bg-accent/90 shadow-xl animate-bounce transform hover:scale-105 transition-transform duration-150 ease-out ring-4 ring-green-300 hover:ring-green-400"
+          className="w-full h-16 md:h-20 text-xl md:text-2xl font-bold bg-accent text-accent-foreground hover:bg-accent/90 shadow-xl transform hover:scale-105 transition-transform duration-150 ease-out ring-4 ring-green-300 hover:ring-green-400"
           onClick={handleLiberarAcessoClick}
         >
           <span className="mr-2 text-3xl">👉</span>
