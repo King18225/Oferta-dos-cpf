@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import OfferTimer from '@/components/features/OfferTimer';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, TrendingUp, Zap, AlertTriangle, ShieldCheck, Check } from 'lucide-react';
 
 interface OfferStepProps {
@@ -18,26 +18,30 @@ interface Testimonial {
   location: string;
   text: string;
   stars: number;
+  photoUrl?: string;
 }
 
 const fakeTestimonialsData: Testimonial[] = [
   {
     name: "Maria S.",
     location: "Fortaleza, CE",
-    text: "Deu certo! Nem acreditei, R$1200 na conta já! 🙌",
+    text: "Finalmente algo que funciona! R$1200 na conta em minutos. A taxa de R$47,90 é NADA perto disso. Salvou meu mês!",
     stars: 5,
+    photoUrl: "https://placehold.co/40x40.png",
   },
   {
     name: "J. Silva",
     location: "Interior de SP",
-    text: "Estava apertado esse mês, essa grana salvou! Taxa valeu a pena.",
+    text: "Estava desconfiado, mas arrisquei. Valeu CADA CENTAVO dos R$47,90! Grana extra na mão quando mais precisei. Indico demais!",
     stars: 5,
+    photoUrl: "https://placehold.co/40x40.png",
   },
   {
     name: "Ana P.",
     location: "Salvador, BA",
-    text: "Rápido e fácil. Consegui pelo celular mesmo. Recomendo!! 👍",
+    text: "Rápido e fácil. Paguei os R$47,90 no PIX e o benefício caiu rapidinho. Plataforma simples de usar, direto pelo celular.",
     stars: 4,
+    photoUrl: "https://placehold.co/40x40.png",
   },
 ];
 
@@ -47,25 +51,21 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setPeopleServed(prev => prev + Math.floor(Math.random() * 5) + 2); // More aggressive increase
-    }, 2500); // Faster update
-
-    // Simulate new testimonials appearing periodically (optional, can make it complex)
-    // For now, we'll stick to the static but updated list.
+      setPeopleServed(prev => prev + Math.floor(Math.random() * 5) + 2);
+    }, 2500);
 
     return () => clearInterval(interval);
   }, []);
 
   const handleLiberarAcessoClick = () => {
     console.log("LIBERAR ACESSO IMEDIATO AGORA clicado! CPF:", cpf, "Redirect to R$47,90 checkout.");
-    // window.location.href = 'YOUR_CHECKOUT_URL_HERE';
     alert("Simulando redirecionamento para pagamento da taxa de R$47,90...");
   };
 
   const formattedCpf = cpf ? `***.${cpf.substring(4, 7)}.${cpf.substring(8, 11)}-**` : '***.***.***-**';
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-4 md:p-6 bg-background text-foreground">
+    <div className="w-full max-w-2xl mx-auto pt-0 px-4 pb-4 md:px-6 md:pb-6 bg-background text-foreground">
       <Image
         src="https://i.imgur.com/oP20qzf.png"
         alt="gov.br logo oficial"
@@ -135,14 +135,28 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
               {testimonials.map((testimonial, index) => (
                 <Card key={index} className="bg-muted/30 border-secondary shadow-sm">
                   <CardContent className="p-3 md:p-4">
-                    <div className="flex items-center mb-1">
-                      {[...Array(testimonial.stars)].map((_, i) => (
-                        <svg key={i} className="w-5 h-5 text-yellow-400 fill-current mr-0.5" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
-                      ))}
-                       <Check className="h-4 w-4 text-green-500 ml-2 mr-1" /> <span className="text-xs text-green-600 font-semibold">Verificado</span>
+                    <div className="flex items-start">
+                        {testimonial.photoUrl && (
+                            <Image
+                            src={testimonial.photoUrl}
+                            alt={`Foto de ${testimonial.name}`}
+                            width={40}
+                            height={40}
+                            data-ai-hint="person avatar"
+                            className="rounded-full mr-3 border-2 border-accent"
+                            />
+                        )}
+                        <div className="flex-1">
+                            <div className="flex items-center mb-1">
+                                {[...Array(testimonial.stars)].map((_, i) => (
+                                <svg key={i} className="w-5 h-5 text-yellow-400 fill-current mr-0.5" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                                ))}
+                                <Check className="h-4 w-4 text-green-500 ml-2 mr-1" /> <span className="text-xs text-green-600 font-semibold">Verificado</span>
+                            </div>
+                            <p className="text-sm md:text-base text-foreground italic">"{testimonial.text}"</p>
+                            <p className="text-xs text-muted-foreground mt-2 font-semibold">- {testimonial.name}, {testimonial.location}</p>
+                        </div>
                     </div>
-                    <p className="text-sm md:text-base text-foreground italic">"{testimonial.text}"</p>
-                    <p className="text-xs text-muted-foreground mt-2 font-semibold">- {testimonial.name}, {testimonial.location}</p>
                   </CardContent>
                 </Card>
               ))}
