@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import OfferTimer from '@/components/features/OfferTimer';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import Image from 'next/image';
+// import Image from 'next/image'; // Image component removed
 import { Banknote, AlertTriangle } from 'lucide-react';
 import {
   AlertDialog,
@@ -59,16 +59,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
           <p className="font-bold text-lg text-accent">DEPÓSITO CONFIRMADO: R$1.200</p>
         </div>
         
-        <div className="my-4 border border-border rounded-md overflow-hidden shadow-lg">
-           <Image 
-            src="https://i.imgur.com/J6Ww0BM.png" 
-            alt="Comprovante de depósito Gov.br" 
-            width={600} 
-            height={400} 
-            layout="responsive"
-            data-ai-hint="bank slip"
-          />
-        </div>
+        {/* Image component and its container div have been removed */}
 
         <div className="mb-6 p-3 bg-destructive/10 border border-destructive/30 rounded-md">
           <div className="flex items-center justify-center text-destructive font-semibold text-lg">
