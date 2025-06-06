@@ -83,21 +83,8 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 
   return (
     <div className="w-full max-w-2xl mx-auto px-0 pb-4 md:px-0 md:pb-6 bg-background text-foreground pt-0">
-      {/* SEÇÃO SUPERIOR (CABEÇALHO) */}
-      <div className="bg-gray-50 shadow-[0px_1px_2px_rgba(0,0,0,0.04)] p-3 mb-6 flex items-center justify-between rounded-sm sticky top-0 z-50">
-        <Image src="https://i.imgur.com/SQWMv5D.png" alt="gov.br logo" width={120} height={40} data-ai-hint="government logo" className="h-auto" />
-        <div className="flex items-center space-x-2">
-          <div className="flex space-x-1">
-            <span className="h-2 w-2 bg-gray-400 rounded-full animate-pulse animation-delay-0"></span>
-            <span className="h-2 w-2 bg-gray-400 rounded-full animate-pulse animation-delay-150"></span>
-            <span className="h-2 w-2 bg-gray-400 rounded-full animate-pulse animation-delay-300"></span>
-          </div>
-          <p className="text-gray-500 text-xs md:text-sm">Procurando um atendente disponível para você...</p>
-        </div>
-      </div>
-
       {/* SEÇÃO DE OFERTA PRINCIPAL (Card Principal) */}
-      <div className="bg-card rounded-lg shadow-[0px_4px_15px_rgba(0,0,0,0.1)] p-4 md:p-6 space-y-6">
+      <div className="bg-card rounded-lg shadow-[0px_4px_15px_rgba(0,0,0,0.1)] p-4 md:p-6 space-y-5">
         
         <div className="text-center">
            <h2 className="font-headline text-2xl md:text-3xl font-bold text-primary mb-2 uppercase">
