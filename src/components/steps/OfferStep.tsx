@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import OfferTimer from '@/components/features/OfferTimer';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, TrendingUp, ShieldCheck, Star, BadgePercent, Users, AlertTriangle, Clock } from 'lucide-react'; // Added Users, AlertTriangle, Clock
+import { CheckCircle, TrendingUp, ShieldCheck, Star, BadgePercent, Users, AlertTriangle, Clock, ShoppingCart, Gift, Award } from 'lucide-react';
 
 interface OfferStepProps {
   cpf: string | null;
@@ -85,29 +85,32 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
   return (
     <div className="w-full max-w-2xl mx-auto p-4 md:p-6 space-y-6 bg-background text-foreground">
         
+        {/* Título Principal */}
         <div className="text-center">
           <h2 className="font-headline text-xl md:text-2xl font-bold mb-2 uppercase text-foreground">
             <span>🔥 ALERTA MÁXIMO, CPF {formattedCpf}!</span><br/>
-            SEU SAQUE DE <strong className="text-3xl md:text-4xl">R$1.200,00</strong> FOI LIBERADO AGORA!
+            SEU SAQUE DE <strong className="text-3xl md:text-4xl font-bold">R$1.200,00</strong> FOI LIBERADO AGORA!
           </h2>
-          
-          <ul className="space-y-2 text-left text-sm md:text-base max-w-md mx-auto bg-secondary/20 p-4 rounded-lg border border-primary/30 shadow">
-            {[
-              { text: "<strong class='text-primary'>SAQUE IMEDIATO EM 5 MINUTOS:</strong> <span class='text-accent font-bold text-lg'>R$1.200,00</span> direto na sua conta Chave PIX <strong class='underline text-accent'>AGORA MESMO!</strong>" },
-              { text: "<strong class='text-primary'>ACESSO VIP GOV+ EXCLUSIVO:</strong> Plataforma Secreta de Benefícios (Valor R$297,00 - <span class='text-accent font-bold'>HOJE GRÁTIS</span>)" },
-              { text: "<strong class='text-primary'>SUPORTE PREMIUM RELÂMPAGO 24/7:</strong> Atendimento VIP WhatsApp <span class='italic text-primary'>Ultra Rápido</span> e Prioritário para VOCÊ!" },
-              { text: "<strong class='text-primary'>BÔNUS SECRETO HOJE:</strong> Guia Exclusivo 'Nome Limpo em 7 Dias' (SPC/Serasa Destravado)!" },
-            ].map((benefit, index) => (
-              <li key={index} className="flex items-start">
-                <CheckCircle className="h-6 w-6 text-green-500 mr-2 mt-0.5 shrink-0" />
-                <span className="font-medium text-foreground" dangerouslySetInnerHTML={{ __html: benefit.text }} />
-              </li>
-            ))}
-          </ul>
         </div>
+          
+        {/* Lista de Benefícios */}
+        <ul className="space-y-2 text-left text-sm md:text-base max-w-md mx-auto bg-secondary/20 p-4 rounded-lg border border-primary/30 shadow">
+          {[
+            { icon: <ShoppingCart className="h-6 w-6 text-green-500 mr-2 mt-0.5 shrink-0" />, text: "<strong class='text-primary'>SAQUE IMEDIATO EM 5 MINUTOS:</strong> <span class='text-accent font-bold text-lg'>R$1.200,00</span> direto na sua conta Chave PIX <strong class='underline text-accent'>AGORA MESMO!</strong>" },
+            { icon: <Gift className="h-6 w-6 text-blue-500 mr-2 mt-0.5 shrink-0" />, text: "<strong class='text-primary'>ACESSO VIP GOV+ EXCLUSIVO:</strong> Plataforma Secreta de Benefícios (Valor R$297,00 - <span class='text-accent font-bold'>HOJE GRÁTIS</span>)" },
+            { icon: <Users className="h-6 w-6 text-purple-500 mr-2 mt-0.5 shrink-0" />, text: "<strong class='text-primary'>SUPORTE PREMIUM RELÂMPAGO 24/7:</strong> Atendimento VIP WhatsApp <span class='italic text-primary'>Ultra Rápido</span> e Prioritário para VOCÊ!" },
+            { icon: <Award className="h-6 w-6 text-yellow-500 mr-2 mt-0.5 shrink-0" />, text: "<strong class='text-primary'>BÔNUS SECRETO HOJE:</strong> Guia Exclusivo 'Nome Limpo em 7 Dias' (SPC/Serasa Destravado)!" },
+          ].map((benefit, index) => (
+            <li key={index} className="flex items-start">
+              {benefit.icon}
+              <span className="font-medium text-foreground" dangerouslySetInnerHTML={{ __html: benefit.text }} />
+            </li>
+          ))}
+        </ul>
+        
 
         {/* Área de Urgência */}
-        <div className="bg-destructive/10 p-3 sm:p-4 rounded-lg border-2 border-destructive text-center shadow-xl text-destructive">
+        <div className="bg-destructive/10 p-3 sm:p-4 rounded-lg border-2 border-destructive text-center shadow-xl text-destructive space-y-2">
           <div className="flex flex-wrap items-center justify-center text-center font-bold text-md sm:text-lg md:text-xl mb-2">
             <Clock className="h-8 w-8 mr-2" /> 
             <span className="uppercase">CORRE! SEU TEMPO TÁ ACABANDO!</span>
@@ -121,7 +124,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         </div>
 
         {/* Seção de Preço */}
-        <div className="text-center p-4 md:p-6 bg-primary/10 rounded-xl shadow-lg border-2 border-accent ring-2 ring-accent/50">
+        <div className="text-center p-4 md:p-6 bg-primary/10 rounded-xl shadow-lg border-2 border-accent ring-2 ring-accent/50 space-y-2">
           <h3 className="font-headline text-xl md:text-2xl font-bold text-primary mb-1 uppercase">
              <BadgePercent className="inline-block h-7 w-7 mr-1 text-accent" /> ÚNICA TAXA DE ACESSO!
           </h3>
@@ -147,7 +150,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         </div>
         
         {/* SEÇÃO DE PROVA SOCIAL */}
-        <div className="my-6 md:my-8">
+        <div> {/* Removed my-6 md:my-8 */}
           <h3 className="font-headline text-xl md:text-2xl font-bold text-primary text-center mb-5 uppercase flex items-center justify-center">
             <Users className="mr-2 h-7 w-7" /> 
             COMUNIDADE SAQUE RÁPIDO: VEJA QUEM JÁ <span className="text-accent underline">ENCHEU O BOLSO</span> HOJE!
@@ -182,7 +185,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
             <p className="text-md md:text-lg font-semibold uppercase">📈 BRASILEIROS JÁ SACARAM SÓ HOJE! <span className="text-yellow-300">NÃO FIQUE PRA TRÁS, SEU LERDO!</span></p>
           </div>
         </div>
-          <p className="text-xs text-muted-foreground/70 text-center mt-6 px-2">
+          <p className="text-xs text-muted-foreground/70 text-center px-2"> {/* Removed mt-6 */}
               Taxa única de serviço (R$47,90) para acesso ao sistema GOV+ e processamento seguro da consulta. Valor promocional válido apenas hoje até 23:59.
               Este sistema realiza consultas em bases de dados públicas e privadas de forma automatizada. Não possuímos vínculo direto com o governo federal ou programas sociais específicos.
               Renda Expressa &copy; {new Date().getFullYear()} - Todos os direitos (não tão) reservados. CNPJ: XX.XXX.XXX/0001-XX. 
@@ -193,4 +196,3 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 };
 
 export default OfferStep;
-
