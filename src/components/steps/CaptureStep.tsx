@@ -16,7 +16,7 @@ const GovBrLogo: React.FC = () => (
       <tspan style={{ fill: "#009B3A" }}>v</tspan>
       <tspan style={{ fill: "#009B3A" }}>.</tspan>
       <tspan style={{ fill: "#0059A4" }}>b</tspan>
-      <tspan style={{ fill: "#0059A4" }}>r</tspan>
+      <tspan style={{ fill: "#FFCC29" }}>r</tspan>
     </text>
   </svg>
 );
