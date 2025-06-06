@@ -10,7 +10,7 @@ interface CaptureStepProps {
 
 const GovBrLogo: React.FC = () => (
   <svg viewBox="0 0 150 45" xmlns="http://www.w3.org/2000/svg" className="h-10 w-auto" aria-label="gov.br logo">
-    <text x="0" y="35" style={{ fontFamily: "Arial, Helvetica, sans-serif", fontSize: "36px", fontWeight: "bold" }}>
+    <text x="0" y="35" style={{ fontFamily: "'Open Sans', Arial, Helvetica, sans-serif", fontSize: "36px", fontWeight: "bold" }}>
       <tspan style={{ fill: "#0059A4" }}>g</tspan>
       <tspan style={{ fill: "#FFCC29" }}>o</tspan>
       <tspan style={{ fill: "#009B3A" }}>v</tspan>
