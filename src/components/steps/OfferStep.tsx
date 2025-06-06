@@ -52,15 +52,14 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 
   return (
     <div className="w-full max-w-2xl mx-auto p-4 md:p-6 bg-background text-foreground">
-      <div className="mb-4">
-        <Image
-          src="https://i.imgur.com/oP20qzf.png"
-          alt="gov.br logo"
-          width={60}
-          height={60}
-          data-ai-hint="government logo"
-        />
-      </div>
+      <Image
+        src="https://i.imgur.com/oP20qzf.png"
+        alt="gov.br logo"
+        width={65}
+        height={65}
+        data-ai-hint="government logo"
+        className="mb-4" 
+      />
       
       <Card className="border-primary shadow-2xl">
         <CardHeader className="bg-primary text-primary-foreground text-center rounded-t-lg p-4 md:p-6">
@@ -149,3 +148,5 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 };
 
 export default OfferStep;
+
+    
