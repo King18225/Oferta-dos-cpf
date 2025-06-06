@@ -31,11 +31,8 @@ const CpfForm: React.FC<CpfFormProps> = ({ onSubmitSuccess }) => {
   });
 
   const onSubmit: SubmitHandler<CpfFormValues> = (data) => {
-    setShowValidationMessage(true);
-    setTimeout(() => {
-      setShowValidationMessage(false);
-      onSubmitSuccess(data.cpf);
-    }, 2000); // Show validation message for 2 seconds
+    setShowValidationMessage(true); // Message will flash briefly
+    onSubmitSuccess(data.cpf); // Proceed to next step immediately
   };
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,8 +87,8 @@ const CpfForm: React.FC<CpfFormProps> = ({ onSubmitSuccess }) => {
         />
         <Button 
           type="submit" 
-          variant="default" // Changed to default (blue)
-          className="w-full h-12 text-base font-medium" // Adjusted size and font
+          variant="default" 
+          className="w-full h-12 text-base font-medium" 
           disabled={form.formState.isSubmitting || showValidationMessage}
         >
           {form.formState.isSubmitting || showValidationMessage ? "VERIFICANDO..." : "Continuar"}
