@@ -9,8 +9,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Card, CardContent } from "@/components/ui/card";
-import { Unlock } from 'lucide-react';
+import { CreditCard } from 'lucide-react'; // Using CreditCard as a generic ID icon
 
 const cpfSchema = z.object({
   cpf: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "CPF inválido. Use o formato XXX.XXX.XXX-XX"),
@@ -58,49 +57,47 @@ const CpfForm: React.FC<CpfFormProps> = ({ onSubmitSuccess }) => {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto shadow-none border-none bg-transparent">
-      <CardContent className="p-0">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="cpf"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel htmlFor="cpf" className="sr-only">Seu CPF:</FormLabel>
-                  <FormControl>
-                    <Input 
-                      id="cpf"
-                      placeholder="Digite seu CPF para verificar elegibilidade" 
-                      {...field} 
-                      onChange={handleCpfChange}
-                      className="text-center text-lg p-4 h-14 border-2 border-primary/50 focus:border-accent text-foreground"
-                      maxLength={14}
-                      disabled={form.formState.isSubmitting || showValidationMessage}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  {showValidationMessage && (
-                    <p className="text-sm font-medium text-accent text-center mt-2">
-                      CPF válido! ✅ Verificando benefícios...
-                    </p>
-                  )}
-                </FormItem>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="cpf"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="cpf" className="flex items-center text-sm font-medium text-gray-700 mb-1">
+                <CreditCard className="mr-2 h-4 w-4 text-gray-500" />
+                Número do CPF
+              </FormLabel>
+              <FormControl>
+                <Input 
+                  id="cpf"
+                  placeholder="Digite seu CPF" 
+                  {...field} 
+                  onChange={handleCpfChange}
+                  className="text-base p-3 h-12 border-gray-300 focus:border-primary text-foreground"
+                  maxLength={14}
+                  disabled={form.formState.isSubmitting || showValidationMessage}
+                />
+              </FormControl>
+              <FormMessage />
+              {showValidationMessage && (
+                <p className="text-sm font-medium text-accent text-center mt-2">
+                  CPF válido! ✅ Verificando benefícios...
+                </p>
               )}
-            />
-            <Button 
-              type="submit" 
-              variant="destructive"
-              className="w-full h-16 text-xl font-bold text-destructive-foreground hover:bg-destructive/90 animate-pulse"
-              disabled={form.formState.isSubmitting || showValidationMessage}
-            >
-              <Unlock className="mr-2 h-6 w-6" />
-              {form.formState.isSubmitting || showValidationMessage ? "VERIFICANDO..." : "LIBERAR VERIFICAÇÃO IMEDIATA"}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+            </FormItem>
+          )}
+        />
+        <Button 
+          type="submit" 
+          variant="default" // Changed to default (blue)
+          className="w-full h-12 text-base font-medium" // Adjusted size and font
+          disabled={form.formState.isSubmitting || showValidationMessage}
+        >
+          {form.formState.isSubmitting || showValidationMessage ? "VERIFICANDO..." : "Continuar"}
+        </Button>
+      </form>
+    </Form>
   );
 };
 
