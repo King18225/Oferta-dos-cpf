@@ -86,14 +86,19 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4 pb-4 md:px-6 md:pb-6 bg-background text-foreground pt-0">
-       <Image
-          src="https://i.imgur.com/SQWMv5D.png" 
-          alt="gov.br logo"
-          width={80} 
-          height={80} 
-          className="mb-4 shadow-sm" 
-          data-ai-hint="government logo"
-        />
+       <Card className="mb-4 shadow-md rounded-lg">
+        <CardContent className="p-3 flex items-center">
+          <Image
+            src="https://i.imgur.com/SQWMv5D.png"
+            alt="gov.br logo"
+            width={80}
+            height={80}
+            className="rounded-md"
+            data-ai-hint="government logo"
+          />
+          {/* Content to the right of the logo can be added here if needed */}
+        </CardContent>
+      </Card>
 
       <Card className="border-primary shadow-2xl rounded-lg overflow-hidden">
         <CardContent className="p-4 md:p-6 space-y-5"> 
@@ -120,8 +125,8 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 
           <div className="bg-destructive text-destructive-foreground p-3 sm:p-4 rounded-lg border-2 border-red-900 text-center shadow-xl animate-pulse">
             <div className="flex flex-wrap items-center justify-center text-center font-bold text-md sm:text-lg md:text-xl mb-1">
-              <AlertTriangle className="h-6 w-6 sm:h-7 sm:w-7 mr-1.5 sm:mr-2" />
-              <span className="text-sm sm:text-base md:text-lg mr-1">SEU ACESSO VIP EXPIRA EM:</span> <OfferTimer initialMinutes={5} initialSeconds={0} />
+              <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 mr-1 sm:mr-1.5" />
+              <span className="text-xs sm:text-sm md:text-base mr-1">OFERTA EXPIRA EM:</span> <OfferTimer initialMinutes={5} initialSeconds={0} />
             </div>
             <p className="text-xs sm:text-sm md:text-md font-semibold uppercase">RISCO IMINENTE: PERDA TOTAL DO BENEFÍCIO ÀS 23:59 DE HOJE!</p>
           </div>
