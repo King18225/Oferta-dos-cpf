@@ -4,61 +4,72 @@
 import type React from 'react';
 import { useState, useEffect } from 'react';
 import { Progress } from "@/components/ui/progress";
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle } from 'lucide-react';
+import UrgentHeader from '@/components/features/UrgentHeader'; // Assuming this might be wanted here too
 
 interface ProcessingStepProps {
   onComplete: () => void;
 }
 
-const messages = [
-  "Conectando ao SISBEN...",
-  "Verificando elegibilidade...",
-  "Cruzando dados com CadÚnico...",
-  "Finalizando consulta..."
+const loadingMessages = [
+  { text: "Conectando ao sistema seguro GOV.BR...", duration: 1500, progress: 20 },
+  { text: "Validando seu CPF junto à Receita Federal...", duration: 2000, progress: 40 },
+  { text: "Verificando elegibilidade para benefícios federais...", duration: 2500, progress: 60 },
+  { text: "Cruzando dados com programas sociais ativos...", duration: 2000, progress: 80 },
+  { text: "Consulta finalizada! Preparando seu relatório...", duration: 1500, progress: 100 },
 ];
 
 const ProcessingStep: React.FC<ProcessingStepProps> = ({ onComplete }) => {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [allStepsComplete, setAllStepsComplete] = useState(false);
 
   useEffect(() => {
-    const progressInterval = setInterval(() => {
-      setProgress(prev => (prev >= 100 ? 100 : prev + 2.5)); // ~3 seconds to reach 75 then jump
-    }, 75); 
+    if (currentMessageIndex < loadingMessages.length) {
+      const currentStep = loadingMessages[currentMessageIndex];
+      setProgress(currentStep.progress);
 
-    let messageIdx = 0;
-    const messageInterval = setInterval(() => {
-      messageIdx++;
-      if (messageIdx < messages.length) {
-        setCurrentMessageIndex(messageIdx);
-      } else {
-        clearInterval(messageInterval);
-      }
-    }, 750); 
+      const timer = setTimeout(() => {
+        setCurrentMessageIndex(prevIndex => prevIndex + 1);
+      }, currentStep.duration);
 
-    const timer = setTimeout(() => {
-      setProgress(100); // Ensure it hits 100 before completing
-      setTimeout(onComplete, 500); // Brief pause at 100%
-    }, 3000); 
-
-    return () => {
-      clearInterval(progressInterval);
-      clearInterval(messageInterval);
-      clearTimeout(timer);
-    };
-  }, [onComplete]);
+      return () => clearTimeout(timer);
+    } else {
+      // All messages shown, wait a bit then complete
+      setAllStepsComplete(true);
+      const finalTimer = setTimeout(() => {
+        onComplete();
+      }, 1000); // Short delay after "Consulta finalizada"
+      return () => clearTimeout(finalTimer);
+    }
+  }, [currentMessageIndex, onComplete]);
 
   return (
-    <div className="w-full max-w-md text-center p-8 bg-card shadow-xl rounded-lg border border-primary/20">
-      <Loader2 className="h-12 w-12 text-primary animate-spin mx-auto mb-6" />
-      <h2 className="font-headline text-2xl font-semibold text-primary mb-4">
-        Processando sua Solicitação
-      </h2>
-      <p className="text-muted-foreground mb-6 h-6">
-        {messages[currentMessageIndex]}
-      </p>
-      <Progress value={progress} className="w-full h-3 mb-2" indicatorClassName="bg-accent" />
-      <p className="text-sm text-accent font-medium">{Math.round(progress)}%</p>
+    <div className="w-full max-w-md mx-auto text-center p-4">
+      <UrgentHeader />
+      <div className="bg-card shadow-xl rounded-lg p-6 md:p-8 border border-border">
+        <h2 className="font-headline text-2xl md:text-3xl font-bold text-primary mb-6">
+          Aguarde, estamos consultando seu CPF...
+        </h2>
+        
+        <div className="my-8">
+          {allStepsComplete ? (
+            <CheckCircle className="h-16 w-16 text-accent mx-auto animate-pulse" />
+          ) : (
+            <Loader2 className="h-16 w-16 text-primary mx-auto animate-spin" />
+          )}
+        </div>
+
+        <Progress value={progress} className="w-full h-4 mb-4" indicatorClassName="bg-accent" />
+        
+        <p className="text-lg text-foreground font-medium h-12 flex items-center justify-center">
+          {currentMessageIndex < loadingMessages.length ? loadingMessages[currentMessageIndex].text : "Tudo pronto!"}
+        </p>
+        
+        <p className="text-sm text-muted-foreground mt-6">
+          Por favor, não feche ou atualize esta página. Sua consulta segura está em andamento.
+        </p>
+      </div>
     </div>
   );
 };
