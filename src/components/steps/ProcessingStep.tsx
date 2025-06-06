@@ -4,19 +4,19 @@
 import type React from 'react';
 import { useState, useEffect } from 'react';
 import { Progress } from "@/components/ui/progress";
-import { Loader2, CheckCircle } from 'lucide-react';
-import UrgentHeader from '@/components/features/UrgentHeader';
+import { CheckCircle } from 'lucide-react'; // Loader2 removido, CheckCircle mantido para conclusão
 
 interface ProcessingStepProps {
   onComplete: () => void;
 }
 
 const loadingMessages = [
-  { text: "Conectando ao sistema seguro GOV.BR...", duration: 1500, progress: 20 },
-  { text: "Validando seu CPF junto à Receita Federal...", duration: 2000, progress: 40 },
-  { text: "Verificando elegibilidade para benefícios federais...", duration: 2500, progress: 60 },
-  { text: "Cruzando dados com programas sociais ativos...", duration: 2000, progress: 80 },
-  { text: "Consulta finalizada! Preparando seu relatório...", duration: 1500, progress: 100 },
+  { text: "Estabelecendo conexão segura...", duration: 1500, progress: 10 },
+  { text: "Analisando seu CPF...", duration: 2000, progress: 30 },
+  { text: "Consultando base de dados da Receita Federal...", duration: 2500, progress: 50 },
+  { text: "Cruzando dados com CadÚnico...", duration: 2000, progress: 75 },
+  { text: "Verificando benefícios disponíveis...", duration: 2000, progress: 90 },
+  { text: "Quase lá! Finalizando...", duration: 1500, progress: 100 },
 ];
 
 const ProcessingStep: React.FC<ProcessingStepProps> = ({ onComplete }) => {
@@ -44,32 +44,40 @@ const ProcessingStep: React.FC<ProcessingStepProps> = ({ onComplete }) => {
   }, [currentMessageIndex, onComplete]);
 
   return (
-    <div className="w-full max-w-md mx-auto text-center p-4">
-      <UrgentHeader />
-      
-      {/* Conteúdo do card anterior agora diretamente aqui */}
-      <div className="mt-6 md:mt-8"> {/* Adicionando margem para separar do header */}
-        <h2 className="font-headline text-2xl md:text-3xl font-bold text-primary-foreground mb-6">
-          Aguarde, estamos consultando seu CPF...
-        </h2>
-        
-        <div className="my-8">
-          {allStepsComplete ? (
-            <CheckCircle className="h-16 w-16 text-accent mx-auto animate-pulse" />
-          ) : (
-            <Loader2 className="h-16 w-16 text-primary-foreground mx-auto animate-spin" />
-          )}
+    <div className="w-full max-w-md mx-auto text-center p-4 flex flex-col items-center justify-center min-h-[calc(100vh-100px)]"> {/* Ajuste para centralizar o card na tela */}
+      <div className="bg-card text-card-foreground p-6 sm:p-8 rounded-lg shadow-xl w-full">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground text-2xl font-bold">
+          GOV
         </div>
 
-        <Progress value={progress} className="w-full h-4 mb-4 bg-secondary/70" indicatorClassName="bg-accent" />
+        <h2 className="text-2xl font-semibold text-card-foreground mb-6 text-center">
+          Analisando seu CPF
+        </h2>
         
-        <p className="text-lg text-primary-foreground font-medium h-12 flex items-center justify-center">
-          {currentMessageIndex < loadingMessages.length ? loadingMessages[currentMessageIndex].text : "Tudo pronto!"}
+        <Progress value={progress} className="w-full h-3 mb-2 bg-muted" indicatorClassName="bg-accent h-3" />
+        
+        <p className="text-2xl font-bold text-accent text-center mb-4">
+          {progress}%
         </p>
         
-        <p className="text-sm text-primary-foreground opacity-80 mt-6">
-          Por favor, não feche ou atualize esta página. Sua consulta segura está em andamento.
+        <p className="text-sm text-muted-foreground text-center mb-6 h-5">
+          {currentMessageIndex < loadingMessages.length ? loadingMessages[currentMessageIndex].text : "Consulta concluída!"}
         </p>
+
+        {allStepsComplete && (
+           <CheckCircle className="h-12 w-12 text-accent mx-auto mb-6 animate-pulse" />
+        )}
+
+        <div className="flex items-center justify-center space-x-4 text-xs text-muted-foreground">
+          <span className="flex items-center">
+            <span className="mr-1.5 h-2 w-2 rounded-full bg-green-500"></span>
+            Conexão segura
+          </span>
+          <span className="flex items-center">
+            <span className="mr-1.5 h-2 w-2 rounded-full bg-blue-500"></span>
+            Dados criptografados
+          </span>
+        </div>
       </div>
     </div>
   );

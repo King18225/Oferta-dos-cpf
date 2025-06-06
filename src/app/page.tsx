@@ -6,6 +6,7 @@ import CaptureStep from '@/components/steps/CaptureStep';
 import ProcessingStep from '@/components/steps/ProcessingStep';
 import OfferStep from '@/components/steps/OfferStep';
 import ExitPopup from '@/components/features/ExitPopup';
+import { AlertTriangle } from 'lucide-react';
 
 export default function RendaExpressaPage() {
   const [currentStep, setCurrentStep] = useState<'capture' | 'processing' | 'offer'>('capture');
@@ -31,6 +32,13 @@ export default function RendaExpressaPage() {
         {currentStep === 'processing' && <ProcessingStep onComplete={handleProcessingComplete} />}
         {currentStep === 'offer' && <OfferStep cpf={userCpf} />}
       </main>
+
+      {currentStep === 'processing' && (
+        <div className="fixed bottom-0 left-0 right-0 bg-primary/90 p-3 text-center text-sm text-primary-foreground/80 shadow-md flex items-center justify-center z-20">
+          <AlertTriangle className="h-4 w-4 mr-2 text-yellow-300" />
+          Não feche esta janela durante o processamento
+        </div>
+      )}
 
       {currentStep !== 'capture' && currentStep !== 'processing' && (
         <footer className="py-6 text-center">
