@@ -55,7 +55,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
       <Card className="border-primary shadow-2xl">
         <CardHeader className="relative bg-primary text-primary-foreground text-center rounded-t-lg p-4 md:p-6">
           <Image
-            src="https://i.imgur.com/Fk96tSt.png"
+            src="https://i.imgur.com/oP20qzf.png"
             alt="gov.br logo"
             width={60}
             height={60}
@@ -88,8 +88,8 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
           </div>
 
           <div className="bg-destructive/10 p-3 sm:p-4 rounded-lg border border-destructive/30 text-center">
-            <div className="flex flex-wrap items-center justify-center text-center text-destructive font-semibold text-base sm:text-lg md:text-xl mb-2">
-              <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 mr-2 animate-pulse" />
+            <div className="flex flex-wrap items-center justify-center text-center text-destructive font-semibold text-xs sm:text-base md:text-lg mb-2">
+              <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2 animate-pulse" />
               OFERTA EXPIRA EM: <OfferTimer initialMinutes={5} initialSeconds={27} />
             </div>
             <p className="text-xs sm:text-sm text-destructive/80">Não perca esta oportunidade única!</p>
