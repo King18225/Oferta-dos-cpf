@@ -19,6 +19,7 @@ interface Testimonial {
   text: string;
   stars: number;
   photoUrl?: string;
+  dataAiHint?: string;
 }
 
 const fakeTestimonialsData: Testimonial[] = [
@@ -88,7 +89,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
   return (
     <div className="w-full max-w-2xl mx-auto px-0 pb-4 md:px-0 md:pb-6 bg-background text-foreground pt-0">
       <div className="w-full bg-background shadow-[0px_1px_2px_rgba(0,0,0,0.04)] mb-6 rounded-sm">
-        <div className="px-4 py-3 flex justify-between items-center">
+        <div className="px-4 py-3 flex justify-start items-center"> {/* Changed justify-between to justify-start */}
           <Image
             src="https://i.imgur.com/SQWMv5D.png"
             alt="gov.br logo"
@@ -96,14 +97,6 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
             height={56}
             data-ai-hint="government logo"
           />
-          <div className="flex items-center space-x-2">
-            <div className="flex space-x-1">
-              <span className="h-2 w-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0s' }}></span>
-              <span className="h-2 w-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></span>
-              <span className="h-2 w-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></span>
-            </div>
-            <p className="text-sm text-gray-600">Procurando um atendente disponível para você...</p>
-          </div>
         </div>
       </div>
 
