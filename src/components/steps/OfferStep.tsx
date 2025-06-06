@@ -6,8 +6,9 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import OfferTimer from '@/components/features/OfferTimer';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, TrendingUp, ShieldCheck, AlertTriangle, Star } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { CheckCircle, TrendingUp, ShieldCheck, AlertTriangle, Star, BadgePercent } from 'lucide-react';
+// Removed Card and CardContent import as they are no longer used for the main structure or testimonials directly.
+// If other elements were to use them, they'd need to be re-added or kept.
 
 interface OfferStepProps {
   cpf: string | null;
@@ -82,11 +83,11 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
   const formattedCpf = cpf ? `***.${cpf.substring(4, 7)}.${cpf.substring(8, 11)}-**` : '***.***.***-**';
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-4 md:p-6 space-y-5 bg-background text-foreground">
+    <div className="w-full max-w-2xl mx-auto p-4 md:p-6 space-y-6 bg-background text-foreground">
         
-        <div className="text-center bg-background p-6 rounded-lg shadow-[0px_4px_15px_rgba(0,0,0,0.1)]">
-           <h2 className="font-headline text-2xl md:text-3xl font-bold text-primary mb-2 uppercase">
-            <span className="text-destructive">🔥 ALERTA MÁXIMO, CPF {formattedCpf}!</span><br/>SEU SAQUE DE <strong className="text-accent text-4xl md:text-5xl">R$1.200,00</strong> FOI LIBERADO AGORA!
+        <div className="text-center p-4 md:p-6 rounded-lg shadow-[0px_4px_15px_rgba(0,0,0,0.1)] bg-card">
+           <h2 className="font-headline text-2xl md:text-3xl font-bold text-destructive mb-2 uppercase">
+            🔥 <span className="text-destructive">ALERTA MÁXIMO, CPF {formattedCpf}!</span><br/>SEU SAQUE DE <strong className="text-accent text-4xl md:text-5xl">R$1.200,00</strong> FOI LIBERADO AGORA!
           </h2>
           
           <ul className="space-y-2 text-left text-sm md:text-base max-w-md mx-auto bg-secondary/20 p-4 rounded-lg border border-primary/30 shadow">
@@ -114,14 +115,14 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
              <OfferTimer initialMinutes={4} initialSeconds={31} />
           </div>
           <p className="text-destructive text-sm sm:text-md md:text-lg font-bold uppercase leading-tight">
-            Atenção: <span className="text-2xl md:text-3xl underline">NÃO SEJA BURRO!</span><br/> Se você não sacar <strong className="text-destructive">AGORA</strong>, seus <strong className="text-destructive">R$1.200,00</strong> serão <strong className="text-destructive">CANCELADOS</strong> e <strong className="text-destructive">PERDIDOS PARA SEMPRE</strong> às 23:59 de <strong className="text-destructive">HOJE!</strong><br/> Não tem choro nem vela, <strong className="text-xl text-destructive">É AGORA OU NUNCA!</strong>
+            Atenção: <span className="text-2xl md:text-3xl underline">NÃO SEJA BURRO!</span><br/> Se você não sacar <strong >AGORA</strong>, seus <strong >R$1.200,00</strong> serão <strong >CANCELADOS</strong> e <strong >PERDIDOS PARA SEMPRE</strong> às 23:59 de <strong >HOJE!</strong><br/> Não tem choro nem vela, <strong className="text-xl">É AGORA OU NUNCA!</strong>
           </p>
         </div>
 
         {/* Seção de Preço */}
         <div className="text-center p-4 md:p-6 bg-primary/10 rounded-xl shadow-lg border-2 border-accent ring-2 ring-accent/50">
           <h3 className="font-headline text-xl md:text-2xl font-bold text-primary mb-1 uppercase">
-            💸 ÚNICA TAXA DE ACESSO!
+             <BadgePercent className="inline-block h-7 w-7 mr-1 text-accent" /> ÚNICA TAXA DE ACESSO!
           </h3>
           <p className="text-muted-foreground line-through text-2xl md:text-3xl mb-0">DE R$297,00</p>
           <p className="text-7xl md:text-8xl font-extrabold text-accent mb-1">
@@ -151,8 +152,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
           </h3>
           <div className="space-y-4">
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="bg-muted/30 border-secondary shadow-md rounded-lg hover:shadow-lg transition-shadow">
-                <CardContent className="p-4 md:p-5">
+              <div key={index} className="p-4 md:p-5">
                   <div className="flex items-start">
                       {testimonial.photoUrl && (
                           <Image
@@ -171,8 +171,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
                           <p className="text-xs text-green-600 font-semibold mt-1">(VERIFICADO AGORA ✅)</p>
                       </div>
                   </div>
-                </CardContent>
-              </Card>
+              </div>
             ))}
           </div>
           <div className="mt-10 text-center p-5 bg-primary text-primary-foreground rounded-lg shadow-xl border-2 border-yellow-300">
@@ -192,5 +191,3 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 };
 
 export default OfferStep;
-
-    
