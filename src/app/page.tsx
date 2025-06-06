@@ -20,8 +20,12 @@ export default function RendaExpressaPage() {
     setCurrentStep('offer');
   };
 
+  const pageBackgroundClass = currentStep === 'processing' 
+    ? 'bg-primary text-primary-foreground' 
+    : 'bg-background text-foreground';
+
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground font-body">
+    <div className={`min-h-screen flex flex-col font-body ${pageBackgroundClass}`}>
       <main className="flex-grow container mx-auto px-4 py-8 flex flex-col items-center justify-center">
         {currentStep === 'capture' && <CaptureStep onSubmitSuccess={handleCaptureSubmit} />}
         {currentStep === 'processing' && <ProcessingStep onComplete={handleProcessingComplete} />}

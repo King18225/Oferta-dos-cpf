@@ -5,7 +5,7 @@ import type React from 'react';
 import { useState, useEffect } from 'react';
 import { Progress } from "@/components/ui/progress";
 import { Loader2, CheckCircle } from 'lucide-react';
-import UrgentHeader from '@/components/features/UrgentHeader'; // Assuming this might be wanted here too
+import UrgentHeader from '@/components/features/UrgentHeader';
 
 interface ProcessingStepProps {
   onComplete: () => void;
@@ -35,11 +35,10 @@ const ProcessingStep: React.FC<ProcessingStepProps> = ({ onComplete }) => {
 
       return () => clearTimeout(timer);
     } else {
-      // All messages shown, wait a bit then complete
       setAllStepsComplete(true);
       const finalTimer = setTimeout(() => {
         onComplete();
-      }, 1000); // Short delay after "Consulta finalizada"
+      }, 1000); 
       return () => clearTimeout(finalTimer);
     }
   }, [currentMessageIndex, onComplete]);
@@ -47,7 +46,9 @@ const ProcessingStep: React.FC<ProcessingStepProps> = ({ onComplete }) => {
   return (
     <div className="w-full max-w-md mx-auto text-center p-4">
       <UrgentHeader />
-      <div className="bg-primary shadow-xl rounded-lg p-6 md:p-8">
+      
+      {/* Conteúdo do card anterior agora diretamente aqui */}
+      <div className="mt-6 md:mt-8"> {/* Adicionando margem para separar do header */}
         <h2 className="font-headline text-2xl md:text-3xl font-bold text-primary-foreground mb-6">
           Aguarde, estamos consultando seu CPF...
         </h2>
