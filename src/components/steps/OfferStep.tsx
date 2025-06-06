@@ -86,22 +86,20 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4 pb-4 md:px-6 md:pb-6 bg-background text-foreground pt-0">
-       <div className="flex items-start space-x-2 mb-4">
-        <Image
-          src="https://i.ibb.co/fFjH96Q/image.png" 
-          alt="Selo de Garantia"
+       <Image
+          src="https://i.imgur.com/SQWMv5D.png" 
+          alt="gov.br logo"
           width={80} 
           height={80} 
           className="mb-4 shadow-sm" 
-          data-ai-hint="guarantee seal"
+          data-ai-hint="government logo"
         />
-      </div>
 
       <Card className="border-primary shadow-2xl rounded-lg overflow-hidden">
         <CardContent className="p-4 md:p-6 space-y-5"> 
           
           <div className="text-center">
-            <h2 className="font-headline text-2xl md:text-3xl font-bold text-primary mb-2">
+             <h2 className="font-headline text-2xl md:text-3xl font-bold text-primary mb-2">
               <span className="text-destructive">URGENTE: CPF <span className="underline">{formattedCpf}</span> SELECIONADO!</span><br/>Benefícios EXCLUSIVOS <strong className="text-accent">LIBERADOS AGORA!</strong>
             </h2>
             
