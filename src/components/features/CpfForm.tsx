@@ -2,13 +2,15 @@
 "use client";
 
 import type React from 'react';
+import { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Unlock } from 'lucide-react';
 
 const cpfSchema = z.object({
   cpf: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "CPF inválido. Use o formato XXX.XXX.XXX-XX"),
@@ -18,10 +20,10 @@ type CpfFormValues = z.infer<typeof cpfSchema>;
 
 interface CpfFormProps {
   onSubmitSuccess: (cpf: string) => void;
-  buttonText: string;
 }
 
-const CpfForm: React.FC<CpfFormProps> = ({ onSubmitSuccess, buttonText }) => {
+const CpfForm: React.FC<CpfFormProps> = ({ onSubmitSuccess }) => {
+  const [showValidationMessage, setShowValidationMessage] = useState(false);
   const form = useForm<CpfFormValues>({
     resolver: zodResolver(cpfSchema),
     defaultValues: {
@@ -30,8 +32,11 @@ const CpfForm: React.FC<CpfFormProps> = ({ onSubmitSuccess, buttonText }) => {
   });
 
   const onSubmit: SubmitHandler<CpfFormValues> = (data) => {
-    console.log("CPF Submetido:", data.cpf);
-    onSubmitSuccess(data.cpf);
+    setShowValidationMessage(true);
+    setTimeout(() => {
+      setShowValidationMessage(false);
+      onSubmitSuccess(data.cpf);
+    }, 2000); // Show validation message for 2 seconds
   };
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,39 +59,47 @@ const CpfForm: React.FC<CpfFormProps> = ({ onSubmitSuccess, buttonText }) => {
 
   return (
     <Card className="w-full max-w-md mx-auto shadow-none border-none bg-transparent">
-      <CardHeader className="text-center p-0 mb-6">
-      </CardHeader>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="cpf"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel htmlFor="cpf" className="sr-only">Seu CPF:</FormLabel>
-                <FormControl>
-                  <Input 
-                    id="cpf"
-                    placeholder="000.000.000-00" 
-                    {...field} 
-                    onChange={handleCpfChange}
-                    className="text-center text-xl p-4 h-14 border-2 border-primary/50 focus:border-accent text-foreground"
-                    maxLength={14}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button 
-            type="submit" 
-            className="w-full h-16 text-xl font-bold bg-accent text-accent-foreground hover:bg-accent/90 animate-pulse"
-            disabled={form.formState.isSubmitting}
-          >
-            {form.formState.isSubmitting ? "VERIFICANDO..." : buttonText}
-          </Button>
-        </form>
-      </Form>
+      <CardContent className="p-0">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="cpf"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="cpf" className="sr-only">Seu CPF:</FormLabel>
+                  <FormControl>
+                    <Input 
+                      id="cpf"
+                      placeholder="Digite seu CPF para verificar elegibilidade" 
+                      {...field} 
+                      onChange={handleCpfChange}
+                      className="text-center text-lg p-4 h-14 border-2 border-primary/50 focus:border-accent text-foreground"
+                      maxLength={14}
+                      disabled={form.formState.isSubmitting || showValidationMessage}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  {showValidationMessage && (
+                    <p className="text-sm font-medium text-accent text-center mt-2">
+                      CPF válido! ✅ Verificando benefícios...
+                    </p>
+                  )}
+                </FormItem>
+              )}
+            />
+            <Button 
+              type="submit" 
+              variant="destructive"
+              className="w-full h-16 text-xl font-bold text-destructive-foreground hover:bg-destructive/90 animate-pulse"
+              disabled={form.formState.isSubmitting || showValidationMessage}
+            >
+              <Unlock className="mr-2 h-6 w-6" />
+              {form.formState.isSubmitting || showValidationMessage ? "VERIFICANDO..." : "LIBERAR VERIFICAÇÃO IMEDIATA"}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
     </Card>
   );
 };
