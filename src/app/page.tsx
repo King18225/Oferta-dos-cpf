@@ -28,7 +28,7 @@ export default function RendaExpressaPage() {
         {currentStep === 'offer' && <OfferStep cpf={userCpf} />}
       </main>
 
-      {currentStep !== 'capture' && (
+      {currentStep !== 'capture' && currentStep !== 'processing' && (
         <footer className="py-6 text-center">
           <p className="text-xs text-muted-foreground px-4">
             Este sistema realiza consultas públicas automáticas com base em dados fornecidos pelo usuário e fontes abertas.
