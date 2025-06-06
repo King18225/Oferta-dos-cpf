@@ -89,7 +89,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         <div className="text-center">
           <h2 className="font-headline text-xl md:text-2xl font-bold mb-2 uppercase text-foreground">
             <span>🔥 ALERTA MÁXIMO, CPF {formattedCpf}!</span><br/>
-            SEU SAQUE DE <strong className="text-3xl md:text-4xl font-bold">R$1.200,00</strong> FOI LIBERADO AGORA!
+            SEU SAQUE DE <strong className="text-3xl md:text-4xl font-bold text-foreground">R$1.200,00</strong> FOI LIBERADO AGORA!
           </h2>
         </div>
           
@@ -150,8 +150,8 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         </div>
         
         {/* SEÇÃO DE PROVA SOCIAL */}
-        <div> {/* Removed my-6 md:my-8 */}
-          <h3 className="font-headline text-xl md:text-2xl font-bold text-primary text-center mb-5 uppercase flex items-center justify-center">
+        <div>
+          <h3 className="font-headline text-xl md:text-2xl font-bold text-foreground text-center mb-5 uppercase flex items-center justify-center">
             <Users className="mr-2 h-7 w-7" /> 
             COMUNIDADE SAQUE RÁPIDO: VEJA QUEM JÁ <span className="text-accent underline">ENCHEU O BOLSO</span> HOJE!
           </h3>
@@ -185,7 +185,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
             <p className="text-md md:text-lg font-semibold uppercase">📈 BRASILEIROS JÁ SACARAM SÓ HOJE! <span className="text-yellow-300">NÃO FIQUE PRA TRÁS, SEU LERDO!</span></p>
           </div>
         </div>
-          <p className="text-xs text-muted-foreground/70 text-center px-2"> {/* Removed mt-6 */}
+          <p className="text-xs text-muted-foreground/70 text-center px-2">
               Taxa única de serviço (R$47,90) para acesso ao sistema GOV+ e processamento seguro da consulta. Valor promocional válido apenas hoje até 23:59.
               Este sistema realiza consultas em bases de dados públicas e privadas de forma automatizada. Não possuímos vínculo direto com o governo federal ou programas sociais específicos.
               Renda Expressa &copy; {new Date().getFullYear()} - Todos os direitos (não tão) reservados. CNPJ: XX.XXX.XXX/0001-XX. 
@@ -196,3 +196,4 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 };
 
 export default OfferStep;
+
