@@ -3,6 +3,7 @@
 
 import type React from 'react';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import OfferTimer from '@/components/features/OfferTimer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -34,18 +35,17 @@ const fakeTestimonials = [
 ];
 
 const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
-  const [peopleServed, setPeopleServed] = useState(1387); // Initial fake number
+  const [peopleServed, setPeopleServed] = useState(1387); 
 
   useEffect(() => {
     const interval = setInterval(() => {
       setPeopleServed(prev => prev + Math.floor(Math.random() * 3) + 1);
-    }, 3500); // Increment every 3.5 seconds
+    }, 3500); 
     return () => clearInterval(interval);
   }, []);
 
   const handleLiberarAcessoClick = () => {
     console.log("LIBERAR ACESSO IMEDIATO AGORA clicado! CPF:", cpf, "Redirect to R$47,90 checkout.");
-    // Replace with actual redirect to payment gateway
     // window.location.href = 'YOUR_CHECKOUT_URL_HERE';
     alert("Redirecionando para pagamento da taxa de R$47,90 (simulado)");
   };
@@ -53,7 +53,15 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
   return (
     <div className="w-full max-w-2xl mx-auto p-4 md:p-6 bg-background text-foreground">
       <Card className="border-primary shadow-2xl">
-        <CardHeader className="bg-primary text-primary-foreground text-center rounded-t-lg p-4 md:p-6">
+        <CardHeader className="relative bg-primary text-primary-foreground text-center rounded-t-lg p-4 md:p-6">
+          <Image
+            src="https://i.imgur.com/Fk96tSt.png"
+            alt="gov.br logo"
+            width={60}
+            height={60}
+            className="absolute top-4 left-4 md:top-6 md:left-6"
+            data-ai-hint="government logo"
+          />
           <CardTitle className="font-headline text-xl md:text-3xl font-bold">
             🎉 PARABÉNS! SEU ACESSO FOI APROVADO! 🎉
           </CardTitle>
