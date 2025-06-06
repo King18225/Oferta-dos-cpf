@@ -2,109 +2,148 @@
 "use client";
 
 import type React from 'react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import OfferTimer from '@/components/features/OfferTimer';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-// import Image from 'next/image'; // Image component removed
-import { Banknote, AlertTriangle } from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { CheckCircle, Users, Zap, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 interface OfferStepProps {
-  cpf: string | null; 
+  cpf: string | null;
 }
 
-const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
-  const [showEmergencyModal, setShowEmergencyModal] = useState(false);
+const fakeTestimonials = [
+  {
+    name: "Carlos A.",
+    location: "São Paulo, SP",
+    text: "Não acreditei quando vi, mas realmente funcionou! O dinheiro caiu rápido na conta.",
+    stars: 5,
+  },
+  {
+    name: "Fernanda L.",
+    location: "Rio de Janeiro, RJ",
+    text: "Estava precisando muito, e essa liberação veio na hora certa. Recomendo!",
+    stars: 5,
+  },
+  {
+    name: "José M.",
+    location: "Belo Horizonte, MG",
+    text: "Processo simples e o valor ajudou demais nas contas. A taxa é pequena perto do benefício.",
+    stars: 4,
+  },
+];
 
-  const handleResgatarClick = () => {
-    console.log("Resgatar Agora clicado! CPF:", cpf, "Redirecionar para checkout de R$7.");
-    // In a real scenario, you would redirect here:
-    // window.location.href = 'YOUR_CHECKOUT_URL';
-  };
+const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
+  const [peopleServed, setPeopleServed] = useState(1387); // Initial fake number
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!sessionStorage.getItem('emergencyModalShown')) {
-        setShowEmergencyModal(true);
-        sessionStorage.setItem('emergencyModalShown', 'true');
-      }
-    }, 15000); // 15 seconds
-
-    return () => clearTimeout(timer);
+    const interval = setInterval(() => {
+      setPeopleServed(prev => prev + Math.floor(Math.random() * 3) + 1);
+    }, 3500); // Increment every 3.5 seconds
+    return () => clearInterval(interval);
   }, []);
 
+  const handleLiberarAcessoClick = () => {
+    console.log("LIBERAR ACESSO IMEDIATO AGORA clicado! CPF:", cpf, "Redirect to R$47,90 checkout.");
+    // Replace with actual redirect to payment gateway
+    // window.location.href = 'YOUR_CHECKOUT_URL_HERE';
+    alert("Redirecionando para pagamento da taxa de R$47,90 (simulado)");
+  };
+
   return (
-    <div className="w-full max-w-xl text-center p-6 md:p-8 bg-card shadow-2xl rounded-lg border-2 border-accent">
-      <h1 className="font-headline text-2xl md:text-3xl font-bold text-primary mb-4">
-        🎉 PARABÉNS! VOCÊ TEM DIREITO A R$1.200 EM 24H!
-      </h1>
-
-      <div className="my-6 space-y-4">
-        <div>
-          <p className="text-sm font-semibold text-muted-foreground mb-1">87% DAS VAGAS PREENCHIDAS</p>
-          <Progress value={87} className="w-full h-3" indicatorClassName="bg-destructive" />
-        </div>
-
-        <div className="p-3 bg-secondary rounded-md">
-          <p className="font-bold text-lg text-accent">DEPÓSITO CONFIRMADO: R$1.200</p>
-        </div>
-        
-        {/* Image component and its container div have been removed */}
-
-        <div className="mb-6 p-3 bg-destructive/10 border border-destructive/30 rounded-md">
-          <div className="flex items-center justify-center text-destructive font-semibold text-lg">
-            <AlertTriangle className="h-6 w-6 mr-2 animate-pulse" />
-            ⏳ TEMPO RESTANTE PARA RESGATE: <OfferTimer initialMinutes={4} initialSeconds={59} />
+    <div className="w-full max-w-2xl mx-auto p-4 md:p-6 bg-background text-foreground">
+      <Card className="border-primary shadow-2xl">
+        <CardHeader className="bg-primary text-primary-foreground text-center rounded-t-lg">
+          <CardTitle className="font-headline text-2xl md:text-3xl font-bold">
+            🎉 PARABÉNS! SEU ACESSO FOI APROVADO! 🎉
+          </CardTitle>
+          <CardDescription className="text-primary-foreground/80 text-sm md:text-base">
+            Você está a um passo de liberar seus benefícios exclusivos.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-4 md:p-6 space-y-6">
+          <div className="text-center">
+            <h2 className="font-headline text-xl font-semibold text-primary mb-3">Benefícios Pré-Aprovados para o CPF: {cpf ? `***.${cpf.substring(4, 7)}.${cpf.substring(8, 11)}-**` : '***.***.***-**'}</h2>
+            <ul className="space-y-2 text-left max-w-md mx-auto">
+              {[
+                "Liberação Imediata de R$ 1.200,00 em sua conta.",
+                "Acesso à Plataforma VIP de Consultas Financeiras.",
+                "Suporte Prioritário 24/7 via WhatsApp.",
+                "Relatório de Crédito Detalhado (SPC/Serasa).",
+              ].map((benefit, index) => (
+                <li key={index} className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-accent mr-2 mt-0.5 shrink-0" />
+                  <span>{benefit}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-      </div>
-      
-      <Button 
-        className="w-full h-16 text-lg md:text-xl font-bold bg-accent text-accent-foreground hover:bg-accent/90 animate-pulse"
-        onClick={handleResgatarClick}
-      >
-        <Banknote className="mr-2 h-7 w-7" />
-        RESGATAR AGORA (ETAPA 2/2)
-      </Button>
 
-      {showEmergencyModal && (
-        <AlertDialog open={showEmergencyModal} onOpenChange={setShowEmergencyModal}>
-          <AlertDialogContent className="border-destructive border-2">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="font-headline text-2xl text-destructive">⚠️ ATENÇÃO! VAI PERDER ESSA CHANCE? ⚠️</AlertDialogTitle>
-              <AlertDialogDescription className="text-lg text-foreground">
-                Você vai deixar <strong className="text-accent font-bold">R$1.200,00</strong> para trás? <br />
-                <span className="font-semibold">10 pessoas da sua região</span> já resgataram nas últimas horas!
-                Não perca essa oportunidade única.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="gap-2 sm:gap-0">
-              <AlertDialogCancel asChild>
-                <Button variant="outline" onClick={() => setShowEmergencyModal(false)} className="text-lg p-6">
-                  CONTINUAR E PERDER
-                </Button>
-              </AlertDialogCancel>
-              <AlertDialogAction asChild>
-                 <Button variant="destructive" onClick={handleResgatarClick} className="text-lg p-6 animate-pulse">
-                  QUERO RESGATAR AGORA!
-                </Button>
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+          <div className="bg-destructive/10 p-4 rounded-lg border border-destructive/30 text-center">
+            <div className="flex items-center justify-center text-destructive font-semibold text-lg md:text-xl mb-2">
+              <AlertTriangle className="h-6 w-6 mr-2 animate-pulse" />
+              OFERTA EXPIRA EM: <OfferTimer initialMinutes={5} initialSeconds={27} />
+            </div>
+            <p className="text-sm text-destructive/80">Não perca esta oportunidade única!</p>
+          </div>
+
+          <div className="text-center p-4 md:p-6 bg-secondary rounded-lg shadow-md">
+            <h3 className="font-headline text-lg md:text-xl font-bold text-primary-foreground mb-2">TAXA ÚNICA DE LIBERAÇÃO DO SISTEMA</h3>
+            <p className="text-4xl md:text-5xl font-bold text-accent mb-1">
+              R$ 47<span className="text-3xl md:text-4xl">,90</span>
+            </p>
+            <p className="text-muted-foreground line-through text-lg mb-2">DE R$ 97,90</p>
+            <p className="text-xs text-primary-foreground/90 max-w-md mx-auto">
+              Esta taxa administrativa é necessária para cobrir os custos de processamento da transação, manutenção da plataforma segura e consultas integradas aos bureaus de crédito. Pagamento 100% seguro.
+            </p>
+          </div>
+          
+          <Button
+            className="w-full h-16 text-lg md:text-xl font-bold bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg animate-pulse"
+            onClick={handleLiberarAcessoClick}
+          >
+            <Zap className="mr-2 h-7 w-7" />
+            LIBERAR ACESSO IMEDIATO AGORA (PIX)
+          </Button>
+          <div className="text-center text-xs text-muted-foreground flex items-center justify-center">
+            <ShieldCheck className="h-4 w-4 mr-1 text-accent" /> Ambiente 100% Seguro. Seus dados estão protegidos.
+          </div>
+
+          <div className="my-8">
+            <h3 className="font-headline text-xl font-semibold text-primary text-center mb-4">O Que Nossos Usuários Dizem:</h3>
+            <div className="space-y-4">
+              {fakeTestimonials.map((testimonial, index) => (
+                <Card key={index} className="bg-muted/50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center mb-1">
+                      {[...Array(testimonial.stars)].map((_, i) => (
+                        <svg key={i} className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                      ))}
+                    </div>
+                    <p className="text-sm text-foreground italic">"{testimonial.text}"</p>
+                    <p className="text-xs text-muted-foreground mt-2 font-semibold">- {testimonial.name}, {testimonial.location}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <div className="mt-6 text-center p-3 bg-primary text-primary-foreground rounded-md shadow">
+              <Users className="h-6 w-6 mx-auto mb-1" />
+              <p className="text-xl font-bold">{peopleServed.toLocaleString('pt-BR')}</p>
+              <p className="text-xs">PESSOAS ATENDIDAS HOJE</p>
+            </div>
+          </div>
+
+          <div className="text-center mt-8">
+            <p className="text-xs text-muted-foreground leading-relaxed px-2">
+              Este site e seu conteúdo são fictícios e criados para fins de demonstração. Nenhuma transação financeira real será processada. Ao prosseguir, você reconhece que esta é uma simulação. Os valores e benefícios mencionados são ilustrativos. O "Renda Expressa" não possui vínculo com instituições governamentais.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
 
 export default OfferStep;
+
+    

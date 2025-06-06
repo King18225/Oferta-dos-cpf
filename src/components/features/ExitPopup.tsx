@@ -1,5 +1,7 @@
+
 "use client";
 
+import type { FC } from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import {
   AlertDialog,
@@ -38,9 +40,7 @@ const ExitPopup: FC = () => {
 
   const handleConfirmExit = () => {
     setIsOpen(false);
-    // User chose to leave, nothing specific to do here as browser handles actual exit.
-    // For a real app, you might try to navigate away or close window if opened by script,
-    // but this is generally blocked by browsers.
+    // User chose to leave.
   };
   
   if (!isOpen) return null;
@@ -49,21 +49,21 @@ const ExitPopup: FC = () => {
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogContent className="border-destructive border-2">
         <AlertDialogHeader>
-          <AlertDialogTitle className="font-headline text-2xl text-destructive">⚠️ ATENÇÃO! VOCÊ TEM CERTEZA? ⚠️</AlertDialogTitle>
+          <AlertDialogTitle className="font-headline text-2xl text-destructive">⚠️ TEM CERTEZA QUE QUER SAIR? ⚠️</AlertDialogTitle>
           <AlertDialogDescription className="text-lg text-foreground">
-            Você está prestes a recusar <strong className="text-accent font-bold">R$1.200,00</strong> que já estão pré-aprovados para você!
-            Esta é uma oportunidade única.
+            Seus <strong className="text-accent font-bold">R$1.200,00</strong> serão cancelados se você sair agora!
+            Esta é sua última chance de garantir o benefício.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="gap-2 sm:gap-0">
           <AlertDialogCancel asChild>
-            <Button variant="outline" onClick={handleClose} className="text-lg p-6">
-              VOLTAR E GARANTIR
+            <Button variant="destructive" onClick={handleConfirmExit} className="text-lg p-6">
+              SIM, QUERO SAIR E PERDER
             </Button>
           </AlertDialogCancel>
           <AlertDialogAction asChild>
-             <Button variant="destructive" onClick={handleConfirmExit} className="text-lg p-6">
-              SAIR E PERDER
+             <Button variant="default" onClick={handleClose} className="text-lg p-6 bg-accent hover:bg-accent/90 text-accent-foreground">
+              NÃO, QUERO GARANTIR MEU VALOR!
             </Button>
           </AlertDialogAction>
         </AlertDialogFooter>
@@ -73,3 +73,5 @@ const ExitPopup: FC = () => {
 };
 
 export default ExitPopup;
+
+    
