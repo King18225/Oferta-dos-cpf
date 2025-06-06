@@ -28,6 +28,12 @@ const nextConfig: NextConfig = {
         hostname: 'user-images.githubusercontent.com',
         port: '',
         pathname: '/16915938/**', // Made pathname more specific
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.ibb.co',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
