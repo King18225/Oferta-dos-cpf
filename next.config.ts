@@ -27,12 +27,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'user-images.githubusercontent.com',
         port: '',
-        pathname: '/**',
+        pathname: '/16915938/**', // Made pathname more specific
       }
     ],
   },
 };
 
 export default nextConfig;
-
-    

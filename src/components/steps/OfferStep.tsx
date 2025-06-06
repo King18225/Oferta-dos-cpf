@@ -46,13 +46,13 @@ const fakeTestimonialsData: Testimonial[] = [
 ];
 
 const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
-  const [peopleServed, setPeopleServed] = useState(1423); // Starting point based on image
+  const [peopleServed, setPeopleServed] = useState(1423);
   const [testimonials, setTestimonials] = useState<Testimonial[]>(fakeTestimonialsData);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setPeopleServed(prev => prev + Math.floor(Math.random() * 3) + 1); // Increase by 1-3
-    }, 1800); // Faster update
+      setPeopleServed(prev => prev + Math.floor(Math.random() * 3) + 1);
+    }, 1800);
 
     return () => clearInterval(interval);
   }, []);
@@ -65,14 +65,14 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
   const formattedCpf = cpf ? `***.${cpf.substring(4, 7)}.${cpf.substring(8, 11)}-**` : '***.***.***-**';
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-4 pb-4 md:px-6 md:pb-6 bg-background text-foreground">
+    <div className="w-full max-w-2xl mx-auto px-4 pb-4 md:px-6 md:pb-6 bg-background text-foreground pt-0">
       <Image
         src="https://user-images.githubusercontent.com/16915938/294723461-d356b2a0-7d19-4f1d-9f23-3774f40775e0.png"
         alt="gov.br logo oficial"
-        width={80} // Increased size
-        height={80} // Increased size
+        width={80} 
+        height={80} 
         data-ai-hint="government logo"
-        className="mb-3 shadow-sm" // Reduced margin slightly
+        className="mb-3 shadow-sm" 
       />
 
       <Card className="border-primary shadow-2xl rounded-lg overflow-hidden">
@@ -99,10 +99,10 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 
           <div className="bg-destructive text-destructive-foreground p-3 sm:p-4 rounded-lg border-2 border-red-800 text-center shadow-xl">
             <div className="flex flex-wrap items-center justify-center text-center font-bold text-md sm:text-lg md:text-xl mb-1">
-              <AlertTriangle className="h-6 w-6 sm:h-7 sm:w-7 mr-2 animate-ping" />
-              ÚLTIMA CHANCE: SEU ACESSO EXPIRA EM: <OfferTimer initialMinutes={5} initialSeconds={27} />
+              <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 mr-1.5 sm:mr-2 animate-ping" />
+              <span className="text-sm sm:text-base md:text-lg mr-1">ÚLTIMA CHANCE: SEU ACESSO EXPIRA EM:</span> <OfferTimer initialMinutes={5} initialSeconds={27} />
             </div>
-            <p className="text-sm sm:text-md font-semibold uppercase">RISCO DE PERDA IMINENTE DO BENEFÍCIO!</p>
+            <p className="text-xs sm:text-sm md:text-md font-semibold uppercase">RISCO DE PERDA IMINENTE DO BENEFÍCIO!</p>
           </div>
 
           <div className="text-center p-4 md:p-6 bg-secondary/30 rounded-xl shadow-lg border-2 border-accent">
@@ -184,5 +184,3 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 };
 
 export default OfferStep;
-
-    
