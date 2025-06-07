@@ -2,7 +2,7 @@
 "use client";
 
 import type React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FC } from 'react';
 import Image from 'next/image';
 // OfferTimer foi removido pois a seção que o continha foi eliminada
 import { Button } from '@/components/ui/button';
@@ -79,21 +79,21 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
       dataAiHint: "money coins",
       title: "Apoio Financeiro Direto",
       description: "Auxílio para cobrir despesas essenciais e impulsionar seus projetos. Verifique as condições e valores disponíveis.",
-      oldBenefitTag: "Saque Imediato"
+      oldBenefitTag: "Programa Auxílio Brasil"
     },
     {
       icon: "https://placehold.co/60x60.png",
       dataAiHint: "education book",
       title: "Cursos e Capacitação",
       description: "Acesso a plataformas de cursos online e presenciais para desenvolvimento de novas habilidades.",
-      oldBenefitTag: "Acesso VIP GOV+"
+      oldBenefitTag: "Tarifa Social de Energia"
     },
     {
       icon: "https://placehold.co/60x60.png",
       dataAiHint: "support help",
       title: "Suporte e Orientação",
       description: "Canais de atendimento para dúvidas e suporte para o seu percurso no programa.",
-      oldBenefitTag: "Suporte Premium"
+      oldBenefitTag: "Vale-Gás Federal"
     }
   ];
 
@@ -231,3 +231,4 @@ export default OfferStep;
     
 
     
+
