@@ -195,7 +195,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         
         {/* SEÇÃO DE PROVA SOCIAL */}
         <div>
-          <h3 className="font-headline text-xl md:text-2xl font-bold text-foreground text-center mb-5 uppercase flex items-center justify-center">
+          <h3 className="font-headline text-lg md:text-xl font-bold text-foreground text-center mb-5 uppercase flex items-center justify-center">
             <Users className="mr-2 h-7 w-7" /> 
             COMUNIDADE SAQUE RÁPIDO: VEJA QUEM JÁ <span className="text-accent underline">ENCHEU O BOLSO</span> HOJE!
           </h3>
@@ -234,3 +234,4 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 };
 
 export default OfferStep;
+
