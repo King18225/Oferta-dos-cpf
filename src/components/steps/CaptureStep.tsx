@@ -12,7 +12,7 @@ interface CaptureStepProps {
 }
 
 const GovBrLogo: React.FC = () => (
-  <svg viewBox="0 0 150 48" xmlns="http://www.w3.org/2000/svg" className="h-10 w-auto" aria-label="gov.br logo">
+  <svg viewBox="0 0 150 48" xmlns="http://www.w3.org/2000/svg" className="h-10 w-auto drop-shadow-sm" aria-label="gov.br logo">
     <text x="75" y="37" style={{ fontFamily: "'Rawline', Arial, Helvetica, sans-serif", fontSize: "40px", fontWeight: "bold", textAnchor: "middle" }}>
       <tspan style={{ fill: "#183EFF" }}>g</tspan>
       <tspan style={{ fill: "#FFD000" }}>o</tspan>
@@ -31,10 +31,10 @@ const CaptureStep: React.FC<CaptureStepProps> = ({ onSubmitSuccess }) => {
         <GovBrLogo />
         <div className="flex items-center space-x-2 sm:space-x-3">
           <Button variant="ghost" size="icon" aria-label="Mudar tema" className="h-9 w-9 sm:h-10 sm:w-10">
-            <Moon className="h-5 w-5" />
+            <Moon className="h-5 w-5 drop-shadow-sm" />
           </Button>
           <Button variant="ghost" size="icon" aria-label="Mudar idioma" className="h-9 w-9 sm:h-10 sm:w-10">
-            <Globe className="h-5 w-5" />
+            <Globe className="h-5 w-5 drop-shadow-sm" />
           </Button>
         </div>
       </header>
