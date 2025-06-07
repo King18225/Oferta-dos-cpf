@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 // OfferTimer foi removido pois a seção que o continha foi eliminada
 import { Button } from '@/components/ui/button';
-import { CheckCircle, TrendingUp, ShieldCheck, Users, DollarSign, BookOpen, LifeBuoy } from 'lucide-react'; // Adicionado DollarSign, BookOpen, LifeBuoy para novos ícones
+import { CheckCircle, TrendingUp, ShieldCheck, Users } from 'lucide-react'; // Removidos DollarSign, BookOpen, LifeBuoy pois os ícones são placeholders agora
 
 interface OfferStepProps {
   cpf: string | null;
@@ -55,6 +55,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
     }, 1500);
 
     const testimonialInterval = setInterval(() => {
+      // Embaralha a lista de depoimentos existente
       setTestimonials(prev => [...prev].sort(() => 0.5 - Math.random()));
     }, 8000);
 
@@ -77,19 +78,22 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
       icon: "https://placehold.co/60x60.png",
       dataAiHint: "money coins",
       title: "Apoio Financeiro Direto",
-      description: "Auxílio para cobrir despesas essenciais e impulsionar seus projetos. Verifique as condições e valores disponíveis."
+      description: "Auxílio para cobrir despesas essenciais e impulsionar seus projetos. Verifique as condições e valores disponíveis.",
+      oldBenefitTag: "Saque Imediato"
     },
     {
       icon: "https://placehold.co/60x60.png",
       dataAiHint: "education book",
       title: "Cursos e Capacitação",
-      description: "Acesso a plataformas de cursos online e presenciais para desenvolvimento de novas habilidades."
+      description: "Acesso a plataformas de cursos online e presenciais para desenvolvimento de novas habilidades.",
+      oldBenefitTag: "Acesso VIP GOV+"
     },
     {
       icon: "https://placehold.co/60x60.png",
       dataAiHint: "support help",
       title: "Suporte e Orientação",
-      description: "Canais de atendimento para dúvidas e suporte para o seu percurso no programa."
+      description: "Canais de atendimento para dúvidas e suporte para o seu percurso no programa.",
+      oldBenefitTag: "Suporte Premium"
     }
   ];
 
@@ -109,7 +113,12 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-[30px] max-w-[1200px] mx-auto">
             {benefitCards.map((card, index) => (
-              <div key={index} className="bg-[#e6f2ff] p-[30px] rounded-[10px] text-center shadow-[0_4px_8px_rgba(0,0,0,0.1)] flex flex-col items-center">
+              <div key={index} className="bg-[#e6f2ff] p-[30px] rounded-[10px] text-center shadow-[0_4px_8px_rgba(0,0,0,0.1)] flex flex-col items-center relative">
+                {card.oldBenefitTag && (
+                  <span className="absolute top-3 right-3 bg-accent text-accent-foreground text-xs font-bold px-2 py-1 rounded-full shadow-md z-10">
+                    {card.oldBenefitTag}
+                  </span>
+                )}
                 <Image 
                   src={card.icon} 
                   alt={`Ícone ${card.title}`} 
