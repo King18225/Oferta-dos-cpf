@@ -184,7 +184,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
             size="lg" 
             className="w-full max-w-md mx-auto h-14 text-lg md:h-16 md:text-xl font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-xl mt-4 rounded-lg border-2 border-yellow-200"
           >
-            <BadgeCent className="mr-2 h-6 w-6 md:h-7 md:w-7" /> Quero Receber o dinheiro!
+            Quero Receber o dinheiro!
           </Button>
           <p className="text-xs mt-4 text-primary-foreground/80 flex items-center justify-center">
             <ShieldCheck className="h-4 w-4 mr-1.5 text-green-300" /> Pagamento 100% SEGURO e Criptografado!
