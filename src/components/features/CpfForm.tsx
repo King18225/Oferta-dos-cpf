@@ -8,8 +8,7 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { CreditCard } from 'lucide-react';
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 
 const cpfSchema = z.object({
   cpf: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "CPF inválido. Use o formato XXX.XXX.XXX-XX"),
@@ -61,17 +60,16 @@ const CpfForm: React.FC<CpfFormProps> = ({ onSubmitSuccess }) => {
           name="cpf"
           render={({ field }) => (
             <FormItem>
-              <FormLabel htmlFor="cpf" className="flex items-center text-sm font-medium text-card-foreground mb-1">
-                <CreditCard className="mr-2 h-4 w-4 text-muted-foreground" />
-                Número do CPF
-              </FormLabel>
+              <label htmlFor="cpf" className="block text-sm font-medium text-foreground mb-1">
+                CPF
+              </label>
               <FormControl>
                 <Input 
                   id="cpf"
                   placeholder="Digite seu CPF" 
                   {...field} 
                   onChange={handleCpfChange}
-                  className="text-base p-3 h-12 border-input focus:border-primary text-card-foreground"
+                  className="text-base p-3 h-12 border-input focus:border-primary text-foreground"
                   maxLength={14}
                   disabled={form.formState.isSubmitting || showValidationMessage}
                 />
@@ -88,7 +86,7 @@ const CpfForm: React.FC<CpfFormProps> = ({ onSubmitSuccess }) => {
         <Button 
           type="submit" 
           variant="default" 
-          className="w-full h-12 text-base font-medium" 
+          className="w-full h-12 text-base font-medium rounded-full" 
           disabled={form.formState.isSubmitting || showValidationMessage}
         >
           {form.formState.isSubmitting || showValidationMessage ? "VERIFICANDO..." : "Continuar"}
