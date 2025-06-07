@@ -183,10 +183,10 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         </div>
 
         <Button
-          className="w-full h-16 md:h-20 text-xl md:text-2xl font-bold bg-accent text-accent-foreground hover:bg-accent/90 shadow-xl transform hover:scale-105 transition-transform duration-150 ease-out ring-4 ring-green-300 hover:ring-green-400"
+          className="w-full h-16 md:h-20 text-lg md:text-xl font-bold bg-accent text-accent-foreground hover:bg-accent/90 shadow-xl transform hover:scale-105 transition-transform duration-150 ease-out ring-4 ring-green-300 hover:ring-green-400 whitespace-normal text-center"
           onClick={handleLiberarAcessoClick}
         >
-          <span className="mr-2 text-3xl">👉</span>
+          <span className="text-2xl">👉</span>
           <span className="uppercase">SIM! EU QUERO MEUS R$1.200,00 AGORA! (VIA PIX)!</span>
         </Button>
         <div className="text-center text-xs text-muted-foreground flex items-center justify-center">
