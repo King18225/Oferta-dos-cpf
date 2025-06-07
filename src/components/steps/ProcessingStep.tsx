@@ -3,6 +3,7 @@
 
 import type React from 'react';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle } from 'lucide-react';
 
@@ -11,12 +12,12 @@ interface ProcessingStepProps {
 }
 
 const loadingMessages = [
-  { text: "Estabelecendo conexão segura...", duration: 800, progress: 10 },
-  { text: "Analisando seu CPF...", duration: 1000, progress: 30 },
-  { text: "Consultando base de dados da Receita Federal...", duration: 1300, progress: 50 },
-  { text: "Cruzando dados com CadÚnico...", duration: 1000, progress: 75 },
-  { text: "Verificando benefícios disponíveis...", duration: 1000, progress: 90 },
-  { text: "Quase lá! Finalizando...", duration: 800, progress: 100 },
+  { text: "Estabelecendo conexão segura...", duration: 500, progress: 10 },
+  { text: "Analisando seu CPF...", duration: 500, progress: 30 },
+  { text: "Consultando base de dados da Receita Federal...", duration: 500, progress: 50 },
+  { text: "Cruzando dados com CadÚnico...", duration: 500, progress: 75 },
+  { text: "Verificando benefícios disponíveis...", duration: 500, progress: 90 },
+  { text: "Quase lá! Finalizando...", duration: 500, progress: 100 },
 ];
 
 const ProcessingStep: React.FC<ProcessingStepProps> = ({ onComplete }) => {
@@ -46,9 +47,14 @@ const ProcessingStep: React.FC<ProcessingStepProps> = ({ onComplete }) => {
   return (
     <div className="w-full max-w-md mx-auto text-center p-4 flex flex-col items-center justify-center min-h-[calc(100vh-100px)]">
       <div className="bg-card text-card-foreground p-6 sm:p-8 rounded-lg shadow-xl w-full">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground text-2xl font-bold">
-          GOV
-        </div>
+        <Image
+          src="https://i.imgur.com/MLJKIv0.jpeg"
+          alt="Logo GOV.BR"
+          width={64}
+          height={64}
+          className="mx-auto mb-6 rounded-full"
+          priority
+        />
 
         <h2 className="text-2xl font-semibold text-card-foreground mb-6 text-center">
           Analisando seu CPF
