@@ -122,9 +122,9 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         </div>
 
         {/* Benefícios disponíveis em destaque */}
-        <div className="bg-white rounded-xl shadow-xl p-6 md:p-8 mb-8 border-l-8 border-green-600 animate-scale-in">
+         <div className="bg-white rounded-xl shadow-xl p-6 md:p-8 mb-8 border-l-8 border-green-600 animate-scale-in">
             <h2 className="text-2xl md:text-3xl font-black text-gray-800 mb-6 text-center">Acesso LIBERADO para você:</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-8">
                 {benefitsFromUserCode.map((beneficio, index) => (
                     <div key={index} className="bg-green-50 p-4 md:p-6 rounded-lg border border-green-200 shadow-md transform hover:scale-105 transition-all duration-200">
                         <div className="text-center">
@@ -149,7 +149,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
           </p>
           <Button
             onClick={handleEligibilityCheckClick}
-            className="bg-[#ffc107] text-[#003366] py-3 px-6 text-lg md:py-4 md:px-10 md:text-xl font-bold border-none rounded-[10px] cursor-pointer transition-colors duration-300 ease-linear hover:bg-[#e0a800] no-underline h-auto"
+            className="bg-[#ffc107] text-[#003366] py-3 px-4 text-base whitespace-normal md:py-4 md:px-10 md:text-xl font-bold border-none rounded-[10px] cursor-pointer transition-colors duration-300 ease-linear hover:bg-[#e0a800] no-underline h-auto"
           >
             Verificar Minha Elegibilidade Agora
           </Button>
@@ -163,7 +163,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
           <div className="absolute -top-4 -left-12 transform -rotate-45 bg-yellow-400 text-primary font-bold py-2 px-16 text-sm shadow-lg hidden sm:block">
             OFERTA ÚNICA
           </div>
-          <AlertTriangle className="h-10 w-10 md:h-12 md:w-12 text-yellow-400 mx-auto mb-4 animate-pulse" />
+          <AlertTriangle className="h-10 w-10 md:h-12 md:w-12 text-yellow-400 mx-auto mb-4" />
           <h3 className="font-headline text-xl md:text-3xl font-extrabold mb-2 uppercase">
             ÚNICA TAXA DE ACESSO!
           </h3>
@@ -187,9 +187,11 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
             <BadgeCent className="mr-2 h-6 w-6 md:h-7 md:w-7" /> Quero Receber o dinheiro!
           </Button>
           <p className="text-xs mt-4 text-primary-foreground/80 flex items-center justify-center">
-            <ShieldCheck className="h-4 w-4 mr-1.5 text-green-300" /> Pagamento 100% SEGURO e Criptografado! 
+            <ShieldCheck className="h-4 w-4 mr-1.5 text-green-300" /> Pagamento 100% SEGURO e Criptografado!
           </p>
-           <OfferTimer initialMinutes={2} initialSeconds={30} /> 
+           <div className="mt-4">
+            <OfferTimer initialMinutes={2} initialSeconds={30} />
+           </div>
         </div>
         
         {/* SEÇÃO DE PROVA SOCIAL */}
@@ -233,5 +235,3 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 };
 
 export default OfferStep;
-
-    
