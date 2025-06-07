@@ -29,7 +29,7 @@ const OfferTimer: React.FC<OfferTimerProps> = ({ initialMinutes, initialSeconds 
   const seconds = timeLeft % 60;
 
   return (
-    <span className="font-bold text-2xl tabular-nums text-destructive">
+    <span className="font-bold text-xl md:text-2xl tabular-nums text-destructive">
       {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
     </span>
   );
