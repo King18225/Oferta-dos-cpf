@@ -4,7 +4,6 @@
 import type React from 'react';
 import { useState, useEffect, FC } from 'react';
 import Image from 'next/image';
-// OfferTimer foi removido pois a seção que o continha foi eliminada
 import { Button } from '@/components/ui/button';
 import { CheckCircle, TrendingUp, ShieldCheck, Users } from 'lucide-react'; 
 
@@ -44,6 +43,33 @@ const fakeTestimonialsData: Testimonial[] = [
   },
 ];
 
+const benefitsFromUserCode = [
+    {
+        nome: "Programa Auxílio Brasil",
+        valor: "R$ 1200/mês",
+        icon: "💰",
+        descricao: "Benefício mensal direto na sua conta!",
+    },
+    {
+        nome: "Tarifa Social de Energia",
+        valor: "Até 65% de desconto",
+        icon: "⚡",
+        descricao: "Redução significativa na sua conta de luz!",
+    },
+    {
+        nome: "Vale-Gás Federal",
+        valor: "R$ 120 mensal",
+        icon: "🔥",
+        descricao: "Auxílio para comprar seu gás sem aperto!",
+    },
+    {
+        nome: "Dinheiro Perdido",
+        valor: "R$5000 por CPF",
+        icon: "💸",
+        descricao: "Valores esquecidos em contas e bancos!",
+    },
+];
+
 
 const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
   const [peopleServed, setPeopleServed] = useState(2402);
@@ -72,27 +98,6 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 
   const formattedCpf = cpf || '***.***.***-**';
 
-  const benefitCards = [
-    {
-      icon: "https://placehold.co/60x60.png",
-      dataAiHint: "money coins",
-      title: "Programa Auxílio Brasil",
-      description: "Benefício mensal direto na sua conta!",
-    },
-    {
-      icon: "https://placehold.co/60x60.png",
-      dataAiHint: "electricity energy",
-      title: "Tarifa Social de Energia",
-      description: "Redução significativa na sua conta de luz!",
-    },
-    {
-      icon: "https://placehold.co/60x60.png",
-      dataAiHint: "gas flame",
-      title: "Vale-Gás Federal",
-      description: "Auxílio para comprar seu gás sem aperto!",
-    }
-  ];
-
   return (
     <div className="w-full max-w-4xl mx-auto p-4 md:p-6 space-y-8 bg-background text-foreground">
         
@@ -102,27 +107,22 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
           </h2>
         </div>
 
-        {/* Nova Seção de Benefícios */}
-        <div className="py-[60px] px-[20px] bg-white font-[Arial,sans-serif]">
-          <h2 className="text-center text-[2.2em] text-[#003366] mb-[50px]">
-            O que o Programa Oferece a Você:
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-[30px] max-w-[1200px] mx-auto">
-            {benefitCards.map((card, index) => (
-              <div key={index} className="bg-[#e6f2ff] p-[30px] rounded-[10px] text-center shadow-[0_4px_8px_rgba(0,0,0,0.1)] flex flex-col items-center relative">
-                <Image 
-                  src={card.icon} 
-                  alt={`Ícone ${card.title}`} 
-                  width={60} 
-                  height={60} 
-                  className="mb-[20px]"
-                  data-ai-hint={card.dataAiHint} 
-                />
-                <h3 className="text-[1.5em] text-[#003366] mb-[10px] font-semibold">{card.title}</h3>
-                <p className="text-[1.1em] text-[#555]">{card.description}</p>
-              </div>
-            ))}
-          </div>
+        {/* Benefícios disponíveis em destaque - Conforme código do usuário */}
+        <div className="bg-white rounded-xl shadow-xl p-8 mb-8 border-l-8 border-green-600 animate-scale-in">
+            <h2 className="text-2xl md:text-3xl font-black text-gray-800 mb-6 text-center">Acesso LIBERADO para você:</h2>
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+                {benefitsFromUserCode.map((beneficio, index) => (
+                    <div key={index} className="bg-green-50 p-6 rounded-lg border border-green-200 shadow-md transform hover:scale-105 transition-all duration-200">
+                        <div className="text-center">
+                            <div className="text-4xl mb-3 animate-pulse-slow">{beneficio.icon}</div>
+                            <h3 className="font-bold text-gray-800 mb-2 text-lg">{beneficio.nome}</h3>
+                            <p className="text-green-700 font-black text-2xl mb-2">{beneficio.valor}</p>
+                            <p className="text-sm text-gray-600">{beneficio.descricao}</p>
+                            <CheckCircle className="text-green-500 mx-auto mt-3 animate-fade-in" size={24} />
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
 
         {/* Nova Seção de Chamada para Ação (CTA) */}
@@ -222,5 +222,6 @@ export default OfferStep;
     
 
     
+
 
 
