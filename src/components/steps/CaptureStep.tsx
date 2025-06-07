@@ -26,7 +26,7 @@ const GovBrLogo: React.FC = () => (
 
 const CaptureStep: React.FC<CaptureStepProps> = ({ onSubmitSuccess }) => {
   return (
-    <div className="w-full max-w-md mx-auto px-4 sm:px-6 py-6">
+    <div className="w-full max-w-md mx-auto px-4 sm:px-6 py-6 bg-background text-foreground">
       <header className="flex justify-between items-center mb-10">
         <GovBrLogo />
         <div className="flex items-center space-x-2 sm:space-x-3">
@@ -42,7 +42,7 @@ const CaptureStep: React.FC<CaptureStepProps> = ({ onSubmitSuccess }) => {
       <main>
         <p className="text-xl font-semibold text-foreground mb-6">Identifique-se no gov.br com:</p>
         
-        <div className="flex items-center space-x-3 p-3 mb-4 border border-primary rounded-md bg-primary/10 shadow-sm">
+        <div className="flex items-center space-x-3 p-3 mb-4">
           <CreditCard className="h-6 w-6 text-primary" />
           <span className="font-medium text-primary">Número do CPF</span>
         </div>
