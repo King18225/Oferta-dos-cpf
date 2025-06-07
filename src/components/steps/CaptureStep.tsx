@@ -12,7 +12,7 @@ interface CaptureStepProps {
 }
 
 const GovBrLogo: React.FC = () => (
-  <svg viewBox="0 0 150 48" xmlns="http://www.w3.org/2000/svg" className="h-10 w-auto drop-shadow-sm" aria-label="gov.br logo">
+  <svg viewBox="0 0 150 48" xmlns="http://www.w3.org/2000/svg" className="h-10 w-auto" aria-label="gov.br logo">
     <text x="75" y="37" style={{ fontFamily: "'Rawline', Arial, Helvetica, sans-serif", fontSize: "40px", fontWeight: "bold", textAnchor: "middle" }}>
       <tspan style={{ fill: "#183EFF" }}>g</tspan>
       <tspan style={{ fill: "#FFD000" }}>o</tspan>
@@ -27,14 +27,14 @@ const GovBrLogo: React.FC = () => (
 const CaptureStep: React.FC<CaptureStepProps> = ({ onSubmitSuccess }) => {
   return (
     <div className="w-full max-w-md mx-auto px-4 sm:px-6 py-6 bg-background text-foreground">
-      <header className="flex justify-between items-center mb-10">
+      <header className="flex justify-between items-center pb-4 mb-6 shadow-sm border-b border-border">
         <GovBrLogo />
         <div className="flex items-center space-x-2 sm:space-x-3">
           <Button variant="ghost" size="icon" aria-label="Mudar tema" className="h-9 w-9 sm:h-10 sm:w-10">
-            <Moon className="h-5 w-5 drop-shadow-sm" />
+            <Moon className="h-5 w-5" />
           </Button>
           <Button variant="ghost" size="icon" aria-label="Mudar idioma" className="h-9 w-9 sm:h-10 sm:w-10">
-            <Globe className="h-5 w-5 drop-shadow-sm" />
+            <Globe className="h-5 w-5" />
           </Button>
         </div>
       </header>
