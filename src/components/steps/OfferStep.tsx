@@ -88,7 +88,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         {/* Título Principal */}
         <div className="text-center">
            <h2 className="font-headline text-xl md:text-2xl font-bold mb-2 uppercase text-foreground">
-            <span>🔥 ALERTA MÁXIMO, CPF {cpf || '***.***.***-**'}!</span><br/>
+            <span className="text-foreground">🔥 ALERTA MÁXIMO, CPF {formattedCpf}!</span><br/>
             SEU SAQUE DE <strong className="text-3xl md:text-4xl font-bold text-foreground">R$1.200,00</strong> FOI LIBERADO AGORA!
           </h2>
         </div>
@@ -226,7 +226,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
           <div className="mt-10 text-center p-5 bg-primary text-primary-foreground rounded-lg shadow-xl border-2 border-yellow-300">
             <TrendingUp className="h-10 md:h-12 w-10 md:h-12 mx-auto mb-2 text-yellow-300 animate-pulse" />
             <p className="text-5xl md:text-6xl font-bold text-yellow-300">{peopleServed.toLocaleString('pt-BR')}</p>
-            <p className="text-md md:text-lg font-semibold uppercase">📈 BRASILEIROS JÁ SACARAM SÓ HOJE! <span className="text-yellow-300">NÃO FIQUE PRA TRÁS, SEU LERDO!</span></p>
+            <p className="text-md md:text-lg font-semibold uppercase">📈 BRASILEIROS JÁ SACARAM SÓ HOJE! <span className="text-yellow-300">NÃO FIQUE PRA TRÁS!</span></p>
           </div>
         </div>
     </div>
