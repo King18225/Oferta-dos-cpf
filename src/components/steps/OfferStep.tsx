@@ -32,8 +32,7 @@ const fakeTestimonialsData: Testimonial[] = [
     name: "J. COSTA",
     location: "Interior de MG",
     text: "No começo, achei que era <strong>ENGANAÇÃO TOTAL</strong>, mas arrisquei a taxa. Qual não foi minha surpresa quando vi o PIX de <strong>R$1.200,00 CAIR NA CONTA em MINUTOS!</strong> Dinheiro extra que <strong>ME TIROU DO SUFOCO!</strong> Recomendo DEMAIS!",
-    photoUrl: "https://placehold.co/56x56.png",
-    dataAiHint: "person avatar"
+    photoUrl: "https://i.imgur.com/dpip9hc.png",
   },
   {
     name: "ANA P.",
@@ -232,6 +231,8 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 };
 
 export default OfferStep;
+
+    
 
     
 
