@@ -27,11 +27,9 @@ const CaptureStep: React.FC<CaptureStepProps> = ({ onSubmitSuccess }) => {
       <div className="flex justify-center mb-6">
         <GovBrLogo />
       </div>
-      <div className="px-2 sm:px-4">
-        <p className="text-lg text-foreground mb-4 text-gray-700 font-bold">Identifique-se no gov.br com:</p>
-        <div className="bg-card shadow-md rounded-lg p-6 border border-gray-200">
-          <CpfForm onSubmitSuccess={onSubmitSuccess} />
-        </div>
+      <p className="text-lg text-foreground mb-3">Identifique-se no gov.br com:</p>
+      <div className="bg-card shadow-md rounded-lg p-6 border border-border">
+        <CpfForm onSubmitSuccess={onSubmitSuccess} />
       </div>
     </div>
   );
