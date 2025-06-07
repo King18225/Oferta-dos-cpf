@@ -197,7 +197,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         <div>
           <h3 className="font-headline text-lg md:text-xl font-bold text-foreground text-center mb-5 uppercase flex items-center justify-center">
             <Users className="mr-2 h-7 w-7" /> 
-            COMUNIDADE SAQUE RÁPIDO: VEJA QUEM JÁ <span className="text-accent underline">ENCHEU O BOLSO</span> HOJE!
+            PESSOAS QUE SACARAM HOJE!
           </h3>
           <div className="space-y-4">
             {testimonials.map((testimonial, index) => (
