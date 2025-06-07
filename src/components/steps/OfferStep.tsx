@@ -87,9 +87,8 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         
         {/* Título Principal */}
         <div className="text-center">
-           <h2 className="font-headline text-xl md:text-2xl font-bold mb-2 uppercase text-foreground">
-            <span className="text-foreground">🔥 ALERTA MÁXIMO, CPF {formattedCpf}!</span><br/>
-            SEU SAQUE DE <strong className="text-3xl md:text-4xl font-bold text-foreground">R$1.200,00</strong> FOI LIBERADO AGORA!
+           <h2 className="font-headline text-xl md:text-2xl font-bold mb-2 text-foreground">
+            Parabéns, seu CPF {formattedCpf} foi aprovado para receber o dinheiro e os benefícios a seguir!
           </h2>
         </div>
 
