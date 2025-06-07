@@ -25,7 +25,7 @@ const fakeTestimonialsData: Testimonial[] = [
     name: "MARIA S.",
     location: "Fortaleza/CE",
     text: "Paguei a taxa com o <strong>CU NA MÃO</strong>, mas para minha surpresa... <strong>CAIU NA HORA!</strong> R$1.200,00 limpos na conta! Essa grana <strong>SALVOU MEU MÊS E MINHA VIDA!</strong> Simplesmente <strong>FODAA!</strong>",
-    photoUrl: "https://placehold.co/56x56.png",
+    photoUrl: "https://i.imgur.com/TXZQbQo.png",
     dataAiHint: "person avatar"
   },
   {
@@ -192,7 +192,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
         
         {/* SEÇÃO DE PROVA SOCIAL */}
         <div>
-          <h3 className="font-headline text-lg md:text-xl font-bold text-foreground text-center mb-5 uppercase flex items-center justify-center">
+           <h3 className="font-headline text-lg md:text-xl font-bold text-foreground text-center mb-5 uppercase flex items-center justify-center">
             <Users className="mr-2 h-7 w-7" /> 
             PESSOAS QUE SACARAM HOJE!
           </h3>
@@ -231,6 +231,8 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 };
 
 export default OfferStep;
+
+    
 
     
 
