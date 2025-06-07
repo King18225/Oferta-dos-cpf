@@ -42,13 +42,13 @@ export default function RendaExpressaPage() {
 
       {currentStep !== 'capture' && currentStep !== 'processing' && (
         <footer className="py-6 text-center">
-          <p className="text-xs text-muted-foreground px-4">
+          <p className="text-xxs text-muted-foreground px-4">
             Este sistema realiza consultas públicas automáticas com base em dados fornecidos pelo usuário e fontes abertas.
             Não possuímos nenhum vínculo direto com o governo federal ou qualquer entidade governamental.
             As informações apresentadas são para fins ilustrativos e de demonstração de capacidade de consulta.
             O uso desta plataforma implica na aceitação destes termos.
           </p>
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-xxs text-muted-foreground mt-2">
             Renda Expressa &copy; {new Date().getFullYear()} - Todos os direitos (não tão) reservados.
           </p>
         </footer>
