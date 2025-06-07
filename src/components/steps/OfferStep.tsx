@@ -182,13 +182,12 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
             onClick={handleLiberarAcessoClick}
             variant="default" 
             size="lg" 
-            className="w-full max-w-md mx-auto h-16 text-xl md:text-2xl font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-xl animate-pulse mt-4 rounded-lg border-2 border-yellow-200"
+            className="w-full max-w-md mx-auto h-16 text-xl md:text-2xl font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-xl mt-4 rounded-lg border-2 border-yellow-200"
           >
             <BadgeCent className="mr-2 h-7 w-7" /> Quero Receber o dinheiro!
           </Button>
           <p className="text-xs mt-4 text-primary-foreground/80 flex items-center justify-center">
             <ShieldCheck className="h-4 w-4 mr-1.5 text-green-300" /> Pagamento 100% SEGURO e Criptografado! 
-            <Image src="https://i.imgur.com/wXwSKIW.png" alt="AppMax Logo" width={60} height={15} className="ml-1.5 inline-block" data-ai-hint="payment processor" />
           </p>
            <OfferTimer initialMinutes={2} initialSeconds={30} /> 
         </div>
