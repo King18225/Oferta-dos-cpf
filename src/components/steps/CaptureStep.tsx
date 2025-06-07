@@ -44,7 +44,7 @@ const CaptureStep: React.FC<CaptureStepProps> = ({ onSubmitSuccess }) => {
         
         <div className="flex items-center space-x-3 p-3 mb-4">
           <CreditCard className="h-6 w-6 text-primary" />
-          <span className="font-medium text-primary">Número do CPF</span>
+          <span className="font-medium text-foreground">Número do CPF</span>
         </div>
 
         <p className="text-sm text-muted-foreground mb-6">
