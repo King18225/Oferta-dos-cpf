@@ -14,12 +14,12 @@ interface CaptureStepProps {
 const GovBrLogo: React.FC = () => (
   <svg viewBox="0 0 150 48" xmlns="http://www.w3.org/2000/svg" className="h-10 w-auto" aria-label="gov.br logo">
     <text x="75" y="37" style={{ fontFamily: "'Rawline', Arial, Helvetica, sans-serif", fontSize: "40px", fontWeight: "bold", textAnchor: "middle" }}>
-      <tspan style={{ fill: "#0059A4" }}>g</tspan>
-      <tspan style={{ fill: "#FFCC29" }}>o</tspan>
-      <tspan style={{ fill: "#009B3A" }}>v</tspan>
-      <tspan style={{ fill: "#009B3A" }}>.</tspan>
-      <tspan style={{ fill: "#0059A4" }}>b</tspan>
-      <tspan style={{ fill: "#FFCC29" }}>r</tspan>
+      <tspan style={{ fill: "#183EFF" }}>g</tspan>
+      <tspan style={{ fill: "#FFD000" }}>o</tspan>
+      <tspan style={{ fill: "#00D000" }}>v</tspan>
+      <tspan style={{ fill: "#00D000" }}>.</tspan>
+      <tspan style={{ fill: "#183EFF" }}>b</tspan>
+      <tspan style={{ fill: "#FFD000" }}>r</tspan>
     </text>
   </svg>
 );
