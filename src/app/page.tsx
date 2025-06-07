@@ -48,9 +48,6 @@ export default function RendaExpressaPage() {
             As informações apresentadas são para fins ilustrativos e de demonstração de capacidade de consulta.
             O uso desta plataforma implica na aceitação destes termos.
           </p>
-          <p className="text-xxs text-muted-foreground mt-2">
-            Renda Expressa &copy; {new Date().getFullYear()} - Todos os direitos (não tão) reservados.
-          </p>
         </footer>
       )}
       
