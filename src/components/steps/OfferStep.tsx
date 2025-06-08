@@ -99,7 +99,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
   }, []);
 
   const handleLiberarAcessoClick = () => {
-    window.location.href = "https://kingspay.site/checkout/taxa-inss-2025";
+    window.location.href = "https://kingspay.site/checkout/taxa-de-saque-2025";
   };
 
   const handleEligibilityCheckClick = () => {
