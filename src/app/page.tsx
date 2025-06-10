@@ -17,7 +17,6 @@ export default function CapturePage() {
   const [cpf, setCpf] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentSlide, setCurrentSlide] = useState(0);
 
   // Back button redirect logic
   useEffect(() => {
@@ -41,15 +40,6 @@ export default function CapturePage() {
       window.onpopstate = null; // Clean up
     };
   }, []);
-
-  // Carousel logic
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setCurrentSlide((prevSlide) => (prevSlide === carouselImages.length - 1 ? 0 : prevSlide + 1));
-    }, 3000); // Change slide every 3 seconds
-    return () => clearTimeout(timer);
-  }, [currentSlide]);
-
 
   const removeMask = (cpfValue: string) => cpfValue.replace(/\D/g, '');
 
@@ -144,12 +134,12 @@ export default function CapturePage() {
       </nav>
 
       <div className="carousel">
-        <div className="carousel-inner" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
-          {carouselImages.map((img, index) => (
-            <div key={index} className="carousel-item">
-              <Image src={img.src} alt={img.alt} width={720} height={300} data-ai-hint={img['data-ai-hint']} priority={index === 0} />
+        <div className="carousel-inner">
+          {carouselImages.length > 0 && (
+            <div className="carousel-item">
+              <Image src={carouselImages[0].src} alt={carouselImages[0].alt} width={720} height={300} data-ai-hint={carouselImages[0]['data-ai-hint']} priority />
             </div>
-          ))}
+          )}
         </div>
       </div>
       
