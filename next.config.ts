@@ -58,6 +58,12 @@ const nextConfig: NextConfig = {
         hostname: 'images.converteai.net',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '225412.b-cdn.net', // Adicionado para o vídeo
+        port: '',
+        pathname: '/**',
       }
     ],
   },
