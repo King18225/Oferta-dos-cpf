@@ -44,17 +44,19 @@ export default function CapturePage() {
   const removeMask = (cpfValue: string) => cpfValue.replace(/\D/g, '');
 
   const formatCPF = (cpfValue: string) => {
-    let digits = removeMask(cpfValue);
-    if (digits.length > 11) {
-      digits = digits.substring(0, 11);
+    const digits = removeMask(cpfValue).substring(0, 11); // Limita a 11 dígitos
+    
+    let maskedValue = "";
+    if (digits.length > 9) {
+      maskedValue = `${digits.substring(0, 3)}.${digits.substring(3, 6)}.${digits.substring(6, 9)}-${digits.substring(9)}`;
+    } else if (digits.length > 6) {
+      maskedValue = `${digits.substring(0, 3)}.${digits.substring(3, 6)}.${digits.substring(6)}`;
+    } else if (digits.length > 3) {
+      maskedValue = `${digits.substring(0, 3)}.${digits.substring(3)}`;
+    } else {
+      maskedValue = digits;
     }
-    return digits.replace(/^(\d{3})(\d{3})?(\d{3})?(\d{2})?.*/, (match, p1, p2, p3, p4) => {
-      let result = p1;
-      if (p2) result += `.${p2}`;
-      if (p3) result += `.${p3}`;
-      if (p4) result += `-${p4}`;
-      return result;
-    });
+    return maskedValue;
   };
 
   const isValidCPF = (cpfValue: string) => {
