@@ -3,16 +3,11 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import Image from 'next/image';
-// import type { Metadata } from 'next'; // Metadata import removed
 import { MoreVertical, Cookie, LayoutGrid, User, Menu, Search, CreditCard } from 'lucide-react';
 import './capture-page.css';
 
-// export const metadata: Metadata = { // Metadata export removed
-//   title: 'Рrоgrаmа Sаquе Sосiаl',
-// };
-
 const carouselImages = [
-  { src: "https://placehold.co/720x300.png?text=Slide+Alpha", alt: "Slide 1", "data-ai-hint": "promotional banner" },
+  { src: "https://i.imgur.com/dkFzJLZ.png", alt: "Slide 1", "data-ai-hint": "promotional banner" },
   { src: "https://placehold.co/720x300.png?text=Slide+Beta", alt: "Slide 2", "data-ai-hint": "information banner" },
   { src: "https://placehold.co/720x300.png?text=Slide+Gamma", alt: "Slide 3", "data-ai-hint": "advertisement content" },
   { src: "https://placehold.co/720x300.png?text=Slide+Delta", alt: "Slide 4", "data-ai-hint": "service highlight" },
