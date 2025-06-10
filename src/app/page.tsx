@@ -20,7 +20,7 @@ export default function CapturePage() {
 
   // Back button redirect logic
   useEffect(() => {
-    const urlBackRedirect = '../back/index.html';
+    const urlBackRedirect = '../back/index.html'; // This might need adjustment depending on your deployment structure for 'back/index.html'
     const trimmedUrlBackRedirect = urlBackRedirect.trim() +
       (urlBackRedirect.indexOf("?") > 0 ? '&' : '?') +
       document.location.search.replace('?', '').toString();
@@ -44,21 +44,19 @@ export default function CapturePage() {
   const removeMask = (cpfValue: string) => cpfValue.replace(/\D/g, '');
 
   const formatCPF = (cpfValue: string) => {
-    const digits = removeMask(cpfValue).substring(0, 11); // Limita a 11 dígitos
-    
-    let maskedValue = "";
-    if (digits.length > 9) {
-      maskedValue = `${digits.substring(0, 3)}.${digits.substring(3, 6)}.${digits.substring(6, 9)}-${digits.substring(9)}`;
-    } else if (digits.length > 6) {
-      maskedValue = `${digits.substring(0, 3)}.${digits.substring(3, 6)}.${digits.substring(6)}`;
-    } else if (digits.length > 3) {
-      maskedValue = `${digits.substring(0, 3)}.${digits.substring(3)}`;
-    } else {
-      maskedValue = digits;
+    const rawValue = removeMask(cpfValue);
+    let formattedValue = '';
+    for (let i = 0; i < rawValue.length && i < 11; i++) {
+      if (i === 3 || i === 6) {
+        formattedValue += '.';
+      } else if (i === 9) {
+        formattedValue += '-';
+      }
+      formattedValue += rawValue[i];
     }
-    return maskedValue;
+    return formattedValue;
   };
-
+  
   const isValidCPF = (cpfValue: string) => {
     cpfValue = removeMask(cpfValue);
     if (cpfValue.length !== 11 || /^(.)\1+$/.test(cpfValue)) return false;
@@ -92,13 +90,16 @@ export default function CapturePage() {
       return;
     }
 
+    // Simulate API call or processing
     setTimeout(() => {
         const newQueryParams = new URLSearchParams(window.location.search);
         newQueryParams.set('cpf', cpfValueRaw);
+        // Remove empty query params
         for (let [key, value] of newQueryParams.entries()) { if (!value.trim()) { newQueryParams.delete(key); } }
         
-        window.location.href = (location.origin.endsWith('/') ? location.origin : location.origin + '/') + 'consulta/index.html?' + newQueryParams.toString();
-    }, 500);
+        // Redirect to processing page
+        window.location.href = '/processing?' + newQueryParams.toString();
+    }, 500); // Simulate a short delay
   };
 
 
@@ -160,7 +161,7 @@ export default function CapturePage() {
                 required
                 value={cpf}
                 onChange={handleCpfInputChange}
-                maxLength={14}
+                maxLength={14} // 11 digits + 2 dots + 1 hyphen
               />
               {errorMsg && <p className="error-message" style={{ display: 'block' }}>{errorMsg}</p>}
               <button type="submit" id="submit-btn" disabled={isSubmitting}>
