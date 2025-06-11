@@ -52,18 +52,17 @@ function ChatPageContent() {
     // Initialize Typebot once the script is loaded and the component is mounted
     // The Typebot script itself will look for <typebot-standard>
     if (typeof window.Typebot !== 'undefined') {
-        // Check if Typebot is already initialized for this element
         const typebotElement = document.querySelector('typebot-standard');
-        if (typebotElement && !typebotElement.shadowRoot?.querySelector('.typebot-container')) { // A simple check
+        // A simple check to avoid re-initializing if Typebot has already rendered its content
+        if (typebotElement && !typebotElement.shadowRoot?.querySelector('.typebot-container')) { 
             window.Typebot.initStandard({
               typebot: "24lkdef", // Your Typebot ID
-              apiHost: "https://chat.bestbot.info",
-              // Pass prefill variables if Typebot is configured to receive them
-              prefill: {
-                nome: searchParams.get('nome') || '',
-                cpf: searchParams.get('cpf') || '',
-                // Add other params like 'mae', 'nascimento' if your Typebot uses them
-              }
+              apiHost: "https://chat.bestbot.info"
+              // Removed prefill to exactly match the user's original script snippet
+              // prefill: {
+              //   nome: searchParams.get('nome') || '',
+              //   cpf: searchParams.get('cpf') || '',
+              // }
             });
         }
     }
@@ -81,8 +80,7 @@ function ChatPageContent() {
         strategy="afterInteractive"
         onLoad={() => {
           // console.log('Typebot script loaded');
-          // Trigger re-render or effect to ensure initStandard is called
-          // This is often handled by the useEffect dependency on window.Typebot or a state change
+          // Initialization logic is now primarily in useEffect that depends on window.Typebot
         }}
       />
       
@@ -134,9 +132,6 @@ function ChatPageContent() {
             </div>
         </div>
         
-        {/* The #popup div was empty in the HTML, can be used if needed later */}
-        {/* <div id="popup"></div> */}
-
         <footer className="chat-page-footer">
           <Image 
             src="https://i.imgur.com/919uhHG.png" // Using a known working logo
