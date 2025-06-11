@@ -1,19 +1,24 @@
-// 1. COLE AQUI O CONTEÚDO COMPLETO DO SEU SCRIPT TYPEBOT.
-//    (O script que você obteve, por exemplo, de https://cdn.jsdelivr.net/npm/@typebot.io/js@0.3.59/dist/web.js)
 
-// 2. IMPORTANTE: MODIFICAÇÃO NECESSÁRIA APÓS COLAR:
-//    Se o script que você colou é um módulo ES6 (geralmente, se ele usa palavras-chave como `export`),
-//    ele NÃO irá automaticamente adicionar o objeto `Typebot` à janela global (`window`).
-//    Para que a página de chat funcione, você PRECISA adicionar uma linha no FINAL DESTE ARQUIVO
-//    para atribuir o objeto principal do Typebot (que pode se chamar `Typebot`, `TypebotClass`, etc.,
-//    dependendo do script) ao `window.Typebot`.
+// This file is no longer used as the Typebot integration has been replaced
+// by a simulated chat flow component (SimulatedChatFlow.tsx).
+// You can safely remove this file if you are not planning to revert to
+// using a local Typebot script.
+
+// If you DO want to use this file for a local Typebot script in the future:
+// 1. Paste the entire content of your Typebot web script here.
+//    (e.g., from https://cdn.jsdelivr.net/npm/@typebot.io/js@0.3.59/dist/web.js)
 //
-//    Por exemplo, se o seu script exporta um objeto chamado `Typebot`:
-//    (Verifique o final do script colado para ver como ele exporta, pode ser algo como `export { TypebotClass as Typebot }` ou similar)
+// 2. CRITICAL: If the script is an ES Module (which it likely is if copied from the CDN),
+//    it will EXPORT the Typebot object/class but NOT assign it to the global `window` object.
+//    To make it work with the old `src/app/chat/page.tsx` logic (that looked for `window.Typebot`),
+//    you would need to find the main Typebot object/class in the script (let's assume its name is `TypebotMainObject`)
+//    and add this line AT THE VERY END of this file:
 //
-//    Adicione esta linha no final do arquivo:
+//    window.Typebot = TypebotMainObject;
 //
-//    window.Typebot = Typebot; // Substitua `Typebot` pelo nome real do objeto/classe exportado, se for diferente.
+//    Replace `TypebotMainObject` with the actual name of the main exported class/object from the script.
+//    If the script uses `export { Typebot as Typebot }` or `export default Typebot`, then you would add:
+//    window.Typebot = Typebot; // (assuming 'Typebot' is the exported name)
 //
-//    Sem esta linha (ou uma equivalente), a inicialização na página de chat falhará com um erro
-//    indicando que `window.Typebot` não está definido.
+// 3. Ensure `src/app/chat/page.tsx` is configured to load this script and use `window.Typebot`.
+//    (The current version of `src/app/chat/page.tsx` uses SimulatedChatFlow instead).

