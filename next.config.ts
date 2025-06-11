@@ -61,7 +61,13 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: '225412.b-cdn.net', // Adicionado para o vídeo
+        hostname: '225412.b-cdn.net', 
+        port: '',
+        pathname: '/**',
+      },
+      { // Added for Typebot assets if loaded from chat.bestbot.info
+        protocol: 'https',
+        hostname: 'chat.bestbot.info',
         port: '',
         pathname: '/**',
       }

