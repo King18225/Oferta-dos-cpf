@@ -131,16 +131,6 @@ export default function CapturePage() {
         </button>
         <button title="Buscar"><Search /></button>
       </nav>
-
-      <div className="carousel">
-        <div className="carousel-inner">
-          {carouselImages.length > 1 && ( // Check if there's at least a second image
-            <div className="carousel-item">
-              <Image src={carouselImages[1].src} alt={carouselImages[1].alt} width={720} height={300} data-ai-hint={carouselImages[1]['data-ai-hint']} priority />
-            </div>
-          )}
-        </div>
-      </div>
       
       <div className="conteudo">
         <div className="conteudo-inner">
