@@ -4,6 +4,7 @@
 import React, { useState, useEffect, Suspense, useRef } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
+import Script from 'next/script'; // Import next/script
 import { useSearchParams, useRouter } from 'next/navigation';
 import { MoreVertical, Cookie, LayoutGrid, User, Menu, Search } from 'lucide-react';
 import '../chat-page.css';
@@ -13,15 +14,15 @@ function ChatPageContent() {
   const searchParams = useSearchParams();
   const [headerUserName, setHeaderUserName] = useState('Usuário');
   const typebotInitializedRef = useRef(false);
+  const [isLocalTypebotScriptLoaded, setIsLocalTypebotScriptLoaded] = useState(false);
 
   useEffect(() => {
     const urlBackRedirect = '/back/index.html';
     const currentQuery = searchParams.toString();
     const trimmedUrlBackRedirect = urlBackRedirect.trim() + (urlBackRedirect.includes("?") ? '&' : '?') + currentQuery;
 
-    // Prevent adding multiple history entries on re-renders if history state is already set
     if (window.history.state?.pageInitialized !== true) {
-        history.pushState({ pageInitialized: true }, "", window.location.href);
+      history.pushState({ pageInitialized: true }, "", window.location.href);
     }
     
     const handlePopState = () => {
@@ -42,68 +43,75 @@ function ChatPageContent() {
   }, []); // Runs once on mount
 
   useEffect(() => {
-    if (typebotInitializedRef.current) {
-      console.log('Typebot initialization already attempted/completed.');
-      return;
-    }
+    if (isLocalTypebotScriptLoaded) {
+      if (typebotInitializedRef.current) {
+        console.log('Typebot initialization already attempted/completed.');
+        return;
+      }
 
-    const typebotElement = document.querySelector('typebot-standard');
-    if (!typebotElement) {
-      console.error('Typebot standard element not found in DOM. Initialization aborted.');
-      return;
-    }
+      const typebotElement = document.querySelector('typebot-standard');
+      if (!typebotElement) {
+        console.error('Typebot standard element not found in DOM. Initialization aborted.');
+        return;
+      }
 
-    if (typebotElement.shadowRoot?.querySelector('.typebot-container')) {
-      console.log('Typebot appears to be already initialized in the DOM.');
-      typebotInitializedRef.current = true;
-      return;
-    }
-    
-    console.log('Attempting to dynamically import @typebot.io/js...');
-    import('@typebot.io/js')
-      .then((TypebotModule) => {
-        if (TypebotModule && TypebotModule.default && typeof TypebotModule.default.initStandard === 'function') {
-          console.log('Successfully imported @typebot.io/js. Initializing Typebot...');
-          
-          const typebotIdFromQuery = searchParams.get('typebotId');
-          const apiHostFromQuery = searchParams.get('apiHost');
+      if (typebotElement.shadowRoot?.querySelector('.typebot-container')) {
+        console.log('Typebot appears to be already initialized in the DOM.');
+        typebotInitializedRef.current = true;
+        return;
+      }
+      
+      console.log('Local Typebot script loaded. Attempting to initialize Typebot...');
+      
+      if (window.Typebot && typeof window.Typebot.initStandard === 'function') {
+        const typebotIdFromQuery = searchParams.get('typebotId');
+        const apiHostFromQuery = searchParams.get('apiHost');
 
-          const typebotToUse = typebotIdFromQuery || "24lkdef"; // Default Typebot ID
-          const apiHostToUse = apiHostFromQuery || "https://chat.bestbot.info"; // Default API Host
+        const typebotToUse = typebotIdFromQuery || "24lkdef";
+        const apiHostToUse = apiHostFromQuery || "https://chat.bestbot.info";
 
-          console.log(`Initializing Typebot with ID: ${typebotToUse} and API Host: ${apiHostToUse}`);
+        console.log(`Initializing Typebot with ID: ${typebotToUse} and API Host: ${apiHostToUse}`);
 
-          try {
-            TypebotModule.default.initStandard({
-              typebot: typebotToUse, 
-              apiHost: apiHostToUse,
-              // You can still add prefill options here if your Typebot is designed to use them
-              // prefill: {
-              //   nome: searchParams.get('nome') || '',
-              //   cpf: searchParams.get('cpf') || '',
-              // }
-            });
-            typebotInitializedRef.current = true; 
-            console.log('Typebot.initStandard called successfully using imported module.');
-          } catch (e) {
-            console.error('Error during Typebot.initStandard call (imported module):', e);
-          }
-        } else {
-          console.error('Failed to import Typebot correctly or initStandard not found on the imported module.');
+        try {
+          window.Typebot.initStandard({
+            typebot: typebotToUse, 
+            apiHost: apiHostToUse,
+          });
+          typebotInitializedRef.current = true; 
+          console.log('Typebot.initStandard called successfully using window.Typebot.');
+        } catch (e) {
+          console.error('Error during Typebot.initStandard call (window.Typebot):', e);
         }
-      })
-      .catch(err => {
-        console.error('Error dynamically importing @typebot.io/js:', err);
-      });
-  }, []); // Empty dependency array ensures this runs once on mount
+      } else {
+        console.error(
+          'window.Typebot or window.Typebot.initStandard is not available, even after local script reported loaded. ' +
+          'This usually means the script at "/js/typebot-web.js" was loaded but did not correctly assign its Typebot object to "window.Typebot". ' +
+          'Please ensure your local script (public/js/typebot-web.js) explicitly sets "window.Typebot = YourTypebotObject;" at the end of the file.'
+        );
+      }
+    }
+  }, [isLocalTypebotScriptLoaded, searchParams]);
 
 
   return (
     <>
       <Head>
         <title>Programa Saque Social - Atendimento</title>
+        {/* Script tag for local Typebot will be added via next/script */}
       </Head>
       
+      <Script
+        src="/js/typebot-web.js" // Path to your local Typebot script
+        strategy="afterInteractive" // Load after the page is interactive
+        onLoad={() => {
+          console.log('Local Typebot script (/js/typebot-web.js) has loaded.');
+          setIsLocalTypebotScriptLoaded(true);
+        }}
+        onError={(e) => {
+          console.error('Error loading local Typebot script (/js/typebot-web.js):', e);
+        }}
+      />
+
       <div className="chat-page-body">
         <header className="chat-page-header">
           <div className="logo">
