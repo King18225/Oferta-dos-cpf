@@ -154,26 +154,73 @@ body.offer-page-body {
   width: 100%;
 }
 
-.video-container {
-  position: relative;
-  padding-bottom: 56.25%; /* 16:9 Aspect Ratio for responsive iframe */
-  height: 0;
-  overflow: hidden;
+.progress-container {
   width: 100%;
-  background-color: #000; /* Optional: Show black background while loading */
-  border-radius: 8px; /* Optional: if you want rounded corners for the video area */
-  margin-bottom: 20px; /* Add some space below the video */
+  height: 15px;
+  background-color: #e5e5e5;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  overflow: hidden;
 }
 
-.video-container iframe {
+.progress-bar {
+  width: 0%;
+  height: 100%;
+  background-color: #1451b4;
+  transition: width 0.2s linear;
+}
+
+.video-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.video-container video { /* Style for Plyr's video element */
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px; /* Optional: if you want rounded corners for the video area */
+}
+
+.thumbnail-overlay {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  border: 0; /* Remove default iframe border */
+  right: 0;
+  bottom: 0;
+  display: flex; /* Changed from none to flex for initial visibility if needed */
+  background: rgba(0,0,0,0.5); /* Slightly darker overlay */
+  justify-content: center;
+  align-items: center;
+  z-index: 10; /* Ensure it's above the video but below other UI if necessary */
+  cursor: pointer;
+  border-radius: 8px; /* Match video border-radius */
 }
 
+.thumbnail-content {
+  background: rgba(0, 0, 0, 0.4); /* Match original for consistency */
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  animation: pulse 2s infinite;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.thumbnail-content h2 {
+  font-size: 24px;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.thumbnail-content .lucide { /* Styling for lucide icon */
+  font-size: 64px; /* This won't directly work for Lucide, size prop is used in JSX */
+  width: 64px; /* Set width for Lucide */
+  height: 64px; /* Set height for Lucide */
+  color: #fff;
+}
 
 @keyframes pulse {
   0% {
@@ -188,6 +235,39 @@ body.offer-page-body {
     transform: scale(1);
   }
 }
+
+.resgate-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: none; /* Initially hidden */
+  background: #1451b4;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #fff;
+  padding: 20px;
+  z-index: 10;
+  border-radius: 8px; /* Match video border-radius */
+}
+
+.resgate-content {
+  max-width: 80%;
+  margin: 0 auto;
+}
+
+.resgate-content h2 {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.resgate-content p {
+  font-size: 16px;
+  line-height: 1.4;
+}
+
 
 .info-container {
   margin-top: 16px;
@@ -562,4 +642,13 @@ body.offer-page-body {
 
 .pay-button:hover {
   background: #0d3a8a;
+}
+
+/* Ensure Plyr styles are not overridden if they conflict */
+.plyr--video {
+  border-radius: 8px; /* Match video container */
+}
+
+.plyr__poster {
+  display: none; /* Hide default Plyr poster if using custom thumbnail */
 }
