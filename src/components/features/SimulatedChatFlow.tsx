@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation'; // Added import
 import { Loader2 } from 'lucide-react';
 
 export interface SimulatedChatParams {
@@ -374,3 +375,4 @@ const SimulatedChatFlow: React.FC<SimulatedChatFlowProps> = ({ initialParams }) 
 
 export default SimulatedChatFlow;
 
+    
