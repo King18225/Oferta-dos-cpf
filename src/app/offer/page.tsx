@@ -5,13 +5,21 @@ import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Plyr from 'plyr-react';
+// import Plyr from 'plyr-react'; // Original import causing SSR issues
 import 'plyr-react/plyr.css';
 import type PlyrInstance from 'plyr'; // Import PlyrInstance type
 import '../offer-page.css'; // Styles specific to this offer page
 import {
   MoreVertical, Cookie, LayoutGrid, User, Menu, Search, CreditCard, CalendarDays, ThumbsUp, ThumbsDown, X, Loader2, VolumeX
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const Plyr = dynamic(() => import('plyr-react'), {
+  ssr: false,
+  // You can add a loading component here if you want:
+  // loading: () => <p>Carregando player...</p>
+});
+
 
 interface UserData {
   nome?: string;
