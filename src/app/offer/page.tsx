@@ -5,10 +5,9 @@ import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-// import Plyr from 'plyr-react'; // Will be dynamically imported
 import 'plyr-react/plyr.css';
-import type PlyrInstance from 'plyr'; // Import PlyrInstance type
-import '../offer-page.css'; // Styles specific to this offer page
+import type PlyrInstance from 'plyr';
+import '../offer-page.css'; 
 import {
   MoreVertical, Cookie, LayoutGrid, User, Menu, Search, CreditCard, CalendarDays, ThumbsUp, ThumbsDown, X, Loader2, VolumeX
 } from 'lucide-react';
@@ -16,7 +15,6 @@ import dynamic from 'next/dynamic';
 
 const Plyr = dynamic(() => import('plyr-react'), {
   ssr: false,
-  // loading: () => <p>Carregando player...</p>
 });
 
 
@@ -51,7 +49,7 @@ function OfferContent() {
   const playerRef = useRef<PlyrInstance | null>(null);
   const videoUrl = "https://225412.b-cdn.net/Video%20Page.mp4";
 
-  const [pageLoading, setPageLoading] = useState(true); // Renamed from 'loading' to avoid conflict
+  const [pageLoading, setPageLoading] = useState(true);
   const [showMainContent, setShowMainContent] = useState(false); 
   
   const [progress, setProgress] = useState(0);
@@ -111,9 +109,9 @@ function OfferContent() {
             finalizeProgressAppearance(); 
         }
         if (state.progressEnabled) setProgressEnabled(state.progressEnabled);
-        if (state.videoStarted && !state.videoCompleted) {
-            setShowThumbnailOverlay(false); 
-        }
+        // If video had started but not completed, keep thumbnail overlay for unmuting
+        // setShowThumbnailOverlay is true by default, so no need to restore it to true here explicitly
+        // unless we specifically stored it as false and want to revert.
       } catch (e) {
         console.error("Failed to parse stored state:", e);
         localStorage.removeItem('offerPageState');
@@ -263,13 +261,17 @@ function OfferContent() {
     }
   };
   
-  const handleThumbnailClick = () => {
+  const handleThumbnailClick = async () => {
     if (playerRef.current?.plyr) {
-      playerRef.current.plyr.muted = false;
-      playerRef.current.plyr.play();
-      setShowThumbnailOverlay(false);
-      setProgressEnabled(true);
-      setVideoStarted(true);
+      try {
+        playerRef.current.plyr.muted = false;
+        await playerRef.current.plyr.play(); // Ensures playing, useful if somehow paused
+        setShowThumbnailOverlay(false);
+        // setProgressEnabled(true); // Already handled by 'play' event
+        // setVideoStarted(true); // Already handled by 'play' event
+      } catch (error) {
+        console.error("Error trying to play/unmute video:", error);
+      }
     }
   };
 
@@ -299,10 +301,11 @@ function OfferContent() {
         }
       };
       const onPlay = () => {
-        if (!videoStarted && !videoCompleted && progressEnabled) {
-          setVideoStarted(true);
+        if (!videoCompleted) { // Allows setting started and progress even if thumbnail is still up for unmuting
+          if (!videoStarted) setVideoStarted(true);
+          if (!progressEnabled) setProgressEnabled(true);
         } else if (videoCompleted) {
-          plyr.pause(); 
+            plyr.pause(); 
         }
       };
       const onEnded = () => {
@@ -312,18 +315,19 @@ function OfferContent() {
       plyr.on('timeupdate', onTimeUpdate);
       plyr.on('play', onPlay);
       plyr.on('ended', onEnded);
-
+      
+      // Handle initial state from localStorage
       if (videoCompleted) {
         finalizeProgressAppearance();
-        setShowThumbnailOverlay(false);
-      } else if (videoStarted) { 
-        setShowThumbnailOverlay(false);
-        setProgressEnabled(true); 
+        setShowThumbnailOverlay(false); // Ensure overlay is hidden if video was already completed
+      } else if (videoStarted) {
+        // If video was started (e.g. from localStorage), enable progress.
+        // Thumbnail overlay remains visible for unmuting, controlled by handleThumbnailClick.
+        setProgressEnabled(true);
       }
 
+
       return () => {
-        // `plyr` here is from the closure of the effect when listeners were attached.
-        // Check if the instance is still valid and not destroyed before trying to remove listeners.
         if (plyr && !plyr.destroyed && typeof plyr.off === 'function') {
           try {
             plyr.off('timeupdate', onTimeUpdate);
@@ -335,7 +339,7 @@ function OfferContent() {
         }
       };
     }
-  }, [progressEnabled, videoCompleted, videoStarted, playerRef.current]);
+  }, [videoCompleted, videoStarted, progressEnabled, playerRef.current]);
 
 
   useEffect(() => {
@@ -404,8 +408,6 @@ function OfferContent() {
     <>
       <Head>
         <title>Рrоgrаmа Sаquе Sосiаl - Oferta</title>
-        {/* Preload and DNS prefetch links for external video player resources (if any specific ones are needed beyond the video URL itself) */}
-        {/* Example: <link rel="preload" href="https://cdn.plyr.io/static/plyr.svg" as="image" /> */}
       </Head>
       <div className="offer-page-body">
         <header className="offer-page-header">
@@ -458,8 +460,8 @@ function OfferContent() {
                     controls: [], 
                     hideControls: true,
                     clickToPlay: false, 
-                    autoplay: false, 
-                    muted: true, 
+                    autoplay: true, // Autoplay enabled
+                    muted: true,    // Start muted
                     playsinline: true,
                   }}
                 />
@@ -603,3 +605,4 @@ export default function OfferPage() {
     </Suspense>
   );
 }
+
