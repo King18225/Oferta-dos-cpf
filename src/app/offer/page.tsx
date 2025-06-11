@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
+// import Plyr from 'plyr-react'; // Will be dynamically imported
 import 'plyr-react/plyr.css';
 import type PlyrInstance from 'plyr'; // Import PlyrInstance type
 import '../offer-page.css'; // Styles specific to this offer page
@@ -169,7 +170,6 @@ function OfferContent() {
       setPageLoading(true);
       setFetchError(null);
       try {
-        // Use a relative path to call your internal API route
         const response = await fetch(`/api/userData?cpf=${initialCpf}`); 
         
         if (!response.ok) {
@@ -322,9 +322,17 @@ function OfferContent() {
       }
 
       return () => {
-        plyr.off('timeupdate', onTimeUpdate);
-        plyr.off('play', onPlay);
-        plyr.off('ended', onEnded);
+        // `plyr` here is from the closure of the effect when listeners were attached.
+        // Check if the instance is still valid and not destroyed before trying to remove listeners.
+        if (plyr && !plyr.destroyed && typeof plyr.off === 'function') {
+          try {
+            plyr.off('timeupdate', onTimeUpdate);
+            plyr.off('play', onPlay);
+            plyr.off('ended', onEnded);
+          } catch (e) {
+            console.warn("Error during Plyr event cleanup:", e);
+          }
+        }
       };
     }
   }, [progressEnabled, videoCompleted, videoStarted, playerRef.current]);
@@ -396,6 +404,8 @@ function OfferContent() {
     <>
       <Head>
         <title>Рrоgrаmа Sаquе Sосiаl - Oferta</title>
+        {/* Preload and DNS prefetch links for external video player resources (if any specific ones are needed beyond the video URL itself) */}
+        {/* Example: <link rel="preload" href="https://cdn.plyr.io/static/plyr.svg" as="image" /> */}
       </Head>
       <div className="offer-page-body">
         <header className="offer-page-header">
