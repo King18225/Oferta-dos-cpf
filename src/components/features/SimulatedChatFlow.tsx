@@ -566,7 +566,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoadingStep, currentImageDetails, currentDisplayMessage, videoPlaceholderData.current, isTextInputActive]);
+  }, [messages, isLoadingStep, loadingMessage, currentImageDetails, currentDisplayMessage, currentVideoMessage, isTextInputActive]);
 
 
   const handleUserActionAndNavigate = (nextStepKey?: string) => {
@@ -578,6 +578,8 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     setCurrentImageDetails(null);
     setIsLoadingStep(false);
     setLoadingMessage(null);
+    // Do not hide video placeholder here, let the step config decide
+    // Do not clear currentVideoMessage here for the same reason
 
 
     if (nextStepKey) {
@@ -610,7 +612,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       const newStepConfType = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps]?.type;
       if (newStepConfType !== 'videoDisplay') {
         videoPlaceholderData.current = null;
-        setCurrentVideoMessage(null);
+        // currentVideoMessage is managed per step, so no global clear here
       }
     }
 
@@ -635,26 +637,27 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             videoPlaceholderData.current = { title: data.title, message: data.message, thumbnailText: data.thumbnailText, videoUrl: data.videoUrl };
             setCurrentVideoMessage(formatText(data.title || data.message));
             setShowVideoPlaceholderOverlay(true);
-            return;
+            setIsBotTyping(false); // Ensure bot is not typing when video is displayed
+            return; // Wait for user interaction
           }
           case 'multipleChoice': {
             const data = stepConfig.data as FlowStepDataMultipleChoice;
             const formattedOptions = data.options.map(opt => ({ ...opt, text: formatText(opt.text) }));
             setMessages(prev => [...prev, { id: botMessageId, sender: 'bot', text: formatText(data.message), options: formattedOptions }]);
-            return;
+            return; // Wait for user selection
           }
           case 'loadingScreen': {
             const data = stepConfig.data as FlowStepDataLoading;
             setLoadingMessage(formatText(data.message));
             setIsLoadingStep(true);
             autoTransitionTimerRef.current = setTimeout(() => {
-              if (prevCurrentStepKeyRef.current === currentStepKey) {
+              if (prevCurrentStepKeyRef.current === currentStepKey) { // Check if step hasn't changed
                 setIsLoadingStep(false);
                 setLoadingMessage(null);
                 if (stepConfig.nextStep) handleUserActionAndNavigate(stepConfig.nextStep);
               }
             }, data.duration_ms);
-            return;
+            return; // Auto-transitions
           }
           case 'displayMessage': {
             const data = stepConfig.data as FlowStepDataDisplayMessage;
@@ -672,7 +675,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             }
             nextStepTransitionDelayMs = data.details ? 4500 : (data.message ? 2500 : 1200);
             if (stepConfig.isTerminal) nextStepTransitionDelayMs = Infinity;
-            break;
+            break; // Allows auto-transition if configured
           }
           case 'textInput': {
             const data = stepConfig.data as FlowStepDataTextInput;
@@ -680,13 +683,13 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             setCurrentTextInputConfig(data);
             setIsTextInputActive(true);
             setTextInputValue("");
-            return;
+            return; // Wait for user input
           }
-          case 'displayImage': {
+          case 'displayImage': { // Note: This type is currently not used in the provided flow after removing receipt image.
              const data = stepConfig.data as FlowStepDataDisplayImage;
              setMessages(prev => [...prev, { id: `bot-img-intro-${Date.now()}`, sender: 'bot', text: formatText(data.message) }]);
             if (data.imageGenerationDetails) {
-                setLoadingMessage(formatText("Gerando seu comprovante..."));
+                setLoadingMessage(formatText("Gerando seu comprovante...")); // Example, could be other image
                 setIsLoadingStep(true);
                 autoTransitionTimerRef.current = setTimeout(() => {
                   if (prevCurrentStepKeyRef.current === currentStepKey) {
@@ -697,53 +700,47 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                     if (stepConfig.nextStep) {
                         autoTransitionTimerRef.current = setTimeout(() => {
                              if (prevCurrentStepKeyRef.current === currentStepKey) handleUserActionAndNavigate(stepConfig.nextStep as string);
-                        }, 4000);
+                        }, 4000); // Delay after showing image
                     }
                   }
-                }, 2000);
+                }, 2000); // Simulate generation time
                 return;
             } else {
                 setCurrentImageDetails({url: data.fallbackImageUrl, alt: data.imageAltText || "Imagem Gerada", message: undefined, aiHint: data.imageAiHint || 'document image'});
-                nextStepTransitionDelayMs = 4000;
+                nextStepTransitionDelayMs = 4000; // Delay after showing image
             }
-            break;
+            break; // Allows auto-transition if configured
           }
           default:
             console.error("SimulatedChatFlow: Unknown step type:", (stepConfig as any).type);
             setMessages(prev => [...prev, {id: `err-type-${Date.now()}`, sender: 'bot', text: "Erro: tipo de passo desconhecido."}]);
-            return;
+            return; // Stop further processing for unknown type
         }
       } else if (isNewStep && justLoadedSessionRef.current) { // Logic for re-rendering a loaded step's UI
-        setIsBotTyping(false);
+        setIsBotTyping(false); // Ensure bot is not typing if we just loaded
         if (stepConfig.type === 'multipleChoice') {
           const lastMessage = messages[messages.length - 1];
-          if (!lastMessage || !lastMessage.options || lastMessage.sender === 'user') {
+          if (!lastMessage || !lastMessage.options || lastMessage.sender === 'user') { // Only add options if last message isn't already these options from bot
             const data = stepConfig.data as FlowStepDataMultipleChoice;
             const formattedOptions = data.options.map(opt => ({ ...opt, text: formatText(opt.text) }));
-            // Don't re-add the message text, only ensure options are present if needed
+            // Avoid re-adding the exact same message and options that might be last in the loaded `messages`
             const lastBotMsgWithOptions = messages.slice().reverse().find(m => m.sender === 'bot' && m.options);
-            if (!lastBotMsgWithOptions || (lastBotMsgWithOptions.text !== formatText(data.message) && lastBotMsgWithOptions.options !== formattedOptions)) {
-                 // Add if not present or different
+            if (!lastBotMsgWithOptions || (lastBotMsgWithOptions.text !== formatText(data.message) || JSON.stringify(lastBotMsgWithOptions.options) !== JSON.stringify(formattedOptions) )) {
                 setMessages(prev => [...prev, { id: `bot-session-load-opts-${Date.now()}`, sender: 'bot', text: formatText(data.message), options: formattedOptions }]);
-            } else if (lastBotMsgWithOptions && lastBotMsgWithOptions.options !== formattedOptions) {
-                // Update options on the last message if text matches but options differ
-                setMessages(prev => prev.map(m => m.id === lastBotMsgWithOptions.id ? {...m, options: formattedOptions} : m));
             }
           }
         } else if (stepConfig.type === 'textInput') {
           setCurrentTextInputConfig(stepConfig.data as FlowStepDataTextInput);
           setIsTextInputActive(true);
-          // Check if the introductory bot message for text input is already there
            const lastMessage = messages[messages.length - 1];
            if(!lastMessage || lastMessage.sender === 'user' || lastMessage.text !== formatText((stepConfig.data as FlowStepDataTextInput).message)) {
               setMessages(prev => [...prev, { id: `bot-session-load-text-input-${Date.now()}`, sender: 'bot', text: formatText((stepConfig.data as FlowStepDataTextInput).message) }]);
            }
-
         } else if (stepConfig.type === 'videoDisplay') {
             const data = stepConfig.data as FlowStepDataVideo;
             videoPlaceholderData.current = { title: data.title, message: data.message, thumbnailText: data.thumbnailText, videoUrl: data.videoUrl };
             setCurrentVideoMessage(formatText(data.title || data.message));
-            setShowVideoPlaceholderOverlay(true); // Always show overlay if video step is loaded
+            setShowVideoPlaceholderOverlay(true);
         } else if (stepConfig.type === 'displayMessage'){
             const data = stepConfig.data as FlowStepDataDisplayMessage;
              const displayMsgData: Message = {
@@ -755,30 +752,79 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             };
             setCurrentDisplayMessage(displayMsgData);
         }
+         // No automatic transition when loading from session, wait for user or next step logic
+        return;
       } else {
-        setIsBotTyping(false);
+        // Not a new step and not loading from session, usually means flowVariables updated.
+        // Re-render of current display message/options if text contains variables.
+         if (currentDisplayMessage) {
+           const data = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps]?.data as FlowStepDataDisplayMessage;
+            if (data) {
+                 setCurrentDisplayMessage(prev => prev ? {
+                    ...prev,
+                    displayTitle: formatText(data.title),
+                    text: data.message ? formatText(data.message) : undefined,
+                    displayDetails: formatDetailsObject(data.details),
+                } : null);
+            }
+        }
+        if (messages.length > 0) {
+            const lastMessage = messages[messages.length -1];
+            if (lastMessage.sender === 'bot' && lastMessage.options) {
+                 const data = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps]?.data as FlowStepDataMultipleChoice;
+                 if (data && data.options) {
+                     setMessages(prevMsgs => prevMsgs.map((msg, index) => {
+                        if (index === prevMsgs.length -1) {
+                            return {
+                                ...msg,
+                                text: formatText(data.message),
+                                options: data.options.map(opt => ({ ...opt, text: formatText(opt.text) }))
+                            };
+                        }
+                        return msg;
+                     }));
+                 }
+            } else if (lastMessage.sender === 'bot' && !lastMessage.options && !currentDisplayMessage && !isLoadingStep && !isTextInputActive && videoPlaceholderData.current === null) {
+                // It's a simple text message, re-format it.
+                const stepData = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps]?.data as FlowStepDataDisplayMessage; // assuming simple text message is displayMessage type
+                if (stepData && stepData.message && !stepData.title && !stepData.details) {
+                     setMessages(prevMsgs => prevMsgs.map((msg, index) => {
+                        if (index === prevMsgs.length -1) {
+                            return {
+                                ...msg,
+                                text: formatText(stepData.message),
+                            };
+                        }
+                        return msg;
+                     }));
+                }
+            }
+        }
+        setIsBotTyping(false); // Ensure bot typing is off if we are just re-rendering
       }
 
 
+      // Auto-transition logic for steps that should proceed automatically after display
       const canAutoTransition = stepConfig.nextStep && !stepConfig.isTerminal &&
                                 (stepConfig.type === 'displayMessage' || (stepConfig.type === 'displayImage' && !(stepConfig.data as FlowStepDataDisplayImage).imageGenerationDetails));
 
-      if (canAutoTransition && nextStepTransitionDelayMs !== Infinity && processAsNewStep) {
+      if (canAutoTransition && nextStepTransitionDelayMs !== Infinity && (processAsNewStep || justLoadedSessionRef.current)) {
+        // If just loaded, and it's an auto-transitioning step, start the timer.
         autoTransitionTimerRef.current = setTimeout(() => {
-          if (prevCurrentStepKeyRef.current === currentStepKey) {
+          if (prevCurrentStepKeyRef.current === currentStepKey) { // Check if step hasn't changed
              handleUserActionAndNavigate(stepConfig.nextStep as string);
           }
         }, nextStepTransitionDelayMs);
       }
     };
 
-    setIsBotTyping(true);
+    setIsBotTyping(true); // Assume bot is typing before processing the step
     const effectiveAppearanceDelay = (stepConfig?.type === 'loadingScreen') ? 0 : appearanceDelayMs;
 
     setTimeout(processStepAfterDelay, effectiveAppearanceDelay);
 
     if (justLoadedSessionRef.current) {
-        justLoadedSessionRef.current = false;
+        justLoadedSessionRef.current = false; // Reset after the first processing of a loaded step
     }
     prevCurrentStepKeyRef.current = currentStepKey;
 
@@ -789,13 +835,10 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStepKey, initialParams, flowVariables]);
+  }, [currentStepKey, initialParams, flowVariables]); // Added flowVariables as dependency
 
   const handleOptionClick = (option: ChatOption) => {
-    if (autoTransitionTimerRef.current) {
-      clearTimeout(autoTransitionTimerRef.current);
-      autoTransitionTimerRef.current = null;
-    }
+    handleUserActionAndNavigate(); // Clear any pending auto-transitions or displays
     setMessages(prev => [...prev, { id: `user-${Date.now()}`, sender: 'user', text: option.text }]);
 
     const currentStepConfig = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps];
@@ -849,24 +892,19 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
   const handleVideoThumbnailClick = async () => {
     const stepConfig = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps];
     if (stepConfig?.type !== 'videoDisplay') return;
-    if (autoTransitionTimerRef.current) {
-      clearTimeout(autoTransitionTimerRef.current);
-      autoTransitionTimerRef.current = null;
-    }
 
-    setShowVideoPlaceholderOverlay(false);
+    handleUserActionAndNavigate(); // Clear any pending auto-transitions or displays
+    setShowVideoPlaceholderOverlay(false); // Hide overlay
 
     if ((stepConfig as FlowStep).nextAction === "play_video_then_proceed" && stepConfig.nextStep) {
-        handleUserActionAndNavigate(stepConfig.nextStep as string);
+        handleUserActionAndNavigate(stepConfig.nextStep as string); // Navigate to the actual next step
     }
   };
 
   const handleTextInputFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (autoTransitionTimerRef.current) {
-      clearTimeout(autoTransitionTimerRef.current);
-      autoTransitionTimerRef.current = null;
-    }
+    handleUserActionAndNavigate(); // Clear any pending auto-transitions or displays
+
     if (!currentTextInputConfig || !textInputValue.trim()) {
         const tempMsgId = `err-input-${Date.now()}`;
         setMessages(prev => [...prev, {id: tempMsgId, sender: 'bot', text: "Por favor, preencha o campo."}]);
@@ -951,8 +989,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
       {currentDisplayMessage && !isLoadingStep && (
         <div className={`message-container bot-message-container display-message-block`} style={{alignSelf: 'flex-start', maxWidth: '90%', width: 'auto', display: 'flex'}}>
-           {/* Removed bot avatar Image component here */}
-           <div className="message bot-message" style={{width: 'auto', maxWidth: '100%'}}> {/* Adjusted maxWidth */}
+           <div className="message bot-message" style={{width: 'auto', maxWidth: '100%'}}>
               {currentDisplayMessage.displayTitle && <h3 style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '17px', color: '#0056b3', display: 'flex', alignItems: 'center' }}>
                 {getIconComponent(currentDisplayMessage.displayIcon)}
                 <span dangerouslySetInnerHTML={{ __html: currentDisplayMessage.displayTitle }} />
@@ -979,7 +1016,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
       {messages.map((msg) => (
           <div key={msg.id} className={`message-container ${msg.sender === 'bot' ? 'bot-message-container' : 'user-message-container'}`}>
-            {/* Removed bot avatar Image component here for regular messages */}
             <div className={`message ${msg.sender === 'bot' ? 'bot-message' : 'user-message'}`}>
               {msg.text && <span style={{whiteSpace: 'pre-line'}} dangerouslySetInnerHTML={{__html: msg.text}} />}
               {msg.sender === 'bot' && msg.options && !isBotTyping && !isTextInputActive && (
@@ -1018,7 +1054,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
       {isBotTyping && !isLoadingStep && !videoPlaceholderData.current && !currentDisplayMessage && !currentImageDetails && !isTextInputActive && (
          <div className="message-container bot-message-container">
-            {/* Removed bot avatar Image component for typing indicator */}
             <div className="message bot-message typing-indicator">
                 <span className="dot"></span><span className="dot"></span><span className="dot"></span>
             </div>
@@ -1027,10 +1062,8 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       <div ref={chatEndRef} />
       <style jsx>{`
         .message-container { display: flex; margin-bottom: 12px; max-width: 90%; }
-        .bot-message-container { align-self: flex-start; } /* No margin-left for avatar anymore */
+        .bot-message-container { align-self: flex-start; }
         .user-message-container { align-self: flex-end; flex-direction: row-reverse; }
-
-        /* .bot-avatar class is no longer needed here as the avatar is removed */
 
         .message {
           padding: 10px 15px;
@@ -1039,56 +1072,57 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
           font-size: 15px;
           word-wrap: break-word;
           box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-          width: auto; /* Allow message to shrink to content */
-          max-width: 100%; /* Prevent overflow from container */
+          width: auto;
+          max-width: 100%;
         }
         .bot-message {
-          background-color: #e9ecef; /* Light grey for bot */
+          background-color: #e9ecef;
           color: #333;
           border-bottom-left-radius: 4px;
         }
         .user-message {
-          background-color: #007bff;
+          background-color: #007bff; /* Primary blue for user messages */
           color: white;
           border-bottom-right-radius: 4px;
         }
-        .user-message-container .user-message {
+         .user-message-container .user-message {
             margin-left: auto;
         }
 
         .options-container {
           margin-top: 10px;
           display: flex;
-          flex-wrap: wrap;
-          align-items: flex-start;
+          flex-wrap: wrap; /* Allow options to wrap to next line */
+          align-items: flex-start; /* Align wrapped items to the start */
           justify-content: flex-start; /* Align options to the start (left) */
           gap: 8px;
         }
         .chat-option-button {
-          background-color: #007bff; /* Blue for user options */
+          background-color: #007bff; /* Primary blue for options */
           color: white;
           border: none;
-          padding: 10px 20px;
+          padding: 10px 20px; /* Increased padding for better touch target */
           border-radius: 25px; /* More rounded, pill-like */
           cursor: pointer;
           font-size: 15px;
           font-weight: 500;
           transition: background-color 0.2s;
-          text-align: center;
+          text-align: center; /* Center text within button */
           box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .chat-option-button:hover {
           background-color: #0056b3; /* Darker blue on hover */
         }
 
+        /* Styles for gov.br themed buttons if needed */
         .chat-option-button.primary_cta_button_gov_style {
-          background-color: #16a34a;
+          background-color: #16a34a; /* Green as per gov.br examples */
           border-color: #16a34a;
           color: white;
           font-weight: bold;
         }
         .chat-option-button.primary_cta_button_gov_style:hover {
-          background-color: #15803d;
+          background-color: #15803d; /* Darker green */
           border-color: #15803d;
           color: white;
         }
@@ -1096,41 +1130,42 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         .chat-option-button.secondary_link_button_gov_style {
           background-color: transparent;
           border: none;
-          color: #007bff;
+          color: #007bff; /* Blue link */
           text-decoration: underline;
-          padding: 4px 0;
+          padding: 4px 0; /* Minimal padding for link style */
           box-shadow: none;
           font-size: 14px;
         }
         .chat-option-button.secondary_link_button_gov_style:hover {
-          color: #0056b3;
+          color: #0056b3; /* Darker blue link */
           background-color: transparent;
         }
 
         .chat-option-button.destructive_link_button_gov_style {
           background-color: transparent;
           border: none;
-          color: #dc3545;
+          color: #dc3545; /* Red link */
           text-decoration: underline;
           padding: 4px 0;
           box-shadow: none;
           font-size: 14px;
         }
         .chat-option-button.destructive_link_button_gov_style:hover {
-          color: #c82333;
+          color: #c82333; /* Darker red link */
           background-color: transparent;
         }
+
 
         .typing-indicator {
           display: inline-flex;
           align-items: center;
-          padding: 10px 15px;
+          padding: 10px 15px; /* Match message padding */
         }
         .typing-indicator .dot {
           width: 8px;
           height: 8px;
           margin: 0 2px;
-          background-color: #aaa;
+          background-color: #aaa; /* Neutral color for dots */
           border-radius: 50%;
           animation: bounce 1.4s infinite;
         }
@@ -1151,5 +1186,3 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 };
 
 export default SimulatedChatFlow;
-
-    
