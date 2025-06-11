@@ -133,7 +133,7 @@ body.offer-page-body {
   height: 16px;
 }
 
-.offer-page-nav button p { /* Changed from span to p for the text part */
+.offer-page-nav button p { 
   color: #666;
   font-size: 14px;
   font-weight: 300;
@@ -154,69 +154,24 @@ body.offer-page-body {
   width: 100%;
 }
 
-.progress-container {
-  width: 100%;
-  height: 15px;
-  background-color: #e5e5e5;
-  border-radius: 10px;
-  margin-bottom: 16px;
-  overflow: hidden;
-}
-
-.progress-bar {
-  width: 0%;
-  height: 100%;
-  background-color: #1451b4;
-  transition: width 0.2s linear;
-}
-
 .video-container {
   position: relative;
+  padding-bottom: 56.25%; /* 16:9 Aspect Ratio for responsive iframe */
+  height: 0;
+  overflow: hidden;
   width: 100%;
+  background-color: #000; /* Optional: Show black background while loading */
+  border-radius: 8px; /* Optional: if you want rounded corners for the video area */
+  margin-bottom: 20px; /* Add some space below the video */
 }
 
-.video-container video {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-.thumbnail-overlay {
+.video-container iframe {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  display: none; /* Controlled by JS */
-  background: transparent;
-  justify-content: center;
-  align-items: center;
-  z-index: 10; /* Ensure it's above video but below other overlays if any */
-  cursor: pointer;
-}
-
-.thumbnail-content {
-  background: rgba(0, 0, 0, 0.4);
-  border-radius: 8px;
-  padding: 20px;
-  text-align: center;
-  animation: pulse 2s infinite;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.thumbnail-content h2 {
-  font-size: 24px;
-  color: #fff;
-  margin-bottom: 12px;
-}
-
-.thumbnail-content .lucide { /* Target Lucide icons */
-  font-size: 64px; /* This might not work as Lucide icons are SVGs */
-  color: #fff;
-  width: 64px; /* Set width */
-  height: 64px; /* Set height */
+  width: 100%;
+  height: 100%;
+  border: 0; /* Remove default iframe border */
 }
 
 
@@ -234,37 +189,6 @@ body.offer-page-body {
   }
 }
 
-.resgate-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: none; /* Controlled by JS */
-  background: #1451b4;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  color: #fff;
-  padding: 20px;
-  z-index: 20; /* Higher than thumbnail */
-}
-
-.resgate-content {
-  max-width: 80%;
-  margin: 0 auto;
-}
-
-.resgate-content h2 {
-  font-size: 20px;
-  margin-bottom: 10px;
-}
-
-.resgate-content p {
-  font-size: 16px;
-  line-height: 1.4;
-}
-
 .info-container {
   margin-top: 16px;
   display: flex;
@@ -280,10 +204,10 @@ body.offer-page-body {
   gap: 6px;
 }
 
-.info-item .lucide { /* Target Lucide icons */
+.info-item .lucide { 
   color: #1451b4;
-  width: 16px; /* Example size, adjust as needed */
-  height: 16px; /* Example size, adjust as needed */
+  width: 16px; 
+  height: 16px; 
 }
 
 
@@ -343,7 +267,7 @@ body.offer-page-body {
   align-items: center;
 }
 
-.fb-header .fb-loading .lucide { /* Target Lucide icons */
+.fb-header .fb-loading .lucide { 
   margin-right: 6px;
   width: 14px;
   height: 14px;
@@ -403,7 +327,7 @@ body.offer-page-body {
   color: #606770;
 }
 
-.comment-actions .lucide { /* Target Lucide icons */
+.comment-actions .lucide { 
   margin-right: 4px;
   width: 12px;
   height: 12px;
@@ -550,10 +474,10 @@ body.offer-page-body {
 }
 
 .bot-avatar {
-  height: 24px; /* Adjusted from 15px for better visibility */
-  width: 24px; /* Added for consistency */
+  height: 24px; 
+  width: 24px; 
   margin-right: 8px;
-  border-radius: 50%; /* Make it round */
+  border-radius: 50%; 
 }
 
 .chat-footer {
