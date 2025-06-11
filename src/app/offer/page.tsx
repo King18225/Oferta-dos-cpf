@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense, useMemo } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -265,10 +265,8 @@ function OfferContent() {
     if (playerRef.current?.plyr) {
       try {
         playerRef.current.plyr.muted = false;
-        await playerRef.current.plyr.play(); // Ensures playing, useful if somehow paused
+        await playerRef.current.plyr.play(); 
         setShowThumbnailOverlay(false);
-        // setProgressEnabled(true); // Already handled by 'play' event
-        // setVideoStarted(true); // Already handled by 'play' event
       } catch (error) {
         console.error("Error trying to play/unmute video:", error);
       }
@@ -301,7 +299,7 @@ function OfferContent() {
         }
       };
       const onPlay = () => {
-        if (!videoCompleted) { // Allows setting started and progress even if thumbnail is still up for unmuting
+        if (!videoCompleted) { 
           if (!videoStarted) setVideoStarted(true);
           if (!progressEnabled) setProgressEnabled(true);
         } else if (videoCompleted) {
@@ -316,13 +314,10 @@ function OfferContent() {
       plyr.on('play', onPlay);
       plyr.on('ended', onEnded);
       
-      // Handle initial state from localStorage
       if (videoCompleted) {
         finalizeProgressAppearance();
-        setShowThumbnailOverlay(false); // Ensure overlay is hidden if video was already completed
+        setShowThumbnailOverlay(false); 
       } else if (videoStarted) {
-        // If video was started (e.g. from localStorage), enable progress.
-        // Thumbnail overlay remains visible for unmuting, controlled by handleThumbnailClick.
         setProgressEnabled(true);
       }
 
@@ -390,6 +385,21 @@ function OfferContent() {
   }, []); 
 
 
+  const plyrSource = useMemo(() => ({
+    type: 'video' as const,
+    sources: [{ src: videoUrl, provider: 'html5' as const }],
+  }), [videoUrl]);
+
+  const plyrOptions = useMemo(() => ({
+    controls: [], 
+    hideControls: true,
+    clickToPlay: false, 
+    autoplay: true, 
+    muted: true,    
+    playsinline: true,
+  }), []);
+
+
   if (pageLoading) {
     return (
       <div id="loading-screen">
@@ -452,18 +462,8 @@ function OfferContent() {
             <div className="video-container">
                <Plyr
                   ref={playerRef}
-                  source={{
-                    type: 'video',
-                    sources: [{ src: videoUrl, provider: 'html5' }],
-                  }}
-                  options={{
-                    controls: [], 
-                    hideControls: true,
-                    clickToPlay: false, 
-                    autoplay: true, // Autoplay enabled
-                    muted: true,    // Start muted
-                    playsinline: true,
-                  }}
+                  source={plyrSource}
+                  options={plyrOptions}
                 />
                 {showThumbnailOverlay && (
                   <div className="thumbnail-overlay" onClick={handleThumbnailClick}>
