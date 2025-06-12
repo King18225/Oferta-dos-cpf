@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React, { useState, useEffect, useRef, FC } from 'react';
@@ -711,15 +710,16 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         }
       };
       processStepAfterDelayInternal();
-
-      if (justLoadedSessionRef.current && isNewStep) {
-          justLoadedSessionRef.current = false;
-      }
-
     }, effectiveAppearanceDelay);
 
     if (isNewStep) {
       prevCurrentStepKeyRef.current = currentStepKey;
+    }
+    
+    if (justLoadedSessionRef.current && isNewStep) {
+        setTimeout(() => {
+            justLoadedSessionRef.current = false;
+        }, 0);
     }
 
     return () => {
@@ -729,7 +729,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         autoTransitionTimerRef.current = null;
       }
     };
-  }, [currentStepKey, initialParams]); // Main useEffect depends only on step key and initial params
+  }, [currentStepKey, initialParams]); 
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -805,7 +805,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       videoPlayerRef.current.play().catch(e => console.warn("Error trying to play video after unmuting:", e));
     }
     setShowVideoSoundOverlay(false);
-    setIsBotTyping(true); 
   };
 
   const handleVideoEnded = () => {
@@ -880,7 +879,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             <video
               ref={videoPlayerRef}
               src={currentVideoData.videoUrl}
-              autoPlay
               muted={isVideoMuted}
               playsInline
               onEnded={handleVideoEnded}
