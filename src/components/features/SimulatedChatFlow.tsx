@@ -709,28 +709,41 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         const canAutoTransition = stepConfig.nextStep && !stepConfig.isTerminal &&
                                   (stepConfig.type === 'displayMessage' || stepConfig.type === 'displayDynamicImage');
 
-        let nextStepTransitionDelayMs = stepConfig.type === 'displayMessage' ? 4500 : (stepConfig.type === 'displayDynamicImage' ? 3000 : 0);
-        if (stepConfig.type === 'displayMessage') {
-            const msgData = stepConfig.data as FlowStepDataDisplayMessage;
-            if (!msgData.audioUrl) {
-                if (!msgData.details && !msgData.title) { // Message is likely just simple text
-                     nextStepTransitionDelayMs = msgData.message ? Math.max(1200, msgData.message.length * 50) : 1200; // Adjust delay based on text length
-                } else { // Has details or title, but no audio
-                    nextStepTransitionDelayMs = 3500;
-                }
-            } else {
-                // For messages with audio, transition is handled by audio 'ended' event.
-                // This delay is a fallback or if audio fails to load/play.
-                nextStepTransitionDelayMs = (audioPlayerRef.current?.duration || 8) * 1000 + 1500;
-            }
-        }
-
-
         if (canAutoTransition && (processAsNewStep || (isNewStep && justLoadedSessionRef.current && messageAddedInThisStep))) {
-            const data = stepConfig.data as FlowStepDataDisplayMessage;
-            if (stepConfig.type !== 'displayMessage' || !data.audioUrl) {
+            let nextStepTransitionDelayMs = 0;
+
+            if (stepConfig.type === 'displayMessage') {
+                const msgData = stepConfig.data as FlowStepDataDisplayMessage;
+                if (msgData.audioUrl) {
+                    if (stepConfig.key === 'step5b_audio_message') {
+                        nextStepTransitionDelayMs = 9500; // ~8s audio + 1.5s buffer
+                    } else if (stepConfig.key === 'step9b_audio_message') {
+                        nextStepTransitionDelayMs = 10500; // ~9s audio + 1.5s buffer
+                    } else if (stepConfig.key === 'step12b_audio_message') {
+                        nextStepTransitionDelayMs = 10000; // 10s (user specified)
+                    } else {
+                        // Fallback, e.g. if audio duration is not known or key changes
+                        nextStepTransitionDelayMs = (audioPlayerRef.current?.duration ? (audioPlayerRef.current.duration * 1000) : 8000) + 1500;
+                    }
+                } else { // Mensagem de display SEM áudio
+                    if (!msgData.details && !msgData.title) {
+                         nextStepTransitionDelayMs = msgData.message ? Math.max(1200, msgData.message.length * 50) : 1200;
+                    } else {
+                        nextStepTransitionDelayMs = 3500;
+                    }
+                }
+            } else if (stepConfig.type === 'displayDynamicImage') {
+                nextStepTransitionDelayMs = 3000;
+            }
+
+            if (nextStepTransitionDelayMs > 0) {
                 autoTransitionTimerRef.current = setTimeout(() => {
-                    if (prevCurrentStepKeyRef.current === currentStepKey && currentStepKey === stepConfig.key) {
+                    const audioIsCurrentlyPlayingForThisStep = stepConfig.type === 'displayMessage' &&
+                                                                (stepConfig.data as FlowStepDataDisplayMessage).audioUrl &&
+                                                                isAudioPlaying &&
+                                                                messages.find(m => m.id === currentPlayingAudioId)?.audioUrl === (stepConfig.data as FlowStepDataDisplayMessage).audioUrl;
+
+                    if (prevCurrentStepKeyRef.current === currentStepKey && currentStepKey === stepConfig.key && !audioIsCurrentlyPlayingForThisStep) {
                         handleUserActionAndNavigate(stepConfig.nextStep as string);
                     }
                 }, nextStepTransitionDelayMs);
@@ -770,6 +783,11 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         setIsAudioPlaying(false);
         // Do not nullify currentPlayingAudioId here, so the icon remains "Play"
 
+        if (autoTransitionTimerRef.current) {
+          clearTimeout(autoTransitionTimerRef.current);
+          autoTransitionTimerRef.current = null;
+        }
+
         const stepConfig = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps];
         const currentMessageWithAudio = messages.find(m => m.id === currentPlayingAudioId);
 
@@ -778,7 +796,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             (stepConfig.data as FlowStepDataDisplayMessage).audioUrl &&
             currentMessageWithAudio?.audioUrl === (stepConfig.data as FlowStepDataDisplayMessage).audioUrl &&
             stepConfig.nextStep) {
-           if(autoTransitionTimerRef.current) clearTimeout(autoTransitionTimerRef.current);
            // Add a slight delay before navigating to ensure UI updates (e.g., pause icon back to play)
            setTimeout(() => {
              handleUserActionAndNavigate(stepConfig.nextStep as string);
