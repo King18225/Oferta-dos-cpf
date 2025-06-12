@@ -27,9 +27,9 @@ interface ChatOption {
 }
 
 interface FlowStepDataDisplayVideo {
-  message?: string;
+  message?: string; // Introductory message for the video
   videoUrl: string;
-  thumbnailText?: string; // Agora usado para o overlay de som
+  thumbnailText?: string;
 }
 
 interface FlowStepDataMultipleChoice {
@@ -296,7 +296,7 @@ const STORAGE_KEY_STEP = 'simulatedChatCurrentStepKey_v2_1';
 const STORAGE_KEY_VARIABLES = 'simulatedChatFlowVariables_v2_1';
 const STORAGE_KEY_SESSION_CPF = 'simulatedChatSessionCpf_v2_1';
 
-const DEFAULT_APPEARANCE_DELAY_MS = 500; // Fallback if step delay_ms is not defined
+const DEFAULT_APPEARANCE_DELAY_MS = 500;
 
 const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initialParams }) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -322,7 +322,11 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
   const audioRef = useRef<HTMLAudioElement>(null);
   const videoPlayerRef = useRef<HTMLVideoElement>(null);
 
-  const [currentVideoData, setCurrentVideoData] = useState<FlowStepDataDisplayVideo | null>(null);
+  const [currentVideoData, setCurrentVideoData] = useState<{
+    videoUrl: string;
+    introductoryMessage?: string;
+    thumbnailText?: string;
+  } | null>(null);
   const [showVideoSoundOverlay, setShowVideoSoundOverlay] = useState(true);
   const [isVideoMuted, setIsVideoMuted] = useState(true);
 
@@ -503,7 +507,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     setCurrentImageDetails(null);
     setIsLoadingStep(false);
     setLoadingMessage(null);
-    setCurrentVideoData(null); // Clear video data when navigating away from a video step
+    setCurrentVideoData(null);
     setIsTextInputActive(false);
     setCurrentTextInputConfig(null);
 
@@ -559,10 +563,13 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
           switch (stepConfig.type) {
             case 'displayVideo': {
               const data = stepConfig.data as FlowStepDataDisplayVideo;
-              setMessages(prev => [...prev, { id: `bot-video-msg-${Date.now()}`, sender: 'bot', text: formatText(data.message)}]);
-              setCurrentVideoData({ ...data, thumbnailText: data.thumbnailText || "Clique para ativar o som" });
-              setShowVideoSoundOverlay(true); // Show overlay for sound
-              setIsVideoMuted(true); // Video starts muted for autoplay
+              setCurrentVideoData({
+                videoUrl: data.videoUrl,
+                introductoryMessage: data.message ? formatText(data.message) : undefined,
+                thumbnailText: data.thumbnailText || "Clique para ativar o som"
+              });
+              setShowVideoSoundOverlay(true);
+              setIsVideoMuted(true);
               break;
             }
             case 'multipleChoice': {
@@ -582,8 +589,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                   if (stepConfig.nextStep) handleUserActionAndNavigate(stepConfig.nextStep);
                 }
               }, data.duration_ms);
-              setIsBotTyping(false);
-              return;
+              break;
             }
             case 'displayMessage': {
               const data = stepConfig.data as FlowStepDataDisplayMessage;
@@ -672,12 +678,11 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                 }
           } else if (stepConfig.type === 'displayVideo') {
             const data = stepConfig.data as FlowStepDataDisplayVideo;
-            // Check if the introductory message for the video is already the last message
-            const lastMessage = messages[messages.length - 1];
-            if (!lastMessage || lastMessage.text !== formatText(data.message)) {
-                 setMessages(prev => [...prev, { id: `bot-video-msg-session-${Date.now()}`, sender: 'bot', text: formatText(data.message)}]);
-            }
-            setCurrentVideoData({ ...data, thumbnailText: data.thumbnailText || "Clique para ativar o som" });
+            setCurrentVideoData({
+                videoUrl: data.videoUrl,
+                introductoryMessage: data.message ? formatText(data.message) : undefined,
+                thumbnailText: data.thumbnailText || "Clique para ativar o som"
+            });
             setShowVideoSoundOverlay(true);
             setIsVideoMuted(true);
           }
@@ -695,7 +700,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
           }
         }
         
-        // This must be called *after* the switch sets up the UI elements for the current step
         setIsBotTyping(false);
 
 
@@ -744,7 +748,11 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
 
   const handleOptionClick = (option: ChatOption) => {
-    // Clear UI elements from the previous step
+    if (!option.text) {
+      console.warn("SimulatedChatFlow: Option clicked with no text.");
+      return;
+    }
+
     setCurrentDisplayMessage(null);
     setCurrentImageDetails(null);
     setIsLoadingStep(false);
@@ -753,26 +761,16 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     setIsTextInputActive(false);
     setCurrentTextInputConfig(null);
     
-    const userMessageText = option.text;
-    if (!userMessageText) {
-        console.warn("SimulatedChatFlow: Option clicked with no text.");
-        return; // Or handle as an error
-    }
     const userMessageId = `user-${Date.now()}`;
-
     setMessages(prevMsgs => {
-      let msgsWithUserReply = [...prevMsgs, { id: userMessageId, sender: 'user', text: userMessageText }];
-      let repliedToBotMessageIndex = -1;
-      for (let i = msgsWithUserReply.length - 2; i >= 0; i--) {
-        if (msgsWithUserReply[i].sender === 'bot' && msgsWithUserReply[i].options && msgsWithUserReply[i].options.length > 0) {
-          repliedToBotMessageIndex = i;
-          break;
-        }
-      }
+      const msgsWithUserReply = [...prevMsgs, { id: userMessageId, sender: 'user', text: option.text }];
+      const repliedToBotMessageIndex = msgsWithUserReply.slice(0, -1).reverse().findIndex(
+        (msg) => msg.sender === 'bot' && msg.options && msg.options.length > 0
+      );
       if (repliedToBotMessageIndex !== -1) {
+        const originalIndex = msgsWithUserReply.length - 2 - repliedToBotMessageIndex;
         const finalMsgs = [...msgsWithUserReply];
-        const updatedBotMessage = { ...finalMsgs[repliedToBotMessageIndex], options: undefined };
-        finalMsgs[repliedToBotMessageIndex] = updatedBotMessage;
+        finalMsgs[originalIndex] = { ...finalMsgs[originalIndex], options: undefined };
         return finalMsgs;
       }
       return msgsWithUserReply;
@@ -819,14 +817,12 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       videoPlayerRef.current.play().catch(e => console.warn("Error trying to play video after unmuting:", e));
     }
     setShowVideoSoundOverlay(false);
-    // Do not navigate here; navigation happens on video end
   };
 
   const handleVideoEnded = () => {
     const stepConfig = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps];
     if (stepConfig?.type === 'displayVideo' && stepConfig.nextStep) {
-      setCurrentVideoData(null); // Clear video UI
-      setIsBotTyping(true); // Show typing for next step
+      setIsBotTyping(true); 
       handleUserActionAndNavigate(stepConfig.nextStep);
     }
   };
@@ -877,6 +873,13 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
       {currentVideoData && !isBotTyping && !isLoadingStep && (
         <div className="video-player-section" style={{ marginBottom: '15px', padding: '10px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+          {currentVideoData.introductoryMessage && (
+             <div className="message-container bot-message-container" style={{marginBottom: '10px', alignSelf: 'flex-start'}}>
+                <div className="message bot-message">
+                  {currentVideoData.introductoryMessage}
+                </div>
+            </div>
+          )}
           <div
             className="video-wrapper"
             style={{
@@ -889,7 +892,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               ref={videoPlayerRef}
               src={currentVideoData.videoUrl}
               autoPlay
-              muted={isVideoMuted} // Controlled by state now
+              muted={isVideoMuted}
               playsInline
               onEnded={handleVideoEnded}
               style={{ width: '100%', height: '100%', display: 'block', borderRadius: '8px' }}
@@ -1145,6 +1148,3 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 };
 
 export default SimulatedChatFlow;
-
-
-      
