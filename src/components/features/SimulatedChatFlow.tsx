@@ -69,7 +69,7 @@ interface FlowStepDataDisplayDynamicImage {
 }
 
 interface FlowStep {
-  key: string; 
+  key: string;
   type: 'displayVideo' | 'multipleChoice' | 'loading' | 'displayMessage' | 'textInput' | 'displayDynamicImage';
   delay_ms?: number;
   data: FlowStepDataDisplayVideo | FlowStepDataMultipleChoice | FlowStepDataLoading | FlowStepDataDisplayMessage | FlowStepDataTextInput | FlowStepDataDisplayDynamicImage;
@@ -80,11 +80,24 @@ interface FlowStep {
 interface Message {
   id: string;
   sender: 'bot' | 'user';
-  text?: string;
-  options?: ChatOption[];
+  text?: string; // For standard text, user replies, and the main message of multipleChoice
+  options?: ChatOption[]; // For multipleChoice
+
+  // For 'displayMessage' type steps
+  isDisplayMessage?: boolean;
   displayTitle?: string;
   displayDetails?: Record<string, string>;
   displayIcon?: 'success_checkmark' | 'currency_dollar_gov_style' | 'warning_amber_gov_style' | string;
+  audioUrl?: string; // Can also be part of a displayMessage
+  displayNote?: string;
+
+
+  // For 'displayDynamicImage' type steps
+  isDisplayImage?: boolean;
+  imageUrl?: string;
+  imageAlt?: string;
+  imageAiHint?: string;
+  imageMessage?: string; // The introductory text for the image, e.g., "Gerando seu comprovante..."
 }
 
 
@@ -261,7 +274,7 @@ const funnelDefinition: {
       "delay_ms": 1000,
       "data": {
         "message": "Gerando seu comprovante de recebimento dos valores...",
-        "templateUrl": "https://i.imgur.com/J8z6Y7z.png", 
+        "templateUrl": "https://i.imgur.com/J8z6Y7z.png",
         "imageAiHint": "receipt screenshot",
         "imageAltText": "Comprovante Gerado",
         "dataMapping": [
@@ -307,12 +320,12 @@ const funnelDefinition: {
   }
 };
 
-const STORAGE_KEY_MESSAGES = 'simulatedChatMessages_v2_2';
-const STORAGE_KEY_STEP = 'simulatedChatCurrentStepKey_v2_2';
-const STORAGE_KEY_VARIABLES = 'simulatedChatFlowVariables_v2_2';
-const STORAGE_KEY_SESSION_ID = 'simulatedChatSessionId_v2_2';
+const STORAGE_KEY_MESSAGES = 'simulatedChatMessages_v2_3'; // Incremented version
+const STORAGE_KEY_STEP = 'simulatedChatCurrentStepKey_v2_3'; // Incremented version
+const STORAGE_KEY_VARIABLES = 'simulatedChatFlowVariables_v2_3'; // Incremented version
+const STORAGE_KEY_SESSION_ID = 'simulatedChatSessionId_v2_3'; // Incremented version
 
-const DEFAULT_APPEARANCE_DELAY_MS = 3000;
+const DEFAULT_APPEARANCE_DELAY_MS = 500;
 
 const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initialParams }) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -349,9 +362,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
   const [isLoadingStep, setIsLoadingStep] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState<string | null>(null);
 
-  const [currentImageDetails, setCurrentImageDetails] = useState<{url: string; alt: string; message?: string, aiHint?: string} | null>(null);
-  const [currentDisplayMessage, setCurrentDisplayMessage] = useState<Message | null>(null);
-
   const [isTextInputActive, setIsTextInputActive] = useState(false);
   const [currentTextInputConfig, setCurrentTextInputConfig] = useState<FlowStepDataTextInput | null>(null);
   const [textInputValue, setTextInputValue] = useState("");
@@ -377,9 +387,9 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         userCPF: initialParams.cpf || '---.---.---.--',
         userBirthDate: initialParams.nascimento || '--/--/----',
         userMotherName: initialParams.mae || 'Nome da Mãe Indisponível',
-        randomMotherName1: 'Maria da Silva Souza', 
+        randomMotherName1: 'Maria da Silva Souza',
         randomMotherName2: 'Joana Oliveira Costa',
-        chavePix: initialParams.cpf || '---.---.---.--', 
+        chavePix: initialParams.cpf || '---.---.---.--',
     };
 
     if (initialParams.cpf && storedSessionId === currentSessionId) {
@@ -423,7 +433,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       prevCurrentStepKeyRef.current = undefined;
       justLoadedSessionRef.current = false;
     }
-  }, [initialParams.cpf, initialParams.nome, initialParams.mae, initialParams.nascimento]); 
+  }, [initialParams.cpf, initialParams.nome, initialParams.mae, initialParams.nascimento]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -460,9 +470,9 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     if (!text) return '';
     let formattedText = text;
     const allVars = {
-        ...initialParams, 
+        ...initialParams,
         ...(funnelDefinition.globalVariables || {}),
-        ...flowVariables, 
+        ...flowVariables,
     };
 
     allVars.userName = flowVariables.userName || initialParams.nome || 'Usuário';
@@ -476,14 +486,14 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       let valueToInsert = String(allVars[key]);
 
       if (valueToInsert !== undefined && valueToInsert !== null && valueToInsert.toLowerCase() !== "null" && valueToInsert.toLowerCase() !== "undefined") {
-        if ((key === 'userCPF' || key === 'chavePix') && valueToInsert.match(/^\d{11}$/)) { 
+        if ((key === 'userCPF' || key === 'chavePix') && valueToInsert.match(/^\d{11}$/)) {
             valueToInsert = valueToInsert.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
         } else if (key === 'userCPF' && valueToInsert.match(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/)) {
-            
-        } else if (key === 'userBirthDate' && valueToInsert.match(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3}Z?)?)?$/)) { 
+            // Already formatted
+        } else if (key === 'userBirthDate' && valueToInsert.match(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3}Z?)?)?$/)) {
             const datePart = valueToInsert.split('T')[0];
             const parts = datePart.split('-');
-            if (parts.length === 3) valueToInsert = `${parts[2]}/${parts[1]}/${parts[0]}`; 
+            if (parts.length === 3) valueToInsert = `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
         else if ((key === 'userName' || key === 'userMotherName') && valueToInsert && valueToInsert === valueToInsert.toLowerCase()) {
              valueToInsert = valueToInsert
@@ -513,12 +523,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         clearTimeout(autoTransitionTimerRef.current);
         autoTransitionTimerRef.current = null;
     }
-    setCurrentDisplayMessage(null);
-    setCurrentImageDetails(null);
-    setIsLoadingStep(false);
-    setLoadingMessage(null);
-    setIsTextInputActive(false);
-    setCurrentTextInputConfig(null);
 
     if (nextStepKey && funnelDefinition.steps[nextStepKey as keyof typeof funnelDefinition.steps]) {
         setCurrentStepKey(nextStepKey);
@@ -540,7 +544,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       setIsBotTyping(false);
       return;
     }
-    
+
     setIsBotTyping(true);
 
     if (autoTransitionTimerRef.current) {
@@ -549,26 +553,32 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     }
 
     const isNewStep = prevCurrentStepKeyRef.current !== currentStepKey;
-    let processAsNewStep = (isNewStep && !justLoadedSessionRef.current) ||
-                           (justLoadedSessionRef.current && stepConfig.type === 'displayVideo' && isNewStep);
+    let processAsNewStep = isNewStep && !justLoadedSessionRef.current;
 
-    if (isNewStep && !(justLoadedSessionRef.current && stepConfig.type === 'displayVideo')) {
-      setIsLoadingStep(false);
-      setLoadingMessage(null);
-      setCurrentImageDetails(null);
-      setCurrentDisplayMessage(null);
-      setIsTextInputActive(false);
-      setCurrentTextInputConfig(null);
-      if (stepConfig.type !== 'displayVideo') {
-         setCurrentVideoData(null);
-      }
+
+    // Clear previous non-persistent UI elements based on the NEW step type
+    if (isNewStep && !justLoadedSessionRef.current) {
+        if (stepConfig.type !== 'loading') {
+            setIsLoadingStep(false);
+            setLoadingMessage(null);
+        }
+        if (stepConfig.type !== 'textInput') {
+            setIsTextInputActive(false);
+            setCurrentTextInputConfig(null);
+        }
+        if (stepConfig.type !== 'displayVideo') {
+           setCurrentVideoData(null);
+        }
     }
-    
+
+
     const effectiveAppearanceDelay = stepConfig.delay_ms ?? DEFAULT_APPEARANCE_DELAY_MS;
 
     const typingTimer = setTimeout(() => {
       const processStepAfterDelayInternal = () => {
-        if (processAsNewStep) {
+        let messageAddedInThisStep = false;
+
+        if (processAsNewStep || (isNewStep && justLoadedSessionRef.current)) {
           switch (stepConfig.type) {
             case 'displayVideo': {
               const data = stepConfig.data as FlowStepDataDisplayVideo;
@@ -579,20 +589,26 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               });
               setShowVideoSoundOverlay(true);
               setIsVideoMuted(true);
+              // No message added to history here, video is a separate UI element
               break;
             }
             case 'multipleChoice': {
               const data = stepConfig.data as FlowStepDataMultipleChoice;
               const formattedOptions = data.options.map(opt => ({ ...opt, text: formatText(opt.text) }));
-              setMessages(prev => [...prev, { id: `bot-msg-${Date.now()}`, sender: 'bot', text: formatText(data.message), options: formattedOptions }]);
+              const lastMessage = messages[messages.length -1];
+              if (!lastMessage || lastMessage.sender === 'user' || (lastMessage.text !== formatText(data.message) || JSON.stringify(lastMessage.options) !== JSON.stringify(formattedOptions))) {
+                setMessages(prev => [...prev, { id: `bot-msg-${Date.now()}`, sender: 'bot', text: formatText(data.message), options: formattedOptions }]);
+                messageAddedInThisStep = true;
+              }
               break;
             }
             case 'loading': {
               const data = stepConfig.data as FlowStepDataLoading;
               setLoadingMessage(formatText(data.message));
               setIsLoadingStep(true);
+              // No message added to history here, loading is a temporary UI state
               autoTransitionTimerRef.current = setTimeout(() => {
-                if (prevCurrentStepKeyRef.current === currentStepKey && currentStepKey === stepConfig.key) { 
+                if (prevCurrentStepKeyRef.current === currentStepKey && currentStepKey === stepConfig.key) {
                   setIsLoadingStep(false);
                   setLoadingMessage(null);
                   if (stepConfig.nextStep) {
@@ -606,14 +622,19 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             }
             case 'displayMessage': {
               const data = stepConfig.data as FlowStepDataDisplayMessage;
-              const displayMsgData: Message = {
-                id: `bot-msg-${Date.now()}`, sender: 'bot',
+              const newBotDisplayMessage: Message = {
+                id: `bot-display-msg-${Date.now()}`,
+                sender: 'bot',
+                isDisplayMessage: true,
                 displayTitle: formatText(data.title),
-                text: data.message ? formatText(data.message) : undefined,
+                text: data.message ? formatText(data.message) : undefined, // Main message content also here
                 displayDetails: formatDetailsObject(data.details),
                 displayIcon: data.icon,
+                audioUrl: data.audioUrl,
+                displayNote: data.note ? formatText(data.note) : undefined,
               };
-              setCurrentDisplayMessage(displayMsgData);
+              setMessages(prev => [...prev, newBotDisplayMessage]);
+              messageAddedInThisStep = true;
               if (data.audioUrl && audioRef.current) {
                 audioRef.current.src = data.audioUrl;
                 audioRef.current.play().catch(e => console.warn("Audio autoplay failed:", e));
@@ -622,104 +643,58 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             }
             case 'textInput': {
               const data = stepConfig.data as FlowStepDataTextInput;
-              setMessages(prev => [...prev, { id: `bot-msg-${Date.now()}`, sender: 'bot', text: formatText(data.message) }]);
+              const lastMessage = messages[messages.length -1];
+              if (!lastMessage || lastMessage.sender === 'user' || lastMessage.text !== formatText(data.message)){
+                 setMessages(prev => [...prev, { id: `bot-text-input-prompt-${Date.now()}`, sender: 'bot', text: formatText(data.message) }]);
+                 messageAddedInThisStep = true;
+              }
               setCurrentTextInputConfig(data);
               setIsTextInputActive(true);
               setTextInputValue("");
               break;
             }
              case 'displayDynamicImage': {
-              console.warn("SimulatedChatFlow: 'displayDynamicImage' step type is simplified. Actual image generation with text overlay is not implemented.");
               const data = stepConfig.data as FlowStepDataDisplayDynamicImage;
-              const messageToShow = formatText(data.message) || "Gerando seu comprovante...";
-               if (data.templateUrl) {
-                setCurrentImageDetails({
-                    url: data.templateUrl,
-                    alt: formatText(data.imageAltText) || "Comprovante",
-                    message: messageToShow,
-                    aiHint: data.imageAiHint
-                });
-              } else {
-                setMessages(prev => [...prev, { id: `bot-msg-${Date.now()}`, sender: 'bot', text: messageToShow}]);
-              }
+              console.warn("SimulatedChatFlow: 'displayDynamicImage' step type is simplified. Actual image generation with text overlay is not implemented.");
+              const newBotImageMessage: Message = {
+                id: `bot-image-msg-${Date.now()}`,
+                sender: 'bot',
+                isDisplayImage: true,
+                imageMessage: formatText(data.message) || "Gerando seu comprovante...",
+                imageUrl: data.templateUrl,
+                imageAlt: formatText(data.imageAltText) || "Comprovante",
+                imageAiHint: data.imageAiHint,
+              };
+              setMessages(prev => [...prev, newBotImageMessage]);
+              messageAddedInThisStep = true;
               break;
             }
             default:
               console.error("SimulatedChatFlow: Unknown step type in processAsNewStep:", (stepConfig as any).type);
               setMessages(prev => [...prev, {id: `err-type-new-${Date.now()}`, sender: 'bot', text: "Erro: tipo de passo desconhecido."}]);
-          }
-        } else if (isNewStep && justLoadedSessionRef.current) {
-          if (stepConfig.type === 'multipleChoice') {
-            const lastMessage = messages[messages.length - 1];
-            const data = stepConfig.data as FlowStepDataMultipleChoice;
-            const formattedOptions = data.options.map(opt => ({ ...opt, text: formatText(opt.text) }));
-            if (messages.length === 0 || (lastMessage && lastMessage.sender === 'user') || (lastMessage && !lastMessage.options) || (lastMessage && stepConfig.type === 'multipleChoice' && (lastMessage.text !== formatText(data.message) || JSON.stringify(lastMessage.options) !== JSON.stringify(formattedOptions)))) {
-               setMessages(prev => [...prev, { id: `bot-session-load-opts-${Date.now()}`, sender: 'bot', text: formatText(data.message), options: formattedOptions }]);
-            }
-          } else if (stepConfig.type === 'textInput') {
-            setCurrentTextInputConfig(stepConfig.data as FlowStepDataTextInput);
-            setIsTextInputActive(true);
-             const lastMessage = messages[messages.length - 1];
-             if(!lastMessage || lastMessage.sender === 'user' || lastMessage.text !== formatText((stepConfig.data as FlowStepDataTextInput).message)) {
-                setMessages(prev => [...prev, { id: `bot-session-load-text-input-${Date.now()}`, sender: 'bot', text: formatText((stepConfig.data as FlowStepDataTextInput).message) }]);
-             }
-          } else if (stepConfig.type === 'displayMessage'){
-              const data = stepConfig.data as FlowStepDataDisplayMessage;
-               const displayMsgData: Message = {
-                id: `bot-session-load-disp-${Date.now()}`, sender: 'bot',
-                displayTitle: formatText(data.title),
-                text: data.message ? formatText(data.message) : undefined,
-                displayDetails: formatDetailsObject(data.details),
-                displayIcon: data.icon,
-              };
-              setCurrentDisplayMessage(displayMsgData);
-          }  else if (stepConfig.type === 'displayDynamicImage') {
-              const data = stepConfig.data as FlowStepDataDisplayDynamicImage;
-              const messageToShow = formatText(data.message) || "Gerando comprovante...";
-               if (data.templateUrl) {
-                    setCurrentImageDetails({
-                        url: data.templateUrl,
-                        alt: formatText(data.imageAltText) || "Comprovante",
-                        message: messageToShow,
-                        aiHint: data.imageAiHint
-                    });
-                } else {
-                    const lastMessage = messages[messages.length - 1];
-                    if(!lastMessage || lastMessage.sender === 'user' || lastMessage.text !== messageToShow) {
-                        setMessages(prev => [...prev, { id: `bot-session-load-dynimg-${Date.now()}`, sender: 'bot', text: messageToShow}]);
-                    }
-                }
-          }
-        } else {
-          if (currentDisplayMessage) {
-             const currentStepData = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps]?.data as FlowStepDataDisplayMessage;
-              if (currentStepData && (funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps] as FlowStep).type === 'displayMessage') {
-                   setCurrentDisplayMessage(prev => prev ? {
-                      ...prev,
-                      displayTitle: formatText(currentStepData.title),
-                      text: currentStepData.message ? formatText(currentStepData.message) : undefined,
-                      displayDetails: formatDetailsObject(currentStepData.details),
-                  } : null);
-              }
+              messageAddedInThisStep = true;
           }
         }
-        
-        // Move setIsBotTyping(false) here, after all step-specific UI setup
-        setIsBotTyping(false);
 
+        setIsBotTyping(false);
 
         const canAutoTransition = stepConfig.nextStep && !stepConfig.isTerminal &&
                                   (stepConfig.type === 'displayMessage' || stepConfig.type === 'displayDynamicImage');
 
         let nextStepTransitionDelayMs = stepConfig.type === 'displayMessage' ? 4500 : (stepConfig.type === 'displayDynamicImage' ? 3000 : 0);
-        if (stepConfig.type === 'displayMessage' && !(stepConfig.data as FlowStepDataDisplayMessage).details && !(stepConfig.data as FlowStepDataDisplayMessage).audioUrl) {
-            nextStepTransitionDelayMs = (stepConfig.data as FlowStepDataDisplayMessage).message ? 2500 : 1200;
+        if (stepConfig.type === 'displayMessage') {
+            const msgData = stepConfig.data as FlowStepDataDisplayMessage;
+            if (!msgData.details && !msgData.audioUrl) { // Simple message, shorter delay
+                 nextStepTransitionDelayMs = msgData.message ? 2500 : 1200;
+            } else if (!msgData.details && msgData.audioUrl) { // Only audio, potentially longer
+                nextStepTransitionDelayMs = 3500; // Example, adjust based on typical audio length
+            }
         }
 
 
-        if (canAutoTransition && (processAsNewStep || (isNewStep && justLoadedSessionRef.current))) {
+        if (canAutoTransition && (processAsNewStep || (isNewStep && justLoadedSessionRef.current && messageAddedInThisStep))) {
           autoTransitionTimerRef.current = setTimeout(() => {
-             if (prevCurrentStepKeyRef.current === currentStepKey && currentStepKey === stepConfig.key) { 
+             if (prevCurrentStepKeyRef.current === currentStepKey && currentStepKey === stepConfig.key) {
                handleUserActionAndNavigate(stepConfig.nextStep as string);
             }
           }, nextStepTransitionDelayMs);
@@ -749,7 +724,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoadingStep, loadingMessage, currentImageDetails, currentDisplayMessage, currentVideoData, isTextInputActive, isBotTyping]);
+  }, [messages, isLoadingStep, loadingMessage, currentVideoData, isTextInputActive, isBotTyping]);
 
 
   const handleOptionClick = (option: ChatOption) => {
@@ -757,7 +732,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       console.warn("SimulatedChatFlow: Option clicked with null or undefined text property.");
       return;
     }
-    
+
     const userMessageId = `user-${Date.now()}`;
     setMessages(prevMsgs => [...prevMsgs, { id: userMessageId, sender: 'user', text: option.text }]);
 
@@ -768,21 +743,21 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         );
 
         if (repliedToBotMessageIndex !== -1) {
-            const originalIndex = msgsWithUserReply.length - 2 - repliedToBotMessageIndex; 
-            msgsWithUserReply[originalIndex] = { ...msgsWithUserReply[originalIndex], options: undefined };
+            const originalIndex = msgsWithUserReply.length - 1 - (repliedToBotMessageIndex +1) ; // Corrected index
+            if (msgsWithUserReply[originalIndex]) {
+                 msgsWithUserReply[originalIndex] = { ...msgsWithUserReply[originalIndex], options: undefined };
+            }
             return msgsWithUserReply;
         }
         return msgsWithUserReply;
     });
-    
-    setCurrentDisplayMessage(null); 
-    setCurrentImageDetails(null);
+
+    setIsBotTyping(true);
+    setCurrentVideoData(null);
     setIsLoadingStep(false);
     setLoadingMessage(null);
-    setCurrentVideoData(null);
     setIsTextInputActive(false);
     setCurrentTextInputConfig(null);
-    setIsBotTyping(true);
 
     if (option.action === 'setChavePixToUserCPF') {
         const cpfToSet = flowVariables.userCPF || "CPF não disponível";
@@ -809,14 +784,15 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             console.error("Invalid payment URL:", finalPaymentUrl, e);
             setMessages(prev => [...prev, { id: `err-payment-url-${Date.now()}`, sender: 'bot', text: "Desculpe, ocorreu um erro ao tentar processar o pagamento." }]);
         }
-        setIsBotTyping(false); 
-        return; 
+        setIsBotTyping(false);
+        return;
     }
-    
+
     handleUserActionAndNavigate(option.nextStep);
   };
 
   const handleVideoThumbnailClick = () => {
+    setIsBotTyping(true);
     if (videoPlayerRef.current) {
       videoPlayerRef.current.muted = false;
       setIsVideoMuted(false);
@@ -827,15 +803,13 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
   const handleVideoEnded = () => {
     const stepConfig = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps];
-    setCurrentDisplayMessage(null); 
-    setCurrentImageDetails(null);
+    setIsBotTyping(true);
+    setCurrentVideoData(null);
     setIsLoadingStep(false);
     setLoadingMessage(null);
-    setCurrentVideoData(null); 
     setIsTextInputActive(false);
     setCurrentTextInputConfig(null);
-    setIsBotTyping(true); 
-    
+
     if (stepConfig?.type === 'displayVideo' && stepConfig.nextStep) {
       handleUserActionAndNavigate(stepConfig.nextStep);
     }
@@ -852,20 +826,19 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     }
 
     setMessages(prev => [...prev, { id: `user-input-${Date.now()}`, sender: 'user', text: textInputValue }]);
-    
-    setCurrentDisplayMessage(null);
-    setCurrentImageDetails(null);
+
+    setIsBotTyping(true);
+    setCurrentVideoData(null);
     setIsLoadingStep(false);
     setLoadingMessage(null);
-    setCurrentVideoData(null);
-    setIsTextInputActive(false); 
-    setIsBotTyping(true);
+    setIsTextInputActive(false);
+
 
     if (currentTextInputConfig.variableToSet === 'chavePix') {
         setFlowVariables(prev => ({...prev, chavePix: textInputValue.trim()}));
     }
-    setTextInputValue(""); 
-    
+    setTextInputValue("");
+
     const nextStepKey = (funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps] as FlowStep)?.nextStep;
     handleUserActionAndNavigate(nextStepKey);
   };
@@ -877,7 +850,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     if (iconName.includes('currency_dollar_gov_style')) {
       return <span style={{fontSize: '20px', marginRight: '8px', verticalAlign: 'bottom', flexShrink: 0, filter: 'grayscale(1) brightness(0.8)'}}>💰</span>;
     }
-    return null; 
+    return null;
   }
 
 
@@ -933,11 +906,60 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       {messages.map((msg) => (
           <div key={msg.id} className={`message-container ${msg.sender === 'bot' ? 'bot-message-container' : 'user-message-container'}`}>
             <div className={`message ${msg.sender === 'bot' ? 'bot-message' : 'user-message'}`}>
-              {msg.text && <span style={{whiteSpace: 'pre-line'}} dangerouslySetInnerHTML={{__html: msg.text}} />}
+              {/* Standard text, user replies, multipleChoice main message */}
+              {msg.text && !msg.isDisplayMessage && !msg.isDisplayImage && (
+                <span style={{whiteSpace: 'pre-line'}} dangerouslySetInnerHTML={{__html: msg.text}} />
+              )}
+
+              {/* Render 'displayMessage' content */}
+              {msg.isDisplayMessage && (
+                <div className="display-message-content-block">
+                  {msg.displayTitle && (
+                    <h3 style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '17px', color: '#0056b3', display: 'flex', alignItems: 'center' }}>
+                      {getIconComponent(msg.displayIcon)}
+                      <span dangerouslySetInnerHTML={{ __html: msg.displayTitle }} />
+                    </h3>
+                  )}
+                  {msg.text && <p style={{ marginBottom: msg.displayDetails ? '12px' : '0', whiteSpace: 'pre-line' }} dangerouslySetInnerHTML={{__html: msg.text}} />}
+                  {msg.displayDetails && (
+                    <div className="details-grid" style={{ borderTop: '1px solid #e0e0e0', paddingTop: '10px', display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 12px', fontSize: '14px' }}>
+                      {Object.entries(msg.displayDetails).map(([key, value]) => (
+                        <React.Fragment key={key}>
+                          <span style={{ fontWeight: '500', color: '#555' }} dangerouslySetInnerHTML={{__html: key}}/>
+                          <span style={{ color: '#333' }} dangerouslySetInnerHTML={{__html: value}}/>
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  )}
+                  {msg.displayNote && (
+                    <p style={{fontSize: '12px', color: '#666', marginTop: '10px', borderTop: '1px dashed #ddd', paddingTop: '8px'}}>
+                        <strong>Nota:</strong> {msg.displayNote}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Render 'displayDynamicImage' content */}
+              {msg.isDisplayImage && (
+                <div className="display-image-content-block" style={{ padding: '5px' }}>
+                  {msg.imageMessage && <p style={{ marginBottom: '8px', padding: '5px 10px', whiteSpace: 'pre-line'}}>{msg.imageMessage}</p>}
+                  {msg.imageUrl && (
+                    <Image
+                      src={msg.imageUrl}
+                      alt={msg.imageAlt || "Imagem do Chat"}
+                      width={300}
+                      height={200}
+                      data-ai-hint={msg.imageAiHint || "illustration"}
+                      style={{ borderRadius: '8px', maxWidth: '100%', height: 'auto', display: 'block' }}
+                    />
+                  )}
+                </div>
+              )}
+
+
               {msg.sender === 'bot' && msg.options &&
                !isBotTyping && !isTextInputActive &&
-               !currentVideoData && !isLoadingStep &&
-               !currentDisplayMessage && !currentImageDetails && (
+               !currentVideoData && !isLoadingStep && (
                 <div className="options-container">
                   {msg.options.map(opt => (
                     <button
@@ -954,22 +976,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         )
       )}
 
-      {currentImageDetails && !isBotTyping && !isLoadingStep && (
-        <div className="message-container bot-message-container image-display-block">
-          <div className="message bot-message" style={{ padding: '5px' }}>
-            {currentImageDetails.message && <p style={{ marginBottom: '8px', padding: '5px 10px', whiteSpace: 'pre-line'}}>{currentImageDetails.message}</p>}
-            <Image
-              src={currentImageDetails.url}
-              alt={currentImageDetails.alt}
-              width={300}
-              height={200}
-              data-ai-hint={currentImageDetails.aiHint || "illustration"}
-              style={{ borderRadius: '8px', maxWidth: '100%', height: 'auto', display: 'block' }}
-            />
-          </div>
-        </div>
-      )}
-
       {isLoadingStep && loadingMessage && !isBotTyping && (
         <div className="message-container bot-message-container loading-step-as-message">
           <div className="message bot-message" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -978,33 +984,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               {loadingMessage}
             </p>
           </div>
-        </div>
-      )}
-      
-      {currentDisplayMessage && !isLoadingStep && !isBotTyping && (
-        <div className={`message-container bot-message-container display-message-block`} style={{alignSelf: 'flex-start', maxWidth: '90%', width: 'auto', display: 'flex'}}>
-           <div className="message bot-message" style={{width: 'auto', maxWidth: '100%'}}>
-              {currentDisplayMessage.displayTitle && <h3 style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '17px', color: '#0056b3', display: 'flex', alignItems: 'center' }}>
-                {getIconComponent(currentDisplayMessage.displayIcon)}
-                <span dangerouslySetInnerHTML={{ __html: currentDisplayMessage.displayTitle }} />
-              </h3>}
-              {currentDisplayMessage.text && <p style={{ marginBottom: currentDisplayMessage.displayDetails ? '12px' : '0', whiteSpace: 'pre-line' }} dangerouslySetInnerHTML={{__html: currentDisplayMessage.text}} />}
-              {currentDisplayMessage.displayDetails && (
-                <div className="details-grid" style={{ borderTop: '1px solid #e0e0e0', paddingTop: '10px', display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 12px', fontSize: '14px' }}>
-                  {Object.entries(currentDisplayMessage.displayDetails).map(([key, value]) => (
-                    <React.Fragment key={key}>
-                      <span style={{ fontWeight: '500', color: '#555' }} dangerouslySetInnerHTML={{__html: key}}/>
-                      <span style={{ color: '#333' }} dangerouslySetInnerHTML={{__html: value}}/>
-                    </React.Fragment>
-                  ))}
-                </div>
-              )}
-               { (currentDisplayMessage.displayIcon && (funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps]?.data as FlowStepDataDisplayMessage)?.note) && (
-                <p style={{fontSize: '12px', color: '#666', marginTop: '10px', borderTop: '1px dashed #ddd', paddingTop: '8px'}}>
-                    <strong>Nota:</strong> {formatText(((funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps] as FlowStep).data as FlowStepDataDisplayMessage)?.note)}
-                </p>
-              )}
-           </div>
         </div>
       )}
 
@@ -1155,7 +1134,8 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
           0%, 80%, 100% { transform: scale(0); }
           40% { transform: scale(1); }
         }
-        .display-message-block .bot-message {
+        .display-message-content-block .bot-message,
+        .display-image-content-block .bot-message {
             width: auto;
             max-width: 100%;
         }
@@ -1165,5 +1145,3 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 };
 
 export default SimulatedChatFlow;
-
-    
