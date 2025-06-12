@@ -466,7 +466,7 @@ function OfferContent() {
               </div>
               {comments.map(comment => (
                 <div key={comment.id} className="comment-item">
-                  <Image className="comment-avatar" src={comment.avatar} alt="avatar" width={40} height={40} data-ai-hint="person avatar"/>
+                  <Image className="comment-avatar" src={comment.avatar} alt="avatar" width={40} height={40} data-ai-hint="person avatar" unoptimized={true} />
                   <div className="comment-content">
                     <div className="comment-name">{comment.name}</div>
                     <div className="comment-text" dangerouslySetInnerHTML={{ __html: comment.text }}></div>
@@ -506,3 +506,5 @@ export default function OfferPage() {
   );
 }
 
+
+    
