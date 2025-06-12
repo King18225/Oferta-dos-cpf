@@ -185,7 +185,8 @@ const funnelDefinition: {
           "Indenização": "{{indenizacaoValor}}",
           "Status": "Pré-aprovado"
         },
-        "audioUrl": "https://screenapp.io/app/#/shared/fXROHEVJIp"
+        "audioUrl": "https://screenapp.io/app/#/shared/fXROHEVJIp",
+        "note": "[Áudio será reproduzido aqui]"
       },
       "nextStep": "step6_ask_pix_type"
     },
@@ -260,7 +261,8 @@ const funnelDefinition: {
           "Chave Pix": "{{chavePix}}",
           "Status": "Aprovado"
         },
-        "audioUrl": "https://url-do-golpista.com/audios/pix_cadastrado.mp3"
+        "audioUrl": "https://url-do-golpista.com/audios/pix_cadastrado.mp3",
+        "note": "[Áudio será reproduzido aqui]"
       },
       "nextStep": "step10_ask_generate_receipt"
     },
@@ -306,7 +308,8 @@ const funnelDefinition: {
           "Chave Pix": "{{chavePix}}",
           "Imposto de Saque": "{{taxaValor}}"
         },
-        "audioUrl": "https://url-do-golpista.com/audios/explicacao_taxa.mp3"
+        "audioUrl": "https://url-do-golpista.com/audios/explicacao_taxa.mp3",
+        "note": "[Áudio será reproduzido aqui]"
       },
       "nextStep": "step13_final_justification_and_cta"
     },
@@ -641,7 +644,8 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               };
               setMessages(prev => [...prev, newBotDisplayMessage]);
               messageAddedInThisStep = true;
-              if (data.audioUrl && audioRef.current) {
+              // Temporarily disable audio playback for placeholder testing
+              if (false && data.audioUrl && audioRef.current) {
                 audioRef.current.src = data.audioUrl;
                 audioRef.current.play().catch(e => console.warn("Audio autoplay failed:", e));
               }
@@ -748,6 +752,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     setMessages(prevMsgs => {
         const msgsCopy = [...prevMsgs];
         let repliedToBotMessageIndex = -1;
+        // Start from second to last message to find the bot message that was replied to
         for (let i = msgsCopy.length - 2; i >= 0; i--) { 
             if (msgsCopy[i].sender === 'bot' && msgsCopy[i].options && msgsCopy[i].options.length > 0) {
                 repliedToBotMessageIndex = i;
@@ -755,6 +760,8 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             }
         }
         if (repliedToBotMessageIndex !== -1) {
+            // Create a new object for the message to ensure state update,
+            // and set options to undefined for that specific message.
             msgsCopy[repliedToBotMessageIndex] = { ...msgsCopy[repliedToBotMessageIndex], options: undefined };
         }
         return msgsCopy;
@@ -931,7 +938,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                   )}
                   {msg.displayNote && (
                     <p style={{fontSize: '12px', color: '#666', marginTop: '10px', borderTop: '1px dashed #ddd', paddingTop: '8px'}}>
-                        <strong>Nota:</strong> {msg.displayNote}
+                        <strong>Nota:</strong> <span dangerouslySetInnerHTML={{__html: msg.displayNote}}/>
                     </p>
                   )}
                 </div>
