@@ -82,32 +82,32 @@ function OfferContent() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  useEffect(() => {
-    const storedState = localStorage.getItem('offerPageState');
-    if (storedState) {
-      try {
-        const state = JSON.parse(storedState);
-        if (state.videoStarted) setVideoStarted(state.videoStarted);
-        if (state.videoCompleted) {
-            setVideoCompleted(state.videoCompleted);
-            // No need to call finalizeProgressAppearance here, the Plyr useEffect will handle it if player is ready
-        }
-        if (state.progressEnabled) setProgressEnabled(state.progressEnabled);
-      } catch (e) {
-        console.error("Failed to parse stored state:", e);
-        localStorage.removeItem('offerPageState');
-      }
-    }
-  }, []);
+  // useEffect(() => {
+  //   const storedState = localStorage.getItem('offerPageState');
+  //   if (storedState) {
+  //     try {
+  //       const state = JSON.parse(storedState);
+  //       if (state.videoStarted) setVideoStarted(state.videoStarted);
+  //       if (state.videoCompleted) {
+  //           setVideoCompleted(state.videoCompleted);
+  //           // No need to call finalizeProgressAppearance here, the Plyr useEffect will handle it if player is ready
+  //       }
+  //       if (state.progressEnabled) setProgressEnabled(state.progressEnabled);
+  //     } catch (e) {
+  //       console.error("Failed to parse stored state:", e);
+  //       localStorage.removeItem('offerPageState');
+  //     }
+  //   }
+  // }, []);
 
-  useEffect(() => {
-    const stateToStore = {
-      videoStarted,
-      videoCompleted,
-      progressEnabled,
-    };
-    localStorage.setItem('offerPageState', JSON.stringify(stateToStore));
-  }, [videoStarted, videoCompleted, progressEnabled]);
+  // useEffect(() => {
+  //   const stateToStore = {
+  //     videoStarted,
+  //     videoCompleted,
+  //     progressEnabled,
+  //   };
+  //   localStorage.setItem('offerPageState', JSON.stringify(stateToStore));
+  // }, [videoStarted, videoCompleted, progressEnabled]);
 
 
   const formatCPF = (cpf: string | undefined) => {
@@ -209,13 +209,12 @@ function OfferContent() {
       setStatusMessage("Saque liberado.");
       setShowSaqueButton(true);
       setProgress(100);
-      setShowThumbnailOverlay(false); // Hide thumbnail when resgate overlay appears
+      setShowThumbnailOverlay(false); 
   }
 
   const handleVideoEnd = () => {
     if (!videoCompleted) {
         setVideoCompleted(true);
-        // finalizeProgressAppearance will be called by the useEffect watching videoCompleted
     }
   };
 
@@ -234,7 +233,7 @@ function OfferContent() {
         const percent = (plyr.currentTime / plyr.duration) * 100;
         setProgress(percent);
         if (percent >= 99.9 && !videoCompleted) {
-          handleVideoEnd(); 
+          handleVideoEnd();
         }
       };
       const onPlay = () => {
@@ -250,29 +249,28 @@ function OfferContent() {
         }
       };
       const onEnded = () => {
-        handleVideoEnd(); 
+        handleVideoEnd();
       };
 
       plyr.on('timeupdate', onTimeUpdate);
       plyr.on('play', onPlay);
       plyr.on('ended', onEnded);
-
-      if (!videoCompleted) {
-        if (videoStarted && plyr.autoplay && plyr.muted) {
-          if (!showThumbnailOverlay) {
-             // setShowThumbnailOverlay(true); // This was the line from previous iteration, potentially problematic
-          }
-        } else if (videoStarted && !plyr.muted) {
-          if (showThumbnailOverlay) {
-            setShowThumbnailOverlay(false);
-          }
-        }
-      } else {
-         // finalizeProgressAppearance which is called by videoCompleted effect handles setShowThumbnailOverlay(false)
-      }
-
-      if (videoStarted) {
-        setProgressEnabled(true);
+      
+      if (videoCompleted) {
+        finalizeProgressAppearance(); // also hides thumbnail
+      } else if (videoStarted && plyr.autoplay && plyr.muted) {
+        // Video was 'started' (e.g. from localStorage if active)
+        // and current instance autoplays muted, ensure thumbnail is visible.
+        setShowThumbnailOverlay(true);
+        if (!progressEnabled) setProgressEnabled(true); // ensure progress tracks for autoplay
+      } else if (videoStarted && !plyr.muted) {
+        // Video was 'started' and is now playing unmuted.
+        setShowThumbnailOverlay(false);
+        if (!progressEnabled) setProgressEnabled(true);
+      } else if (!videoStarted && plyr.autoplay && plyr.muted) {
+         // Fresh start, no videoStarted from localStorage, and it autoplays muted.
+         setShowThumbnailOverlay(true); // Show overlay
+         // onPlay will handle setting videoStarted and progressEnabled when autoplay kicks in
       }
 
 
@@ -516,3 +514,4 @@ export default function OfferPage() {
   );
 }
 
+    
