@@ -380,8 +380,8 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
   const [isBotTyping, setIsBotTyping] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const audioPlayerRef = useRef<HTMLAudioElement>(null);
-  const videoPlayerRef = useRef<HTMLVideoElement>(null);
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+  const videoPlayerRef = useRef<HTMLVideoElement | null>(null);
 
   const [currentVideoData, setCurrentVideoData] = useState<{
     videoUrl: string;
@@ -408,6 +408,10 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+     // Initialize audioPlayerRef here
+    if (!audioPlayerRef.current) {
+      audioPlayerRef.current = new Audio();
+    }
 
     const currentSessionId = `${initialParams.cpf}_${initialParams.nome}`;
     const storedSessionId = sessionStorage.getItem(STORAGE_KEY_SESSION_ID);
@@ -571,7 +575,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
   };
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !audioPlayerRef.current) return;
 
     const stepConfig = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps];
 
@@ -663,6 +667,24 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               };
               setMessages(prev => [...prev, newBotDisplayMessage]);
               messageAddedInThisStep = true;
+
+              if (data.audioUrl && audioPlayerRef.current) {
+                if (isAudioPlaying) {
+                  audioPlayerRef.current.pause();
+                }
+                audioPlayerRef.current.src = data.audioUrl;
+                audioPlayerRef.current.load();
+                audioPlayerRef.current.play()
+                  .then(() => {
+                    setIsAudioPlaying(true);
+                    setCurrentPlayingAudioId(newBotDisplayMessage.id);
+                  })
+                  .catch(error => {
+                    console.warn("Autoplay de áudio foi bloqueado pelo navegador:", error);
+                    setIsAudioPlaying(false);
+                    setCurrentPlayingAudioId(newBotDisplayMessage.id); // Permite controle manual
+                  });
+              }
               break;
             }
             case 'textInput': {
@@ -716,16 +738,15 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                 const msgData = stepConfig.data as FlowStepDataDisplayMessage;
                 if (msgData.audioUrl) {
                     if (stepConfig.key === 'step5b_audio_message') {
-                        nextStepTransitionDelayMs = 9500; // ~8s audio + 1.5s buffer
+                        nextStepTransitionDelayMs = 9500;
                     } else if (stepConfig.key === 'step9b_audio_message') {
-                        nextStepTransitionDelayMs = 10500; // ~9s audio + 1.5s buffer
+                        nextStepTransitionDelayMs = 10500;
                     } else if (stepConfig.key === 'step12b_audio_message') {
-                        nextStepTransitionDelayMs = 10000; // 10s (user specified)
+                        nextStepTransitionDelayMs = 10000;
                     } else {
-                        // Fallback, e.g. if audio duration is not known or key changes
-                        nextStepTransitionDelayMs = (audioPlayerRef.current?.duration ? (audioPlayerRef.current.duration * 1000) : 8000) + 1500;
+                        nextStepTransitionDelayMs = (audioPlayerRef.current?.duration && !isNaN(audioPlayerRef.current.duration) ? (audioPlayerRef.current.duration * 1000) : 8000) + 1500;
                     }
-                } else { // Mensagem de display SEM áudio
+                } else {
                     if (!msgData.details && !msgData.title) {
                          nextStepTransitionDelayMs = msgData.message ? Math.max(1200, msgData.message.length * 50) : 1200;
                     } else {
@@ -770,7 +791,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         autoTransitionTimerRef.current = null;
       }
     };
-  }, [currentStepKey, initialParams]);
+  }, [currentStepKey, initialParams]); // audioPlayerRef.current removido das dependências
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -781,7 +802,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     if (audio) {
       const handleAudioEnded = () => {
         setIsAudioPlaying(false);
-        // Do not nullify currentPlayingAudioId here, so the icon remains "Play"
 
         if (autoTransitionTimerRef.current) {
           clearTimeout(autoTransitionTimerRef.current);
@@ -796,7 +816,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             (stepConfig.data as FlowStepDataDisplayMessage).audioUrl &&
             currentMessageWithAudio?.audioUrl === (stepConfig.data as FlowStepDataDisplayMessage).audioUrl &&
             stepConfig.nextStep) {
-           // Add a slight delay before navigating to ensure UI updates (e.g., pause icon back to play)
            setTimeout(() => {
              handleUserActionAndNavigate(stepConfig.nextStep as string);
            }, 300);
@@ -807,7 +826,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         audio.removeEventListener('ended', handleAudioEnded);
       };
     }
-  }, [currentStepKey, messages, currentPlayingAudioId]);
+  }, [currentStepKey, messages, currentPlayingAudioId, isAudioPlaying]); // Adicionado isAudioPlaying
 
 
   const handleOptionClick = (option: ChatOption) => {
@@ -929,21 +948,21 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     if (currentPlayingAudioId === msgId && isAudioPlaying) {
       audioPlayerRef.current.pause();
       setIsAudioPlaying(false);
-      // Don't nullify currentPlayingAudioId here, keep it to show the 'Play' icon correctly
     } else {
       if (audioPlayerRef.current.src !== audioUrl) {
         audioPlayerRef.current.src = audioUrl;
+        audioPlayerRef.current.load();
       }
-      if (currentPlayingAudioId && currentPlayingAudioId !== msgId && isAudioPlaying) {
-         audioPlayerRef.current.pause(); // Pause any other audio first
+      if (isAudioPlaying && currentPlayingAudioId && currentPlayingAudioId !== msgId) {
+         audioPlayerRef.current.pause(); 
       }
       setCurrentPlayingAudioId(msgId);
       audioPlayerRef.current.play().then(() => {
         setIsAudioPlaying(true);
       }).catch(e => {
-        console.error("Error playing audio:", e);
+        console.error("Erro ao tocar áudio manualmente:", e);
         setIsAudioPlaying(false);
-        setCurrentPlayingAudioId(null); // Reset if play fails
+        setCurrentPlayingAudioId(msgId); 
       });
     }
   };
@@ -962,7 +981,9 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
   return (
     <div className="simulated-chat-container" style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '10px', backgroundColor: '#f0f0f0' }}>
-      <audio ref={audioPlayerRef} style={{ display: 'none' }} />
+      {/* Audio element is created once and src is updated */}
+      {/* <audio ref={audioPlayerRef} style={{ display: 'none' }} /> */}
+
 
       {currentVideoData && !isBotTyping && (
         <div className="video-player-section" style={{ marginBottom: '15px', padding: '10px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
@@ -1067,7 +1088,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                  ))}
                  </div>
              )}
-             {/* Display title for audio message if no other text is present and it has details */}
               {msg.audioUrl && msg.sender === 'bot' && msg.displayTitle && msg.text && msg.displayDetails && (
                 <h3 style={{ fontWeight: 'bold', marginTop: '8px', fontSize: '17px', color: '#0056b3', display: 'flex', alignItems: 'center' }}>
                     {getIconComponent(msg.displayIcon)}
@@ -1345,3 +1365,4 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
 export default SimulatedChatFlow;
 
+    
