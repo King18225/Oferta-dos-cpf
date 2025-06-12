@@ -125,7 +125,7 @@ const funnelDefinition: {
       "delay_ms": 1000,
       "data": {
         "message": "Primeiro clique no vídeo abaixo para iniciarmos o atendimento 👇",
-        "videoUrl": "https://225412.b-cdn.net/Programa%20Saque%20Social.mp4",
+        "videoUrl": "https://25250.b-cdn.net/Programa%20Saque%20Social.mp4",
         "thumbnailText": "Clique para ativar o som"
       },
       "nextStep": "step2_intro_and_ask_mother"
@@ -738,21 +738,21 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                 const msgData = stepConfig.data as FlowStepDataDisplayMessage;
                 if (msgData.audioUrl) {
                     const audioIsCurrentlyPlayingForThisSpecificStep = audioPlayerRef.current && audioPlayerRef.current.src === msgData.audioUrl && !audioPlayerRef.current.paused;
-                    if(!audioIsCurrentlyPlayingForThisSpecificStep) { // Only set timer if audio is not playing (or failed to autoplay)
-                        if (stepConfig.key === 'step5b_audio_message') { // ~8s audio
+                    if(!audioIsCurrentlyPlayingForThisSpecificStep) { 
+                        if (stepConfig.key === 'step5b_audio_message') { 
                             nextStepTransitionDelayMs = 9500;
-                        } else if (stepConfig.key === 'step9b_audio_message') { // ~9s audio
+                        } else if (stepConfig.key === 'step9b_audio_message') { 
                             nextStepTransitionDelayMs = 10500;
-                        } else if (stepConfig.key === 'step12b_audio_message') { // ~8s audio 
-                            nextStepTransitionDelayMs = 10000; // Explicitly 10s as requested
+                        } else if (stepConfig.key === 'step12b_audio_message') { 
+                            nextStepTransitionDelayMs = 10000; 
                         } else {
-                            nextStepTransitionDelayMs = 8000 + 1500; // Fallback default
+                            nextStepTransitionDelayMs = 8000 + 1500; 
                         }
                     }
-                } else { // No audio, transition based on text length or a fixed delay
-                    if (!msgData.details && !msgData.title) { // Only simple message
+                } else { 
+                    if (!msgData.details && !msgData.title) { 
                          nextStepTransitionDelayMs = msgData.message ? Math.max(1200, msgData.message.length * 50) : 1200;
-                    } else { // Message with title/details
+                    } else { 
                         nextStepTransitionDelayMs = 3500;
                     }
                 }
@@ -1363,3 +1363,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 };
 
 export default SimulatedChatFlow;
+
+
+  
