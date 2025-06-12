@@ -257,7 +257,7 @@ const funnelDefinition: {
           "Chave Pix": "{{chavePix}}",
           "Status": "Aprovado"
         },
-        "audioUrl": "https://url-do-golpista.com/audios/pix_cadastrado.mp3"
+        "audioUrl": "https://media.vocaroo.com/mp3/1dTwVDw858sb"
       },
       "nextStep": "step10_ask_generate_receipt"
     },
@@ -353,7 +353,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
   const [isBotTyping, setIsBotTyping] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const audioPlayerRef = useRef<HTMLAudioElement>(null); // Renamed for clarity
+  const audioPlayerRef = useRef<HTMLAudioElement>(null);
   const videoPlayerRef = useRef<HTMLVideoElement>(null);
 
   const [currentVideoData, setCurrentVideoData] = useState<{
@@ -631,7 +631,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                 text: data.message ? formatText(data.message) : undefined,
                 displayDetails: formatDetailsObject(data.details),
                 displayIcon: data.icon,
-                audioUrl: data.audioUrl, // Keep audioUrl here for the player
+                audioUrl: data.audioUrl, 
                 displayNote: data.note ? formatText(data.note) : undefined,
               };
               setMessages(prev => [...prev, newBotDisplayMessage]);
@@ -685,27 +685,19 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         let nextStepTransitionDelayMs = stepConfig.type === 'displayMessage' ? 4500 : (stepConfig.type === 'displayDynamicImage' ? 3000 : 0);
         if (stepConfig.type === 'displayMessage') {
             const msgData = stepConfig.data as FlowStepDataDisplayMessage;
-            // If it's an audio message, don't auto-transition based on content, let audio finish or user interact.
-            // Only auto-transition non-audio displayMessages.
             if (!msgData.audioUrl) {
                 if (!msgData.details) {
                      nextStepTransitionDelayMs = msgData.message ? 2500 : 1200;
                 }
             } else {
-                // For audio messages, don't auto-transition from here.
-                // Transition will be handled by onEnded or nextStep if audio is not played.
-                // Or, if we want a default timeout if audio isn't played, set it here.
-                // For now, rely on user interaction or manual advancement for audio messages.
-                // To prevent auto-transition for audio, we can set a very long delay or just not set the timer.
-                // Let's keep a default timeout for now, but it might be overridden by audio playback logic.
-                nextStepTransitionDelayMs = 10000; // Example: 10s timeout if audio is not played
+                nextStepTransitionDelayMs = 10000; 
             }
         }
 
 
         if (canAutoTransition && (processAsNewStep || (isNewStep && justLoadedSessionRef.current && messageAddedInThisStep))) {
-            const data = stepConfig.data as FlowStepDataDisplayMessage; // Assuming audioUrl is only on displayMessage
-            if (stepConfig.type !== 'displayMessage' || !data.audioUrl) { // Only set auto-transition if not an audio message
+            const data = stepConfig.data as FlowStepDataDisplayMessage; 
+            if (stepConfig.type !== 'displayMessage' || !data.audioUrl) { 
                 autoTransitionTimerRef.current = setTimeout(() => {
                     if (prevCurrentStepKeyRef.current === currentStepKey && currentStepKey === stepConfig.key) {
                         handleUserActionAndNavigate(stepConfig.nextStep as string);
@@ -746,10 +738,13 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       const handleAudioEnded = () => {
         setIsAudioPlaying(false);
         setCurrentPlayingAudioId(null);
-        // Auto-navigate to next step if current step was the one playing audio
+        
         const stepConfig = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps];
-        if (stepConfig?.type === 'displayMessage' && (stepConfig.data as FlowStepDataDisplayMessage).audioUrl && stepConfig.nextStep) {
-           if(autoTransitionTimerRef.current) clearTimeout(autoTransitionTimerRef.current); // Clear any generic timer
+        if (stepConfig?.type === 'displayMessage' && 
+            (stepConfig.data as FlowStepDataDisplayMessage).audioUrl && 
+            messages.find(m => m.id === currentPlayingAudioId)?.audioUrl === (stepConfig.data as FlowStepDataDisplayMessage).audioUrl &&
+            stepConfig.nextStep) {
+           if(autoTransitionTimerRef.current) clearTimeout(autoTransitionTimerRef.current); 
            handleUserActionAndNavigate(stepConfig.nextStep);
         }
       };
@@ -758,7 +753,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         audio.removeEventListener('ended', handleAudioEnded);
       };
     }
-  }, [currentStepKey]);
+  }, [currentStepKey, messages, currentPlayingAudioId]);
 
 
   const handleOptionClick = (option: ChatOption) => {
@@ -877,17 +872,22 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
   const handleAudioMessagePlayPause = (msgId: string, audioUrl?: string) => {
     if (!audioUrl || !audioPlayerRef.current) return;
 
-    if (currentPlayingAudioId === msgId && isAudioPlaying) { // Pause current audio
+    if (currentPlayingAudioId === msgId && isAudioPlaying) { 
       audioPlayerRef.current.pause();
       setIsAudioPlaying(false);
-    } else { // Play new audio (or resume paused)
-      if (currentPlayingAudioId !== msgId) { // If it's a new audio
-        audioPlayerRef.current.src = audioUrl;
-        setCurrentPlayingAudioId(msgId);
+    } else { 
+      if (currentPlayingAudioId && currentPlayingAudioId !== msgId) {
+         audioPlayerRef.current.pause(); // Pause any other audio
       }
+      audioPlayerRef.current.src = audioUrl;
+      setCurrentPlayingAudioId(msgId);
       audioPlayerRef.current.play().then(() => {
         setIsAudioPlaying(true);
-      }).catch(e => console.error("Error playing audio:", e));
+      }).catch(e => {
+        console.error("Error playing audio:", e);
+        setIsAudioPlaying(false); 
+        setCurrentPlayingAudioId(null);
+      });
     }
   };
 
@@ -992,25 +992,24 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                     </button>
                     <div className="audio-message-info">
                         {msg.displayTitle && <span className="audio-title" dangerouslySetInnerHTML={{ __html: msg.displayTitle }} />}
-                        {msg.text && <span className="audio-text" style={{whiteSpace: 'pre-line'}} dangerouslySetInnerHTML={{__html: msg.text}} />}
+                        {msg.text && !msg.displayTitle && <span className="audio-text" style={{whiteSpace: 'pre-line'}} dangerouslySetInnerHTML={{__html: msg.text}} />}
                         <span className="audio-label">Mensagem de Áudio</span>
-                        {/* Simple visual bar, not functional */}
                         <div className="audio-progress-bar-visual">
                             <div className="audio-progress-indicator-visual" style={{ width: (currentPlayingAudioId === msg.id && isAudioPlaying) ? '50%' : '0%' }}></div>
                         </div>
                     </div>
-                    {msg.displayDetails && (
-                        <div className="details-grid" style={{ borderTop: '1px solid #e0e0e0', paddingTop: '10px', display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 12px', fontSize: '14px', marginTop: '8px' }}>
-                        {Object.entries(msg.displayDetails).map(([key, value]) => (
-                            <React.Fragment key={key}>
-                            <span style={{ fontWeight: '500', color: '#555' }} dangerouslySetInnerHTML={{__html: key}}/>
-                            <span style={{ color: '#333' }} dangerouslySetInnerHTML={{__html: value}}/>
-                            </React.Fragment>
-                        ))}
-                        </div>
-                    )}
                  </div>
               )}
+             {msg.audioUrl && msg.sender === 'bot' && msg.displayDetails && (
+                 <div className="details-grid" style={{ borderTop: '1px solid #e0e0e0', paddingTop: '10px', display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 12px', fontSize: '14px', marginTop: '8px' }}>
+                 {Object.entries(msg.displayDetails).map(([key, value]) => (
+                     <React.Fragment key={key}>
+                     <span style={{ fontWeight: '500', color: '#555' }} dangerouslySetInnerHTML={{__html: key}}/>
+                     <span style={{ color: '#333' }} dangerouslySetInnerHTML={{__html: value}}/>
+                     </React.Fragment>
+                 ))}
+                 </div>
+             )}
 
 
               {msg.isDisplayImage && (
@@ -1047,7 +1046,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         )
       )}
 
-      {isLoadingStep && loadingMessage && !isBotTyping && (
+      {isLoadingStep && !isBotTyping && (
         <div className="message-container bot-message-container loading-step-as-message">
           <div className="message bot-message" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Loader2 className="animate-spin" size={24} style={{ color: '#1451b4', flexShrink: 0 }} />
@@ -1214,34 +1213,36 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 8px; /* Reduced padding for a more compact look */
-            min-width: 200px; /* Minimum width */
+            padding: 8px; 
+            min-width: 200px;
         }
         .play-pause-button {
-            background-color: #007bff; /* Primary blue */
+            background-color: #007bff; 
             color: white;
             border: none;
             border-radius: 50%;
-            width: 36px; /* Smaller button */
+            width: 36px; 
             height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: background-color 0.2s;
+            flex-shrink: 0;
         }
         .play-pause-button:hover {
-            background-color: #0056b3; /* Darker blue on hover */
+            background-color: #0056b3; 
         }
         .audio-message-info {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            overflow: hidden; /* Prevents text overflow issues */
         }
         .audio-label {
             font-size: 14px;
-            color: #555; /* Darker grey for better readability */
+            color: #555; 
             margin-bottom: 4px;
         }
         .audio-title {
@@ -1249,25 +1250,29 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             font-size: 15px;
             color: #333;
             margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .audio-text {
             font-size: 14px;
             color: #444;
             margin-bottom: 4px;
+            white-space: pre-line; /* Ensure this is still respected */
         }
 
         .audio-progress-bar-visual {
-            background-color: #ccc; /* Light grey background for the bar */
+            background-color: #ccc; 
             border-radius: 4px;
-            height: 6px; /* Slimmer bar */
-            width: 100%; /* Full width of its container */
-            overflow: hidden; /* Ensures indicator stays within bounds */
+            height: 6px; 
+            width: 100%; 
+            overflow: hidden; 
         }
         .audio-progress-indicator-visual {
-            background-color: #007bff; /* Blue indicator */
+            background-color: #007bff; 
             height: 100%;
             border-radius: 4px;
-            transition: width 0.1s linear; /* Smooth transition for visual effect */
+            transition: width 0.1s linear; 
         }
       `}</style>
     </div>
