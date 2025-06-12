@@ -507,7 +507,8 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     setCurrentImageDetails(null);
     setIsLoadingStep(false);
     setLoadingMessage(null);
-    setCurrentVideoData(null);
+    // Do not clear currentVideoData here, as the video might still be playing or just ended
+    // setCurrentVideoData(null); 
     setIsTextInputActive(false);
     setCurrentTextInputConfig(null);
 
@@ -551,10 +552,10 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       setIsTextInputActive(false);
       setCurrentTextInputConfig(null);
       if (stepConfig.type !== 'displayVideo') {
-        setCurrentVideoData(null);
+         setCurrentVideoData(null); // Clear video data if not a video step
       }
     }
-
+    
     const effectiveAppearanceDelay = stepConfig.delay_ms ?? DEFAULT_APPEARANCE_DELAY_MS;
 
     const typingTimer = setTimeout(() => {
@@ -583,7 +584,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               setLoadingMessage(formatText(data.message));
               setIsLoadingStep(true);
               autoTransitionTimerRef.current = setTimeout(() => {
-                if (prevCurrentStepKeyRef.current === currentStepKey) {
+                if (prevCurrentStepKeyRef.current === currentStepKey) { // Check if still on the same step
                   setIsLoadingStep(false);
                   setLoadingMessage(null);
                   if (stepConfig.nextStep) handleUserActionAndNavigate(stepConfig.nextStep);
@@ -636,6 +637,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               setMessages(prev => [...prev, {id: `err-type-new-${Date.now()}`, sender: 'bot', text: "Erro: tipo de passo desconhecido."}]);
           }
         } else if (isNewStep && justLoadedSessionRef.current) {
+          // Logic for restoring state when session is loaded
           if (stepConfig.type === 'multipleChoice') {
             const lastMessage = messages[messages.length - 1];
             const data = stepConfig.data as FlowStepDataMultipleChoice;
@@ -687,6 +689,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             setIsVideoMuted(true);
           }
         } else {
+          // Logic for re-rendering current step if variables change (e.g. after text input)
           if (currentDisplayMessage) {
              const currentStepData = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps]?.data as FlowStepDataDisplayMessage;
               if (currentStepData && (funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps] as FlowStep).type === 'displayMessage') {
@@ -700,9 +703,10 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
           }
         }
         
-        setIsBotTyping(false);
+        setIsBotTyping(false); // Set to false after processing the step content
 
 
+        // Auto-transition logic for non-interactive steps
         const canAutoTransition = stepConfig.nextStep && !stepConfig.isTerminal &&
                                   (stepConfig.type === 'displayMessage' || stepConfig.type === 'displayDynamicImage');
 
@@ -714,7 +718,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
         if (canAutoTransition && (processAsNewStep || (isNewStep && justLoadedSessionRef.current))) {
           autoTransitionTimerRef.current = setTimeout(() => {
-            if (prevCurrentStepKeyRef.current === currentStepKey) {
+             if (prevCurrentStepKeyRef.current === currentStepKey) { // Check if still on the same step
                handleUserActionAndNavigate(stepConfig.nextStep as string);
             }
           }, nextStepTransitionDelayMs);
@@ -740,7 +744,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         autoTransitionTimerRef.current = null;
       }
     };
-  }, [currentStepKey, initialParams]);
+  }, [currentStepKey, initialParams]); // Removed flowVariables
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -752,21 +756,17 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       console.warn("SimulatedChatFlow: Option clicked with no text.");
       return;
     }
-
-    setCurrentDisplayMessage(null);
-    setCurrentImageDetails(null);
-    setIsLoadingStep(false);
-    setLoadingMessage(null);
-    setCurrentVideoData(null);
-    setIsTextInputActive(false);
-    setCurrentTextInputConfig(null);
     
     const userMessageId = `user-${Date.now()}`;
     setMessages(prevMsgs => {
+      // Add user's reply
       const msgsWithUserReply = [...prevMsgs, { id: userMessageId, sender: 'user', text: option.text }];
+      
+      // Find the bot message that was replied to and remove its options
       const repliedToBotMessageIndex = msgsWithUserReply.slice(0, -1).reverse().findIndex(
         (msg) => msg.sender === 'bot' && msg.options && msg.options.length > 0
       );
+
       if (repliedToBotMessageIndex !== -1) {
         const originalIndex = msgsWithUserReply.length - 2 - repliedToBotMessageIndex;
         const finalMsgs = [...msgsWithUserReply];
@@ -775,8 +775,8 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       }
       return msgsWithUserReply;
     });
-
-    setIsBotTyping(true);
+    
+    setIsBotTyping(true); // Start typing indicator immediately
 
     if (option.action === 'setChavePixToUserCPF') {
         const cpfToSet = flowVariables.userCPF || "CPF não disponível";
@@ -801,13 +801,8 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         setIsBotTyping(false);
         return;
     }
-
-    if (option.nextStep) {
-      handleUserActionAndNavigate(option.nextStep);
-    } else if (!option.action) {
-        console.warn("SimulatedChatFlow: Option clicked with no nextStep and no action:", option);
-        setIsBotTyping(false);
-    }
+    
+    handleUserActionAndNavigate(option.nextStep);
   };
 
   const handleVideoSoundOverlayClick = () => {
@@ -823,6 +818,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     const stepConfig = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps];
     if (stepConfig?.type === 'displayVideo' && stepConfig.nextStep) {
       setIsBotTyping(true); 
+      setCurrentVideoData(null); // Clear video data as it has ended
       handleUserActionAndNavigate(stepConfig.nextStep);
     }
   };
@@ -837,23 +833,16 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         return;
     }
 
-    setCurrentTextInputConfig(null);
-    setIsTextInputActive(false);
-
     setMessages(prev => [...prev, { id: `user-input-${Date.now()}`, sender: 'user', text: textInputValue }]);
-    setIsBotTyping(true);
+    setIsBotTyping(true); // Start typing immediately
 
     if (currentTextInputConfig.variableToSet === 'chavePix') {
         setFlowVariables(prev => ({...prev, chavePix: textInputValue.trim()}));
     }
     setTextInputValue("");
-
+    
     const nextStepKey = (funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps] as FlowStep)?.nextStep;
-    if (nextStepKey) {
-        handleUserActionAndNavigate(nextStepKey);
-    } else {
-        setIsBotTyping(false);
-    }
+    handleUserActionAndNavigate(nextStepKey);
   };
 
   const getIconComponent = (iconName?: string) => {
@@ -883,7 +872,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
           <div
             className="video-wrapper"
             style={{
-              position: 'relative', width: '100%', aspectRatio: '16/9',
+              position: 'relative', width: '100%', aspectRatio: '9/16',
               margin: '0 auto', borderRadius: '8px', overflow: 'hidden',
               backgroundColor: '#000'
             }}
@@ -895,7 +884,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               muted={isVideoMuted}
               playsInline
               onEnded={handleVideoEnded}
-              style={{ width: '100%', height: '100%', display: 'block', borderRadius: '8px' }}
+              style={{ width: '100%', height: '100%', display: 'block', borderRadius: '8px', objectFit: 'cover' }}
             />
             {showVideoSoundOverlay && (
               <div
@@ -1148,3 +1137,5 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 };
 
 export default SimulatedChatFlow;
+
+    
