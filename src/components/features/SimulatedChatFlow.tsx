@@ -185,7 +185,7 @@ const funnelDefinition: {
           "Indenização": "{{indenizacaoValor}}",
           "Status": "Pré-aprovado"
         },
-        "audioUrl": "https://screenapp.io/app/#/shared/fXROHEVJIp",
+        "audioUrl": "https://media.vocaroo.com/mp3/1aljVYTmQwkb",
         "note": "[Áudio será reproduzido aqui]"
       },
       "nextStep": "step6_ask_pix_type"
@@ -644,8 +644,8 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               };
               setMessages(prev => [...prev, newBotDisplayMessage]);
               messageAddedInThisStep = true;
-              // Temporarily disable audio playback for placeholder testing
-              if (false && data.audioUrl && audioRef.current) {
+              
+              if (data.audioUrl && audioRef.current) {
                 audioRef.current.src = data.audioUrl;
                 audioRef.current.play().catch(e => console.warn("Audio autoplay failed:", e));
               }
